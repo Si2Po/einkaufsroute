@@ -1,0 +1,16 @@
+{
+  "name": "Einkaufsroute",
+  "short_name": "Einkauf",
+  "description": "Einkaufsliste, die sich nach dem Grundriss deines Supermarkts sortiert.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF2EE",
+  "theme_color": "#0E6B4D",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
