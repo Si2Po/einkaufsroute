@@ -2294,7 +2294,7 @@ function themePage() {
     <div class="group">${opt('auto', 'Automatisch', 'wie das Gerät')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
     <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
     <div class="group swatches">${sw}</div>
-    <div class="sheettitle" style="margin-top:12px">Glas <small style="text-transform:none;letter-spacing:0;font-weight:600">· untere Leiste und Sheets</small></div>
+    <div class="sheettitle" style="margin-top:12px">Glas</div>
     <div class="group glassrow"><span aria-hidden="true">Deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">Glas</span></div>
     `, themePage);
 }
