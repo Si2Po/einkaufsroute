@@ -28,7 +28,8 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 - Änderungen an Daten, die abgeglichen werden, müssen `save()` oder `commit()` aufrufen (löst den Abgleich aus).
 - Neue Datenarten brauchen eine eigene `kind` (Check-Constraint in `schema.sql`) und Behandlung in `buildDocs` / `applyRows` in `sync.js`.
 - Eingabefelder mit mindestens 16 px Schrift (sonst zoomt iOS). Bedienung muss mit einer Hand und im Laden funktionieren: einfach auf den ersten Blick, Erweitertes hinter langem Drücken, Wischen oder Menüs.
-- Lokal testen: Ordner mit einem kleinen Webserver ausliefern (z. B. `python -m http.server`) und auf `localhost` öffnen. Service Worker dort ggf. in den Browser-Werkzeugen abschalten oder die Cache-Version erhöhen.
+- Lokal ansehen: Doppelklick auf `lokal-starten.cmd` (PowerShell-Webserver `tools/server.ps1`, kein Python/Node nötig; beide stehen in `.gitignore` und werden nicht hochgeladen) → http://localhost:8080. Auf localhost ist der Service Worker abgeschaltet, Neuladen zeigt sofort den neuen Stand. Lokal hat die App eigene Daten; wer sich anmeldet, gleicht aber mit dem echten Haushalt ab.
+- Git: Änderungen lokal auf `main` committen, **erst pushen, wenn der Besitzer es sagt** (Push = Veröffentlichung auf GitHub Pages). Die Version in `sw.js` beim Bündel vor dem Push einmal erhöhen.
 
 ## Stand und Pläne
 Siehe `TODO.md` (Merkliste mit Reihenfolge der nächsten Schritte). Grober Plan: Alltagstauglichkeit (iPhone-Rand, Tastatur, Icon) → einheitliche Oberfläche (Seiten/Sheets, Übergänge, Design) → Gruppen → Weiteres.

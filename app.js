@@ -542,7 +542,14 @@ function viewSettings() {
 // Versionsnummer: steht nur an einer Stelle, im Namen des Caches in sw.js ("einkaufsroute-v0.6.1").
 // Die App liest sie aus dem Cache, aus dem sie gerade läuft.
 let appVersion = '';
-if (window.caches) {
+const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
+if (IS_LOCAL) {
+  // Lokal gibt es keinen Cache: Nummer direkt aus sw.js lesen
+  fetch('sw.js').then((r) => r.text()).then((t) => {
+    const m = t.match(/einkaufsroute-v([\w.]+)/);
+    if (m) { appVersion = `${m[1]} (lokal)`; if (ui.tab === 'settings') render(); }
+  }).catch(() => {});
+} else if (window.caches) {
   caches.keys().then((keys) => {
     const k = keys.filter((n) => n.startsWith('einkaufsroute-v')).pop();
     if (!k) return;
@@ -1946,7 +1953,10 @@ document.addEventListener('change', async (e) => {
   if (!S.stores.find((s) => s.id === S.storeId)) S.storeId = S.stores[0]?.id || null;
   save();
   render();
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. in der Vorschau nicht möglich */ });
+  } else if ('serviceWorker' in navigator && IS_LOCAL) {
+    // Lokal (lokal-starten.cmd) ohne Service Worker, damit nach dem Neuladen immer die geänderten Dateien kommen
+    navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
   }
 })();
