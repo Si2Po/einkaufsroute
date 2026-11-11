@@ -5,9 +5,9 @@
 - [ ] **Animationen und Übergänge überarbeiten:** Wechsel zwischen Bereichen und Öffnen von Details. In den Einstellungen passt das „›“ (deutet eine neue Seite an) nicht zum Bottom-Sheet, das von unten kommt und nach unten weggewischt wird. Vorschlag: Einstellungs-Unterpunkte als echte Seiten mit Einblenden von rechts, Zurück-Pfeil und Wisch-zurück; Sheets nur für Schnellaktionen (Listenwahl, Details eines Eintrags). Dazu sanfter Übergang beim Tabwechsel. **Wichtig: einheitliche Bedienung.** Jede Unterseite lässt sich gleich verlassen (Zurück-Pfeil und Wisch vom linken Rand), jedes Sheet gleich (Wisch nach unten, Fertig). Eine gemeinsame Seiten- und Sheet-Komponente statt Einzellösungen. „Bewegung reduzieren“ (prefers-reduced-motion) beachten.
 - [ ] **Einstellungen aufräumen:** „Daten sichern und übertragen" in „Konto und Haushalt" einordnen
 - [ ] **Stichwörter überarbeiten:** manche Wörter in Obst & Gemüse sollten im Plural stehen
-- [ ] **Oberer Rand auf dem iPhone:** Inhalt scrollt unter den Rand und wirkt verschwommen → mehr Abstand (safe-area-inset-top, Margin)
-- [ ] **Tastatur prüfen:** darf keine Eingabefelder verdecken. Teilweise muss man das Feld verlassen und neu antippen, bis sich alles richtig verschiebt.
-- [ ] **PWA-Icon** gestalten
+- [x] **Oberer Rand auf dem iPhone:** Inhalt scrollt unter den Rand und wirkt verschwommen → mehr Abstand (safe-area-inset-top, Margin)
+- [x] **Tastatur prüfen:** darf keine Eingabefelder verdecken. Teilweise muss man das Feld verlassen und neu antippen, bis sich alles richtig verschiebt.
+- [x] **PWA-Icon** gestalten (Regale + Laufweg + Haken)
 - [ ] **Standardreihenfolge „Kein Laden“** ansehen und ändern können (Reihenfolge der Kategorien, z. B. per Hoch/Runter in „Kategorien und Stichwörter“; die Reihenfolge wird schon mit dem Haushalt synchronisiert)
 
 ## Idee: Hilfe-Bereich in den Einstellungen

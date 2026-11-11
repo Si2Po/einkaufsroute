@@ -552,6 +552,44 @@ function openSheet(html) {
   }
   d.querySelector('[autofocus]')?.focus();
 }
+
+// ---------- Tastatur auf dem iPhone ----------
+// Safari macht bei offener Tastatur nicht die Seite kleiner, sondern nur den sichtbaren Ausschnitt (visualViewport).
+// Ein Sheet am unteren Rand läge dann hinter der Tastatur. Deshalb messen wir die Tastatur und schieben das Sheet
+// darüber (CSS-Variablen --kb und --vvh). Danach wird das aktive Feld im Sheet in den sichtbaren Bereich gerollt.
+(function keyboardWatch() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const root = document.documentElement;
+  let raf = 0, lastKb = 0;
+  const showField = () => {
+    const a = document.activeElement;
+    if (a && a.matches?.('input, textarea, select') && dlg()?.contains(a)) a.scrollIntoView({ block: 'nearest' });
+  };
+  const update = () => {
+    raf = 0;
+    // Teil der Seite, der unten verdeckt ist (Tastatur). Kleine Werte (z. B. Safari-Leisten) zählen nicht.
+    const covered = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    const kb = covered > 80 ? covered : 0;
+    root.style.setProperty('--kb', `${kb}px`);
+    if (kb) root.style.setProperty('--vvh', `${Math.round(vv.height)}px`); else root.style.removeProperty('--vvh');
+    root.classList.toggle('kb', kb > 0);
+    if (kb && kb !== lastKb) setTimeout(showField, 280); // nach dem Hochschieben des Sheets
+    lastKb = kb;
+  };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(update); };
+  vv.addEventListener('resize', queue);
+  vv.addEventListener('scroll', queue);
+  // Wechsel in ein anderes Feld, während die Tastatur schon offen ist
+  document.addEventListener('focusin', (e) => {
+    if (lastKb && e.target.matches?.('input, textarea, select') && dlg()?.contains(e.target)) setTimeout(showField, 50);
+  });
+  // Tastatur zu: Safari lässt die Seite manchmal verschoben stehen. Dann einmal zurechtrücken.
+  document.addEventListener('focusout', () => setTimeout(() => {
+    if (!document.activeElement?.matches?.('input, textarea, select')) { queue(); if (vv.offsetTop > 0) window.scrollTo(window.scrollX, window.scrollY); }
+  }, 300));
+  update();
+})();
 // Was im Feld eines Sheets getippt, aber noch nicht mit + bestätigt wurde, geht beim Schließen nicht verloren (Komma trennt mehrere)
 let toastT;
 // Kurze Meldung unten; popover liegt über dem offenen Sheet

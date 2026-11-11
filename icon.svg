@@ -1,10 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#0E6B4D"/>
-  <rect x="96" y="96" width="140" height="140" rx="22" fill="#fff" fill-opacity=".92"/>
-  <rect x="262" y="96" width="154" height="140" rx="22" fill="#fff" fill-opacity=".55"/>
-  <rect x="96" y="262" width="140" height="154" rx="22" fill="#fff" fill-opacity=".55"/>
-  <rect x="262" y="262" width="154" height="154" rx="22" fill="#fff" fill-opacity=".92"/>
-  <path d="M166 166 L339 166 L339 339" fill="none" stroke="#0E6B4D" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 0"/>
-  <circle cx="166" cy="166" r="24" fill="#0E6B4D"/>
-  <circle cx="339" cy="339" r="24" fill="#0E6B4D"/>
+  <!-- App-Icon: zwei Regale, dazwischen der Laufweg vom Start (Ring) bis zum Ziel (Haken).
+       Alles Wichtige liegt im inneren Kreis, damit Android das Icon rund zuschneiden kann. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#159A6C"/>
+      <stop offset="1" stop-color="#0A5038"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g transform="translate(256 256) scale(.9) translate(-256 -256)">
+    <rect x="92" y="176" width="240" height="40" rx="20" fill="#fff" fill-opacity=".26"/>
+    <rect x="180" y="296" width="240" height="40" rx="20" fill="#fff" fill-opacity=".26"/>
+    <path d="M128 132 H344 A40 40 0 0 1 384 172 V216 A40 40 0 0 1 344 256 H168 A40 40 0 0 0 128 296 V340 A40 40 0 0 0 168 380 H340"
+          fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="128" cy="132" r="26" fill="#0E6B4D" stroke="#fff" stroke-width="16"/>
+    <circle cx="380" cy="380" r="44" fill="#fff"/>
+    <path d="M360 381 l14 14 l27 -29" fill="none" stroke="#0E6B4D" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
 </svg>
