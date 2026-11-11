@@ -459,7 +459,8 @@ dialog input, dialog textarea, .page input, .page textarea { -webkit-user-select
   left: 0; right: 0; margin: 0 auto; width: calc(100% - 24px); max-width: 520px;
   bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) - 10px));
   padding: 5px; border-radius: 999px; border: 1px solid var(--glass-line);
-  background: var(--glass); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8);
+  background: color-mix(in srgb, var(--surface) var(--bar-p, 72%), transparent);
+  -webkit-backdrop-filter: blur(var(--bar-blur, 22px)) saturate(1.8); backdrop-filter: blur(var(--bar-blur, 22px)) saturate(1.8);
   box-shadow: 0 8px 30px rgba(0, 0, 0, .16), 0 0 0 .5px var(--line);
 }
 #tabbar button { border-radius: 999px; padding: 5px 0; }
@@ -474,8 +475,8 @@ dialog:not(.viewer) {
   margin-bottom: calc(var(--kb, 0px) + 8px);
   max-height: calc(var(--vvh, 100dvh) - env(safe-area-inset-top, 0px) - 20px);
   padding-bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) - 6px));
-  background: color-mix(in srgb, var(--surface) 86%, transparent);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
+  background: color-mix(in srgb, var(--surface) var(--sheet-p, 86%), transparent);
+  -webkit-backdrop-filter: blur(var(--sheet-blur, 28px)) saturate(1.6); backdrop-filter: blur(var(--sheet-blur, 28px)) saturate(1.6);
   border: 1px solid var(--glass-line); box-shadow: 0 12px 50px rgba(0, 0, 0, .3);
 }
 html.kb dialog:not(.viewer) { padding-bottom: 14px; }
@@ -505,3 +506,8 @@ dialog::backdrop { background: rgba(0, 0, 0, .32); }
 .swatch.custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; cursor: pointer; }
 .swatch.custom .dot { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; pointer-events: none; }
 .swatch.on { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--c, var(--accent)); }
+/* Glas-Stärke (Einstellungen → Darstellung → Glas): app.js setzt --bar-p/--bar-blur/--sheet-p/--sheet-blur. Heller Rand oben wie bei echtem Glas. */
+#tabbar { box-shadow: 0 8px 30px rgba(0, 0, 0, .16), 0 0 0 .5px var(--line), inset 0 1px 0 var(--glass-line); }
+.glassrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+.glassrow input { flex: 1; accent-color: var(--accent); }
+.glassrow output { min-width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }

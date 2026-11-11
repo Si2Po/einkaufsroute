@@ -2278,6 +2278,7 @@ function applyTheme() {
   if (p === 'auto') delete root.dataset.theme; else root.dataset.theme = p;
   const a = accentPref(), c = a === 'custom' ? customAccentStored() : null;
   if (a === 'gruen') delete root.dataset.accent; else root.dataset.accent = a;
+  applyGlass(glassPref());
   ['l', 'd', 'od'].forEach((k) => { if (c) root.style.setProperty(`--cust-${k}`, c[k]); else root.style.removeProperty(`--cust-${k}`); });
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = THEME_BG[p === 'auto' ? (/dark/.test(m.media) ? 'dark' : 'light') : p]; });
 }
@@ -2293,6 +2294,8 @@ function themePage() {
     <div class="group">${opt('auto', 'Automatisch', 'wie das Gerät')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
     <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
     <div class="group swatches">${sw}</div>
+    <div class="sheettitle" style="margin-top:12px">Glas <small style="text-transform:none;letter-spacing:0;font-weight:600">· untere Leiste und Sheets</small></div>
+    <div class="group glassrow"><span aria-hidden="true">klar</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">frostig</span><output id="glassOut">${glassPref()} %</output></div>
     <p class="sheetnote">Der bunte Kreis öffnet die Farbauswahl. Zu helle oder zu dunkle Farben passt die App automatisch an, damit alles lesbar bleibt. Gilt nur für dieses Gerät.</p>`, themePage);
 }
 // Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
@@ -2304,3 +2307,19 @@ function pickAccent(hex, done) {
 document.addEventListener('input', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, false); });
 document.addEventListener('change', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, true); });
 applyTheme();
+// Glas-Stärke 0–100 %: 0 = fast undurchsichtig, 100 = sehr durchsichtig und stark verschwommen (35 = Standard)
+function glassPref() { try { const g = parseInt(localStorage.getItem('ek_glass'), 10); return g >= 0 && g <= 100 ? g : 35; } catch (_) { return 35; } }
+function applyGlass(g) {
+  const s = document.documentElement.style;
+  s.setProperty('--bar-p', `${Math.round(95 - g * 0.65)}%`);
+  s.setProperty('--bar-blur', `${Math.round(12 + g * 0.3)}px`);
+  s.setProperty('--sheet-p', `${Math.round(97 - g * 0.4)}%`);
+  s.setProperty('--sheet-blur', `${Math.round(16 + g * 0.34)}px`);
+}
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'glassRange') return;
+  const g = +e.target.value;
+  try { localStorage.setItem('ek_glass', String(g)); } catch (_) { /* privat */ }
+  applyGlass(g);
+  const o = $('#glassOut'); if (o) o.textContent = `${g} %`;
+});
