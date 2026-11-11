@@ -1948,7 +1948,7 @@ function mealSheet() {
     ${m.photo ? `<img class="mphoto" src="${m.photo}" alt="">` : ''}
     <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="Weniger Personen"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="Mehr Personen">${ICON_PLUS_S}</button></div>
     ${m.ing.length ? `<ul class="scrollbox mings">${rows}</ul>` : '<p class="sheetnote">Noch keine Zutaten. Tippe auf „Bearbeiten“.</p>'}
-    <div class="actions mealacts${m.ing.length ? ' over' : ''}">
+    <div class="actions mealacts">
       <button type="button" class="btn ghost" data-act="m_edit">Bearbeiten</button>
       ${ui.mealRandom ? `<button type="button" class="btn ghost diceBtn${ui.diceRoll ? ' roll' : ''}" data-act="m_random" aria-label="Nochmal würfeln">${ICON_DICE}</button>` : ''}
       <button type="button" class="btn" id="mAddBtn" data-act="m_tolist"${ui.mealPick.size ? '' : ' disabled'}>${mealBtnText()}</button>

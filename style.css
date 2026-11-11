@@ -541,18 +541,22 @@ dialog:not(.viewer) { background-color: color-mix(in srgb, var(--surface) var(--
 .scrollbox.more-b { --fb: 44px; }
 .scrollbox.more-t { --ft: 24px; }
 /* Essen-Sheet: Knöpfe in einer Reihe, Zutaten bekommen mehr Platz */
-dialog .mings { max-height: 48vh; }
 .mealacts { flex-wrap: nowrap; }
 .mealacts #mAddBtn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .diceBtn { flex: none; display: grid; place-items: center; padding: 0 12px; }
-/* Essen-Sheet: Zutaten laufen bis unten, die Knöpfe liegen darüber; lange Ausblendung unter den Knöpfen */
-dialog .mings { max-height: 56vh; padding-bottom: 72px; }
-dialog .mings.more-b { --fb: 130px; }
-.mealacts.over { position: relative; z-index: 2; margin-top: -68px; }
 .mealacts { margin-top: 10px; }
-.mealacts .btn.ghost { background: color-mix(in srgb, var(--surface) 70%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 /* Würfel wackelt beim Neu-Würfeln */
 .diceBtn svg { display: block; }
 .diceBtn.roll svg { animation: diceroll .6s cubic-bezier(.3, .7, .3, 1); }
 @keyframes diceroll { 0% { transform: rotate(0) scale(1); } 20% { transform: rotate(-28deg) scale(1.15); } 45% { transform: rotate(22deg) scale(1.1); } 65% { transform: rotate(-12deg); } 85% { transform: rotate(5deg); } 100% { transform: rotate(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .diceBtn.roll svg { animation: none; } }
+/* Essen-Sheet: nicht das Sheet scrollt, sondern nur die Zutatenliste; sie füllt den Platz bis unten */
+dialog[open]:has(> .mings) { display: flex; flex-direction: column; overflow: hidden; }
+dialog:has(> .mings) > * { flex: none; }
+dialog > .mings { flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: auto; }
+/* Essen-Sheet (Stand nach Test): höchstens 60 % der Bildschirmhöhe, Knöpfe unter der Liste,
+   unten blenden etwa 1,5 Zeilen weich aus */
+dialog[open]:has(> .mings) { max-height: min(60dvh, calc(var(--vvh, 100dvh) - env(safe-area-inset-top, 0px) - 20px)); }
+dialog > .mings { padding-bottom: 0; }
+dialog > .mings.more-b { --fb: 74px; }
+dialog:not(.viewer) .mealacts .btn.ghost { background: color-mix(in srgb, var(--surface) 92%, transparent); }
