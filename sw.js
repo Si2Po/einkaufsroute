@@ -1,10 +1,11 @@
 // Service Worker: legt die App-Dateien beim ersten Besuch im Cache,
 // damit die App danach auch ohne Netz startet.
-const CACHE = 'einkaufsroute-v0.6.3';
+const CACHE = 'einkaufsroute-v0.6.4';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'sync.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: 'reload' = immer frisch vom Server, nicht aus dem kurzen Browser-Zwischenspeicher (sonst landen alte Dateien in der neuen Version)
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

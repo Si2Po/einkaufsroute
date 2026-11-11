@@ -2140,6 +2140,15 @@ document.addEventListener('change', async (e) => {
   render();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. in der Vorschau nicht möglich */ });
+    // Neue Version übernommen: einmal neu laden, damit auch der neue Programmcode läuft.
+    // Nicht mitten im Tippen oder bei offenem Sheet, dann erst beim nächsten Wechsel aus der App heraus.
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController) return; // allererster Start: nichts Altes zu ersetzen
+      const busy = () => dlg().open || pages.length || document.activeElement?.matches?.('input, textarea, select');
+      if (!busy()) { location.reload(); return; }
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') location.reload(); });
+    });
   } else if ('serviceWorker' in navigator && IS_LOCAL) {
     // Lokal (lokal-starten.cmd) ohne Service Worker, damit nach dem Neuladen immer die geänderten Dateien kommen
     navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
