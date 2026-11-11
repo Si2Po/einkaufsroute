@@ -536,7 +536,19 @@ function viewSettings() {
       ${row('datasheet', 'Daten sichern und übertragen', 'Sicherung als Datei oder Text')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
-    </ul>`;
+    </ul>
+    ${appVersion ? `<p class="tip">Version ${esc(appVersion)}</p>` : ''}`;
+}
+// Versionsnummer: steht nur an einer Stelle, im Namen des Caches in sw.js ("einkaufsroute-v0.6.1").
+// Die App liest sie aus dem Cache, aus dem sie gerade läuft.
+let appVersion = '';
+if (window.caches) {
+  caches.keys().then((keys) => {
+    const k = keys.filter((n) => n.startsWith('einkaufsroute-v')).pop();
+    if (!k) return;
+    appVersion = k.slice('einkaufsroute-v'.length);
+    if (ui.tab === 'settings') render();
+  }).catch(() => { /* ohne Cache keine Anzeige */ });
 }
 
 // ---------- Sheets ----------

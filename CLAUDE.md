@@ -24,7 +24,7 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 - Zugriffsschutz über Row Level Security. Der Schlüssel in `sync.js` ist der öffentliche Publishable-Key und darf im Code stehen. **Niemals** `service_role`/Secret-Key oder Datenbank-Passwort einchecken.
 
 ## Beim Ändern beachten
-- Bei jeder Veröffentlichung in `sw.js` die Zahl in `CACHE` erhöhen (`einkaufsroute-vNN`) und neue Dateien in `FILES` aufnehmen. Sonst zeigt das iPhone die alte Version.
+- Bei jeder Veröffentlichung in `sw.js` die Version in `CACHE` erhöhen (`einkaufsroute-v0.6.1` → `v0.6.2`; größere Schritte nach Absprache `v0.7.0`). Neue Dateien in `FILES` aufnehmen. Sonst zeigt das iPhone die alte Version. Die App liest die Nummer aus dem Cache-Namen und zeigt sie unten in den Einstellungen an; sie steht also nur in `sw.js`.
 - Änderungen an Daten, die abgeglichen werden, müssen `save()` oder `commit()` aufrufen (löst den Abgleich aus).
 - Neue Datenarten brauchen eine eigene `kind` (Check-Constraint in `schema.sql`) und Behandlung in `buildDocs` / `applyRows` in `sync.js`.
 - Eingabefelder mit mindestens 16 px Schrift (sonst zoomt iOS). Bedienung muss mit einer Hand und im Laden funktionieren: einfach auf den ersten Blick, Erweitertes hinter langem Drücken, Wischen oder Menüs.
