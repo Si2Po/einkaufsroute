@@ -364,7 +364,7 @@ function accountPage(msg) {
     </div>
     ${note}
     <div class="sheettitle" style="margin-top:16px">Haushalt</div>
-    <p class="sheetnote" style="margin:0 4px 8px">Wer zu deinem Haushalt gehört, teilt Läden, Stichwörter, Essen und Listen.</p>
+    <p class="sheetnote" style="margin:0 4px 8px">Wer zu deinem Haushalt gehört, teilt Geschäfte, Stichwörter, Essen und Listen.</p>
     <div class="group">
       <button type="button" class="sheetbtn" data-act="acc_invite"><span>Person einladen</span><small>Link erstellen ›</small></button>
       <button type="button" class="sheetbtn" data-act="acc_joinsheet"><span>Einladung annehmen</span><small>Code eingeben ›</small></button>
@@ -376,7 +376,7 @@ function joinPage(code, msg) {
   openPage('join', 'Einladung annehmen', `
     <form id="joinForm" autocomplete="off" style="display:grid;gap:10px">
       <label class="field"><span>Einladungscode</span><input id="joinCode" value="${esc(code || '')}" autocapitalize="characters" autocomplete="off" ${code ? '' : 'autofocus'} required></label>
-      <p class="sheetnote" style="color:var(--warn)">Achtung: Die Daten auf diesem Gerät (Läden, Listen, Essen) werden durch die Daten des Haushalts ersetzt. Eine Sicherung bleibt auf dem Gerät.</p>
+      <p class="sheetnote" style="color:var(--warn)">Achtung: Die Daten auf diesem Gerät (Geschäfte, Listen, Essen) werden durch die Daten des Haushalts ersetzt. Eine Sicherung bleibt auf dem Gerät.</p>
       ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg)}</p>` : ''}
       <button type="submit" class="btn">Beitreten</button>
     </form>`);
@@ -410,7 +410,7 @@ async function acceptInvite(code) {
 const exportJson = () => JSON.stringify({ app: 'einkaufsroute', v: 1, state: snapshot() });
 function dataPage(msg) {
   openPage('data', 'Daten sichern', `
-    <p class="sheetnote" style="margin:0 4px 8px">Alles (Listen, Läden, Stichwörter, Essen, Fotos) als Sicherung. So nimmst du deine Daten auch auf ein anderes Gerät oder in eine neue Installation mit.</p>
+    <p class="sheetnote" style="margin:0 4px 8px">Alles (Listen, Geschäfte, Stichwörter, Essen, Fotos) als Sicherung. So nimmst du deine Daten auch auf ein anderes Gerät oder in eine neue Installation mit.</p>
     <div class="group">
       <button type="button" class="sheetbtn" data-act="acc_dlfile"><span>Als Datei speichern</span><small>.json</small></button>
       <button type="button" class="sheetbtn" data-act="acc_copydata"><span>Als Text kopieren</span><small>Zwischenablage</small></button>

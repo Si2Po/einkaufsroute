@@ -427,3 +427,10 @@ html.kb .page { padding-bottom: 16px; }
 .sheetdone { flex: none; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--soft); color: var(--muted); }
 .sheetdone:active { background: var(--line); }
 #editForm .actions { justify-content: flex-start; }
+
+/* Wisch-zurück auch am Seitenrand der Hauptansicht (dort liegt nur body), z. B. bei Geschäfte */
+html, body { touch-action: pan-y; }
+/* Nach langem Drücken liegt der Finger noch auf dem neuen Sheet: keine versehentliche Textauswahl.
+   In Eingabefeldern bleibt Markieren möglich. */
+dialog, .page { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+dialog input, dialog textarea, .page input, .page textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }

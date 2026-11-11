@@ -313,10 +313,10 @@ function listBody() {
   const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten</p>' : '';
   return body + doneHtml + tip;
 }
-const pillName = () => curStore()?.name || 'Kein Laden';
+const pillName = () => curStore()?.name || 'Kein Geschäft';
 
 const barHtml = () => `
-      <button type="button" class="pill" data-act="storesheet" aria-haspopup="dialog" aria-label="Laden wählen"><span id="pillName">${esc(pillName())}</span></button>`;
+      <button type="button" class="pill" data-act="storesheet" aria-haspopup="dialog" aria-label="Geschäft wählen"><span id="pillName">${esc(pillName())}</span></button>`;
 function viewList() {
   return `<div class="bar">${barHtml()}    </div>
     <div class="addwrap">
@@ -333,10 +333,10 @@ function viewStores() {
   const cards = S.stores.map((s) => `<li><button type="button" class="card" data-act="openstore" data-id="${s.id}">
       <span><strong>${esc(s.name)}</strong><small>${s.zones.length} ${s.zones.length === 1 ? 'Bereich' : 'Bereiche'}${s.id === S.storeId ? ' · aktiv' : ''}</small></span>
       <span class="go">›</span></button></li>`).join('');
-  return `${pageHead('Einstellungen', 'Läden', 'data-act="tab" data-tab="settings"')}
+  return `${pageHead('Einstellungen', 'Geschäfte', 'data-act="tab" data-tab="settings"')}
     <p class="hint">Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.</p>
     ${S.stores.length ? `<ul class="cards">${cards}</ul>` : ''}
-    <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">+ Neuer Laden</button>`;
+    <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">+ Neues Geschäft</button>`;
 }
 
 // ---------- Plan: endlose Fläche mit Raster ----------
@@ -483,8 +483,8 @@ function viewEditor() {
     : `<p class="hint">${S.showPlan ? (st.zones.length ? 'Antippen: bearbeiten · Gedrückt halten: Form ändern' : 'Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.') : (st.zones.length ? 'Reihenfolge = Laufweg. Am Griff ziehen zum Sortieren.' : 'Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.')}</p><button type="button" class="btn small" data-act="addzone">+ Bereich</button>`;
   return `
     <div class="edhead">
-      <button type="button" class="pageback" data-act="back" aria-label="Zurück zu Läden">${ICON_BACK}<span>Läden</span></button>
-      <input id="storeName" value="${esc(st.name)}" aria-label="Name des Ladens">
+      <button type="button" class="pageback" data-act="back" aria-label="Zurück zu Geschäfte">${ICON_BACK}<span>Geschäfte</span></button>
+      <input id="storeName" value="${esc(st.name)}" aria-label="Name des Geschäfts">
       <button type="button" class="iconbtn" data-act="editormenu" aria-haspopup="dialog" aria-label="Menü">${ICON_DOTS}</button>
     </div>
     <button type="button" class="prow plantoggle${S.showPlan ? ' open' : ''}" data-act="togplan" aria-expanded="${!!S.showPlan}"><span class="pl">Grundriss</span><span class="pv">${S.showPlan ? 'Bereiche einzeichnen' : 'optional, zum Einzeichnen'}</span></button>
@@ -533,7 +533,7 @@ function viewSettings() {
     <ul class="cards">
       ${row('accountsheet', 'Konto und Haushalt', typeof accountSub === 'function' ? accountSub() : 'Nicht angemeldet')}
       ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
-      ${row('tab', 'Läden und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Laden' : 'Läden'}`, ' data-tab="stores"')}
+      ${row('tab', 'Geschäfte und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}`, ' data-tab="stores"')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
     </ul>
@@ -594,7 +594,7 @@ const ICON_BACK = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="
 const pageHead = (back, title, attrs = 'data-act="pageback"') => `<header class="pagehead">
     <button type="button" class="pageback" ${attrs} aria-label="Zurück zu ${esc(back)}">${ICON_BACK}<span>${esc(back)}</span></button>
     <h2 class="pagetitle">${esc(title)}</h2></header>`;
-const rootTitle = () => ({ list: S.lists.length > 1 ? curList().name : 'Liste', meals: 'Essen', stores: 'Läden' }[ui.tab] || 'Einstellungen');
+const rootTitle = () => ({ list: S.lists.length > 1 ? curList().name : 'Liste', meals: 'Essen', stores: 'Geschäfte' }[ui.tab] || 'Einstellungen');
 function setPagesInert() {
   const n = pages.length;
   $('.wrap').inert = n > 0;
@@ -819,10 +819,10 @@ const closeSheet = () => {
 
 function storeSheet() {
   openSheet(`<div class="sheettitle">Einkauf bei</div>
-    <button type="button" class="sheetbtn${S.storeId ? '' : ' on'}" data-act="pickstore" data-id="">Kein Laden <small>Standardreihenfolge</small></button>
+    <button type="button" class="sheetbtn${S.storeId ? '' : ' on'}" data-act="pickstore" data-id="">Kein Geschäft <small>Standardreihenfolge</small></button>
     ${S.stores.map((s) => `<button type="button" class="sheetbtn${s.id === S.storeId ? ' on' : ''}" data-act="pickstore" data-id="${s.id}">${esc(s.name)}</button>`).join('')}
-    <button type="button" class="sheetbtn accent" data-act="newstoresheet">+ Neuer Laden</button>
-    <button type="button" class="sheetbtn accent" data-act="gostores">Läden bearbeiten …</button>`);
+    <button type="button" class="sheetbtn accent" data-act="newstoresheet">+ Neues Geschäft</button>
+    <button type="button" class="sheetbtn accent" data-act="gostores">Geschäfte bearbeiten …</button>`);
 }
 function assignSheet(cat) {
   const st = curStore();
@@ -951,9 +951,9 @@ function catDetailPage(id) {
     </div>` : ''}`, () => catDetailPage(id));
 }
 function newStoreSheet() {
-  openSheet(`<div class="sheettitle">Neuer Laden</div>
+  openSheet(`<div class="sheettitle">Neues Geschäft</div>
     <form id="newStoreForm" autocomplete="off">
-      <input id="newStoreName" autofocus class="notein" placeholder="Name, z. B. Rewe Hauptstraße" aria-label="Name des Ladens" required>
+      <input id="newStoreName" autofocus class="notein" placeholder="Name, z. B. Rewe Hauptstraße" aria-label="Name des Geschäfts" required>
       ${S.stores.length ? `<label class="srow"><span class="pl">Vorlage</span><select id="nsTemplate" aria-label="Bereiche übernehmen von"><option value="">Leer beginnen</option>${S.stores.map((x) => `<option value="${x.id}">Kopie von ${esc(x.name)}</option>`).join('')}</select></label>` : ''}
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
@@ -1015,7 +1015,7 @@ function moreSheet() {
   openSheet(`<div class="sheettitle">Menü</div>
     <button type="button" class="sheetbtn" data-act="listsheet">Listen <small>${S.lists.length > 1 ? esc(curList().name) : 'neue Liste anlegen'}</small></button>
     <button type="button" class="sheetbtn" data-act="tab" data-tab="meals">Essen <small>${(S.meals || []).length || 'Zutaten auf einen Tipp'}</small></button>
-    <button type="button" class="sheetbtn" data-act="gostores">Läden und Grundrisse</button>
+    <button type="button" class="sheetbtn" data-act="gostores">Geschäfte und Grundrisse</button>
     ${done ? `<button type="button" class="sheetbtn" data-act="cleardone">Erledigte entfernen <small>${done}</small></button>` : ''}
     <button type="button" class="sheetbtn" data-act="catlist">Kategorien <small>${CATS.length}</small></button>`);
 }
@@ -1023,7 +1023,7 @@ function editorSheet() {
   const st = editStore();
   openSheet(`<div class="sheettitle">${esc(st.name)}</div>
     ${S.storeId === st.id ? '' : `<button type="button" class="sheetbtn" data-act="usestore" data-id="${st.id}">In der Liste verwenden</button>`}
-    <button type="button" class="sheetbtn danger" data-act="delstore">${ui.confirmDel ? 'Wirklich löschen?' : 'Laden löschen'}</button>`);
+    <button type="button" class="sheetbtn danger" data-act="delstore">${ui.confirmDel ? 'Wirklich löschen?' : 'Geschäft löschen'}</button>`);
 }
 function zoneField(it) {
   const st = curStore();
