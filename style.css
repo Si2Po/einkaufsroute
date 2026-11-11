@@ -417,3 +417,5 @@ html.kb .page { padding-bottom: 16px; }
 .pagebody .mings { max-height: none; overflow: visible; }
 .mcard { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; } /* langes Drücken ohne iOS-Menü */
 .mmore #mSteps { display: block; margin-top: 12px; }
+.ming .mname { flex: 1; min-width: 0; font-size: 16px; padding: 6px 8px; border: 1.5px solid transparent; border-radius: 10px; background: transparent; color: var(--ink); text-overflow: ellipsis; }
+.ming .mname:focus { border-color: var(--line); background: var(--surface); outline: none; }

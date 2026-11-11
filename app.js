@@ -1928,7 +1928,7 @@ function mealEditPage() {
   const m = mealById(ui.mealId);
   if (!m) return;
   const tags = [...new Set([...allTags(), ...m.tags, ...DEFAULT_TAGS])];
-  const ings = ingSorted(m).map((i) => `<li class="ming"><input class="mqty" data-ing="${i.id}" value="${esc(i.qty || '')}" placeholder="Menge" aria-label="Menge für ${esc(i.name)}" autocomplete="off" autocapitalize="off" enterkeyhint="done"><span class="mn">${esc(i.name)}</span><button type="button" class="chipbtn basicbtn${i.basic ? ' on' : ''}" data-act="m_basic" data-id="${i.id}" aria-pressed="${!!i.basic}">Basis</button><button type="button" class="chipbtn" data-act="m_deling" data-id="${i.id}" aria-label="${esc(i.name)} entfernen">×</button></li>`).join('');
+  const ings = ingSorted(m).map((i) => `<li class="ming"><input class="mqty" data-ing="${i.id}" value="${esc(i.qty || '')}" placeholder="Menge" aria-label="Menge für ${esc(i.name)}" autocomplete="off" autocapitalize="off" enterkeyhint="done"><input class="mname" data-ingname="${i.id}" value="${esc(i.name)}" aria-label="Name der Zutat" autocomplete="off" enterkeyhint="done"><button type="button" class="chipbtn basicbtn${i.basic ? ' on' : ''}" data-act="m_basic" data-id="${i.id}" aria-pressed="${!!i.basic}">Basis</button><button type="button" class="chipbtn" data-act="m_deling" data-id="${i.id}" aria-label="${esc(i.name)} entfernen">×</button></li>`).join('');
   const mid = m.id;
   openPage('meal:' + mid, 'Essen bearbeiten', `
     <input id="mName" class="notein" value="${esc(m.name)}" aria-label="Name">
@@ -1979,6 +1979,9 @@ function addCustomTag(text) {
   render();
 }
 document.addEventListener('focusout', (e) => { if (e.target.id === 'mOvTagNew' && ui.ovTagInput) addCustomTag(e.target.value); });
+// Zutat umbenennen: leeres Feld beim Verlassen auf den alten Namen zurücksetzen, Enter schließt die Tastatur
+document.addEventListener('focusout', (e) => { const t = e.target; if (t.dataset?.ingname && !t.value.trim()) { const i = mealById(ui.mealId)?.ing.find((x) => x.id === t.dataset.ingname); if (i) t.value = i.name; } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.target.dataset?.ingname || e.target.dataset?.ing)) { e.preventDefault(); e.target.blur(); } });
 function addTagsTo(m, text) {
   const t = text.split(',').map((x) => x.trim()).filter((x) => x && !m.tags.some((y) => y.toLowerCase() === x.toLowerCase()));
   if (!t.length) return false;
@@ -2067,6 +2070,7 @@ document.addEventListener('input', (e) => {
   if (t.id === 'mealQ') { ui.mealQ = t.value; const l = $('#mealList'); if (l) l.innerHTML = mealListHtml(); }
   else if (t.id === 'mIng') updateIngSugg();
   else if (t.dataset.ing && m) { const i = m.ing.find((x) => x.id === t.dataset.ing); if (i) { i.qty = t.value.trim(); save(); } }
+  else if (t.dataset.ingname && m) { const i = m.ing.find((x) => x.id === t.dataset.ingname), v = t.value.trim(); if (i && v) { i.name = v; save(); } } // leer lassen = alter Name bleibt
   else if (t.id === 'mName' && m && t.value.trim()) { m.name = t.value.trim(); save(); }
   else if (t.id === 'mSteps' && m) { m.steps = t.value; save(); }
 });
