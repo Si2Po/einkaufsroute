@@ -374,3 +374,43 @@ dialog.viewer::backdrop { background: #000; }
 .cards{overflow-x:clip}
 
 .chip.unused{border-style:dashed;color:var(--muted)}
+
+/* ---------- Seiten (Unterseiten von rechts, siehe openPage in app.js) ---------- */
+.wrap, .page { touch-action: pan-y; } /* waagerechtes Wischen gehört der App (Wisch-zurück, Einträge) */
+.page {
+  position: fixed; left: 0; right: 0; top: var(--vvt, 0px); bottom: var(--kb, 0px); z-index: 15;
+  overflow-y: auto; overscroll-behavior: contain; background: var(--bg);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, .16);
+  padding: 0 max(16px, env(safe-area-inset-left, 0px)) calc(92px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px));
+}
+html.kb .page { padding-bottom: 16px; }
+.page > * { max-width: 560px; margin-inline: auto; }
+.pagehead {
+  display: grid; justify-items: start; gap: 2px;
+  position: sticky; top: 0; z-index: 2; background: var(--bg);
+  padding: calc(env(safe-area-inset-top, 0px) + 4px) 0 10px;
+}
+.wrap .pagehead { position: static; padding-top: 0; }
+.pageback {
+  display: inline-flex; align-items: center; gap: 2px; max-width: 100%; min-height: 44px;
+  margin-left: -8px; padding: 0 10px 0 2px; background: none; border: 0; border-radius: 10px;
+  color: var(--accent); font-weight: 600;
+}
+.pageback span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pageback:active { background: var(--soft); }
+.pagetitle { font: 700 1.6rem/1.15 var(--font-display); margin: 0; overflow-wrap: anywhere; }
+.edhead .pageback { flex: none; margin-left: -8px; }
+.pagebody { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.pagebody > .btn { justify-self: start; }
+.pagebody .field input, .pagebody .notein, .pagebody .srow, .pagebody .add input { background: var(--surface); }
+.pagebody .catsearch { margin: 0; }
+.pagebody .sheettitle { padding: 0 4px; }
+
+/* Gruppe von Zeilen auf einer Seite (wie in den iOS-Einstellungen) */
+.group { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.group[hidden] { display: none; }
+.group .sheetbtn { padding: 13px 14px; }
+.group .sheetbtn:first-child { border-top: 0; }
+.group .sheetbtn:active { background: var(--soft); }
+.group > .sheetnote { padding: 12px 14px; }
+.pagebody .kwbox { max-height: none; padding: 2px 0; }

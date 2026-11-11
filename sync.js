@@ -316,7 +316,7 @@ function renderSoon() {
   if (a && a.matches && a.matches('input, textarea, select') && !dlg().contains(a)) { sync.renderLater = true; return; }
   sync.renderLater = false;
   render();
-  if (ui.acc && ui.accView === 'account' && sync.sess && dlg().open) accountSheet(ui.accMsg);
+  if (pageTop() === 'account' && sync.sess) accountPage(ui.accMsg);
 }
 document.addEventListener('focusout', () => { if (sync.renderLater) setTimeout(() => { if (sync.renderLater) renderSoon(); }, 250); });
 
@@ -334,43 +334,51 @@ const STATUS_TXT = { ok: 'Synchronisiert', busy: 'Synchronisiere …', offline: 
 const accountSub = () => (sync.sess ? `${esc(sync.sess.user.email)} · ${STATUS_TXT[sync.status] || ''}` : 'Nicht angemeldet – Daten nur auf diesem Gerät');
 function paintStatus() {
   if (ui.tab === 'settings' && !dlg().open) { const el = document.querySelector('[data-act="accountsheet"] small'); if (el) el.innerHTML = accountSub(); }
-  if (ui.acc && ui.accView === 'account' && sync.sess && dlg().open && !document.activeElement?.matches?.('#dlg input')) accountSheet(ui.accMsg);
+  if (pageTop() === 'account' && sync.sess && !document.activeElement?.matches?.('.page input')) accountPage(ui.accMsg);
 }
 const ago = (t) => { const s = Math.round((Date.now() - t) / 1000); return s < 10 ? 'gerade eben' : s < 90 ? `vor ${s} s` : `vor ${Math.round(s / 60)} min`; };
 
-function accountSheet(msg) {
-  ui.acc = true; ui.accView = 'account'; ui.accMsg = msg;
+function accountPage(msg) {
+  ui.accMsg = msg;
   const note = msg ? `<p class="sheetnote" role="status" style="color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : '';
+  const dataRow = `<div class="sheettitle" style="margin-top:16px">Daten</div>
+    <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>Daten sichern und übertragen</span><small>Datei oder Text ›</small></button></div>`;
   if (!sync.sess) {
-    openSheet(`<div class="sheettitle">Konto</div>
+    const mail = $('#accMail')?.value || '', pass = $('#accPass')?.value || ''; // beim Neuzeichnen nichts Getipptes verlieren
+    openPage('account', 'Konto und Haushalt', `
       <p class="sheetnote">Mit einem Konto liegen deine Daten sicher online, laufen auf mehreren Geräten und lassen sich mit anderen teilen. Ohne Konto bleibt alles wie bisher nur auf diesem Gerät.</p>
       ${sync.joinCode ? '<p class="sheetnote" style="color:var(--accent)">Du hast eine Einladung bekommen. Melde dich an oder registriere dich, danach kannst du sie annehmen.</p>' : ''}
       <form id="accForm" autocomplete="on" style="display:grid;gap:10px;margin-top:8px">
-        <label class="field"><span>E-Mail</span><input id="accMail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" required></label>
-        <label class="field"><span>Passwort</span><input id="accPass" type="password" autocomplete="current-password" minlength="6" required></label>
+        <label class="field"><span>E-Mail</span><input id="accMail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" value="${esc(mail)}" required></label>
+        <label class="field"><span>Passwort</span><input id="accPass" type="password" autocomplete="current-password" minlength="6" value="${esc(pass)}" required></label>
         ${note}
         <div class="actions"><button type="submit" class="btn" style="flex:1" value="login">Anmelden</button><button type="submit" class="btn ghost" style="flex:1" value="signup">Registrieren</button></div>
-      </form>`);
+      </form>
+      ${dataRow}`, () => accountPage(ui.accMsg));
     return;
   }
-  openSheet(`<div class="sheettitle">Konto</div>
-    <p style="margin:0 4px"><strong>${esc(sync.sess.user.email)}</strong></p>
-    <p class="sheetnote" style="margin:2px 4px 8px">${STATUS_TXT[sync.status] || ''}${sync.status === 'ok' && sync.last ? ' · ' + ago(sync.last) : ''}${sync.err && sync.status !== 'ok' ? '<br>' + esc(sync.err) : ''}</p>
+  openPage('account', 'Konto und Haushalt', `
+    <div class="group" style="padding:12px 14px">
+      <strong style="overflow-wrap:anywhere">${esc(sync.sess.user.email)}</strong>
+      <p class="sheetnote" style="margin:2px 0 0">${STATUS_TXT[sync.status] || ''}${sync.status === 'ok' && sync.last ? ' · ' + ago(sync.last) : ''}${sync.err && sync.status !== 'ok' ? '<br>' + esc(sync.err) : ''}</p>
+    </div>
     ${note}
-    <div class="sheettitle" style="margin-top:8px">Haushalt</div>
+    <div class="sheettitle" style="margin-top:16px">Haushalt</div>
     <p class="sheetnote" style="margin:0 4px 8px">Wer zu deinem Haushalt gehört, teilt Läden, Stichwörter, Essen und Listen.</p>
-    <button type="button" class="sheetbtn" data-act="acc_invite"><span>Person einladen</span><small>Link erstellen</small></button>
-    <button type="button" class="sheetbtn" data-act="acc_joinsheet"><span>Einladung annehmen</span><small>Code eingeben</small></button>
-    <div class="actions" style="margin-top:12px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>`);
+    <div class="group">
+      <button type="button" class="sheetbtn" data-act="acc_invite"><span>Person einladen</span><small>Link erstellen ›</small></button>
+      <button type="button" class="sheetbtn" data-act="acc_joinsheet"><span>Einladung annehmen</span><small>Code eingeben ›</small></button>
+    </div>
+    ${dataRow}
+    <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>`, () => accountPage(ui.accMsg));
 }
-function joinSheet(code, msg) {
-  ui.acc = true; ui.accView = 'other'; ui.accMsg = null;
-  openSheet(`<div class="sheettitle">Einladung annehmen</div>
+function joinPage(code, msg) {
+  openPage('join', 'Einladung annehmen', `
     <form id="joinForm" autocomplete="off" style="display:grid;gap:10px">
       <label class="field"><span>Einladungscode</span><input id="joinCode" value="${esc(code || '')}" autocapitalize="characters" autocomplete="off" ${code ? '' : 'autofocus'} required></label>
       <p class="sheetnote" style="color:var(--warn)">Achtung: Die Daten auf diesem Gerät (Läden, Listen, Essen) werden durch die Daten des Haushalts ersetzt. Eine Sicherung bleibt auf dem Gerät.</p>
       ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg)}</p>` : ''}
-      <div class="actions"><button type="submit" class="btn" style="flex:1">Beitreten</button><button type="button" class="btn ghost" data-act="acc_back">Zurück</button></div>
+      <button type="submit" class="btn">Beitreten</button>
     </form>`);
 }
 async function copyText(t) {
@@ -380,15 +388,12 @@ async function createInvite() {
   try {
     const code = await api('/rest/v1/rpc/create_invite', { method: 'POST', body: '{}' });
     const link = location.origin + location.pathname + '#join=' + code;
-    ui.acc = true; ui.accView = 'other';
-    openSheet(`<div class="sheettitle">Einladung</div>
+    openPage('invite', 'Person einladen', `
       <p class="sheetnote" style="margin:0 4px 8px">Schick diesen Link an die Person. Er gilt 7 Tage. Sie öffnet ihn auf ihrem Handy, meldet sich an und ist danach im Haushalt.</p>
       <input class="notein" id="invLink" readonly value="${esc(link)}" aria-label="Einladungslink">
       <p class="sheetnote" style="margin:8px 4px">Oder der Code zum Eintippen: <strong>${esc(code)}</strong></p>
-      <div class="actions" style="margin-top:8px">
-        <button type="button" class="btn" style="flex:1" data-act="acc_share" data-link="${esc(link)}">${navigator.share ? 'Teilen' : 'Link kopieren'}</button>
-        <button type="button" class="btn ghost" data-act="acc_back">Zurück</button></div>`);
-  } catch (e) { accountSheet('!' + niceError(e)); }
+      <button type="button" class="btn" data-act="acc_share" data-link="${esc(link)}">${navigator.share ? 'Teilen' : 'Link kopieren'}</button>`);
+  } catch (e) { accountPage('!' + niceError(e)); }
 }
 async function acceptInvite(code) {
   try {
@@ -397,30 +402,30 @@ async function acceptInvite(code) {
     sync.hid = hid; sync.known = {}; sync.cursor = null; persistSync();
     await syncRun();
     render();
-    accountSheet(sync.status === 'ok' ? 'Du bist jetzt im Haushalt.' : '!' + (sync.err || 'Abgleich später'));
-  } catch (e) { joinSheet(code, niceError(e)); }
+    accountPage(sync.status === 'ok' ? 'Du bist jetzt im Haushalt.' : '!' + (sync.err || 'Abgleich später'));
+  } catch (e) { joinPage(code, niceError(e)); }
 }
 
 // ---------- Sichern und übertragen (Datei oder Text) ----------
 const exportJson = () => JSON.stringify({ app: 'einkaufsroute', v: 1, state: snapshot() });
-function dataSheet(msg) {
-  ui.acc = true; ui.accView = 'other';
-  openSheet(`<div class="sheettitle">Daten sichern und übertragen</div>
+function dataPage(msg) {
+  openPage('data', 'Daten sichern', `
     <p class="sheetnote" style="margin:0 4px 8px">Alles (Listen, Läden, Stichwörter, Essen, Fotos) als Sicherung. So nimmst du deine Daten auch auf ein anderes Gerät oder in eine neue Installation mit.</p>
-    <button type="button" class="sheetbtn" data-act="acc_dlfile"><span>Als Datei speichern</span><small>.json</small></button>
-    <button type="button" class="sheetbtn" data-act="acc_copydata"><span>Als Text kopieren</span><small>Zwischenablage</small></button>
-    <button type="button" class="sheetbtn" data-act="acc_importsheet"><span>Sicherung laden</span><small>ersetzt die Daten hier</small></button>
+    <div class="group">
+      <button type="button" class="sheetbtn" data-act="acc_dlfile"><span>Als Datei speichern</span><small>.json</small></button>
+      <button type="button" class="sheetbtn" data-act="acc_copydata"><span>Als Text kopieren</span><small>Zwischenablage</small></button>
+      <button type="button" class="sheetbtn" data-act="acc_importsheet"><span>Sicherung laden</span><small>ersetzt die Daten hier ›</small></button>
+    </div>
     ${msg ? `<p class="sheetnote" role="status" style="margin:8px 4px;color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : ''}
     <div id="dataTextBox"></div>`);
 }
-function importSheet(msg) {
-  ui.acc = true; ui.accView = 'other';
-  openSheet(`<div class="sheettitle">Sicherung laden</div>
+function importPage(msg) {
+  openPage('import', 'Sicherung laden', `
     <p class="sheetnote" style="color:var(--warn);margin:0 4px 8px">Achtung: Die Daten auf diesem Gerät werden durch die Sicherung ersetzt. Eine Kopie der bisherigen Daten bleibt auf dem Gerät.</p>
     <label class="field"><span>Datei wählen</span><input id="impFile" type="file" accept=".json,application/json,text/plain"></label>
     <label class="field" style="margin-top:8px"><span>Oder Text einfügen</span><textarea id="impText" rows="4" class="notein" placeholder="Sicherung hier einfügen" style="width:100%;font-size:16px"></textarea></label>
     ${msg ? `<p class="sheetnote" role="status" style="margin:8px 4px;color:var(--warn)">${esc(msg)}</p>` : ''}
-    <div class="actions" style="margin-top:10px"><button type="button" class="btn" style="flex:1" data-act="acc_doimport">Laden</button><button type="button" class="btn ghost" data-act="acc_databack">Zurück</button></div>`);
+    <button type="button" class="btn" style="margin-top:10px" data-act="acc_doimport">Laden</button>`);
 }
 function importJson(txt) {
   let o; try { o = JSON.parse(txt); } catch (_) { throw new Error('Das ist keine gültige Sicherung.'); }
@@ -450,13 +455,13 @@ document.addEventListener('submit', async (e) => {
     const btns = f.querySelectorAll('button'); btns.forEach((b) => { b.disabled = true; });
     try {
       const r = await authCall(kind, $('#accMail').value.trim(), $('#accPass').value);
-      if (r.needsConfirm) { accountSheet('Bestätigungsmail verschickt. Bitte bestätige die E-Mail und melde dich dann an.'); return; }
+      if (r.needsConfirm) { accountPage('Bestätigungsmail verschickt. Bitte bestätige die E-Mail und melde dich dann an.'); return; }
       sync.status = 'busy';
       await syncRun();
       render();
-      if (sync.joinCode && sync.sess) { joinSheet(sync.joinCode); return; }
-      accountSheet(sync.status === 'ok' ? 'Angemeldet.' : (sync.err ? '!' + sync.err : ''));
-    } catch (err) { accountSheet('!' + niceError(err)); }
+      if (sync.joinCode && sync.sess) { joinPage(sync.joinCode); return; }
+      accountPage(sync.status === 'ok' ? 'Angemeldet.' : (sync.err ? '!' + sync.err : ''));
+    } catch (err) { accountPage('!' + niceError(err)); }
   } else if (f.id === 'joinForm') {
     e.preventDefault(); e.stopImmediatePropagation();
     const code = $('#joinCode').value.trim();
@@ -469,11 +474,11 @@ document.addEventListener('click', async (e) => {
   if (!el) return;
   e.stopImmediatePropagation();
   const act = el.dataset.act;
-  if (act === 'accountsheet') { accountSheet(); return; }
-  if (act === 'datasheet' || act === 'acc_databack') { dataSheet(); return; }
-  if (act === 'acc_importsheet') { importSheet(); return; }
+  if (act === 'accountsheet') { accountPage(); return; }
+  if (act === 'datasheet' || act === 'acc_databack') { dataPage(); return; }
+  if (act === 'acc_importsheet') { importPage(); return; }
   if (act === 'acc_doimport') {
-    try { importJson($('#impText').value.trim()); dataSheet('Sicherung geladen.'); } catch (err) { importSheet(err.message); }
+    try { importJson($('#impText').value.trim()); dataPage('Sicherung geladen.'); } catch (err) { importPage(err.message); }
     return;
   }
   if (act === 'acc_dlfile') {
@@ -481,22 +486,22 @@ document.addEventListener('click', async (e) => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([exportJson()], { type: 'application/json' }));
       a.download = 'einkaufsroute-sicherung.json'; document.body.appendChild(a); a.click(); a.remove();
-      dataSheet('Datei wird gespeichert. Falls nichts passiert, nimm „Als Text kopieren“.');
-    } catch (_) { dataSheet('!Speichern nicht möglich. Nimm „Als Text kopieren“.'); }
+      dataPage('Datei wird gespeichert. Falls nichts passiert, nimm „Als Text kopieren“.');
+    } catch (_) { dataPage('!Speichern nicht möglich. Nimm „Als Text kopieren“.'); }
     return;
   }
   if (act === 'acc_copydata') {
     const txt = exportJson();
-    if (await copyText(txt)) { dataSheet('In die Zwischenablage kopiert.'); return; }
-    dataSheet('!Kopieren wurde blockiert. Markiere den Text unten und kopiere ihn von Hand.');
+    if (await copyText(txt)) { dataPage('In die Zwischenablage kopiert.'); return; }
+    dataPage('!Kopieren wurde blockiert. Markiere den Text unten und kopiere ihn von Hand.');
     $('#dataTextBox').innerHTML = '<textarea id="dataText" readonly rows="5" class="notein" style="width:100%;font-size:16px;margin-top:8px"></textarea>';
     const t = $('#dataText'); t.value = txt; t.focus(); t.select();
     return;
   }
-  if (act === 'acc_back') accountSheet();
+  if (act === 'acc_back') accountPage();
   else if (act === 'acc_invite') createInvite();
-  else if (act === 'acc_joinsheet') joinSheet('');
-  else if (act === 'acc_sync') { sync.dirty = true; sync.ver++; await syncRun(); accountSheet(sync.status === 'ok' ? 'Abgeglichen.' : '!' + sync.err); }
+  else if (act === 'acc_joinsheet') joinPage('');
+  else if (act === 'acc_sync') { sync.dirty = true; sync.ver++; await syncRun(); accountPage(sync.status === 'ok' ? 'Abgeglichen.' : '!' + sync.err); }
   else if (act === 'acc_share') {
     const link = el.dataset.link;
     if (navigator.share) { try { await navigator.share({ title: 'Einkaufsroute', text: 'Komm in meinen Haushalt bei Einkaufsroute:', url: link }); } catch (_) { /* abgebrochen */ } }
@@ -504,11 +509,10 @@ document.addEventListener('click', async (e) => {
   } else if (act === 'acc_logout') {
     sync.sess = null; sync.hid = null; sync.known = {}; sync.cursor = null; sync.status = 'out'; sync.err = '';
     await persistSync();
-    accountSheet('Abgemeldet. Deine Daten bleiben auf diesem Gerät.');
+    accountPage('Abgemeldet. Deine Daten bleiben auf diesem Gerät.');
     render();
   }
 }, true);
-dlg().addEventListener('close', () => { ui.acc = false; });
 
 // ---------- Start ----------
 (async function syncInit() {
@@ -522,7 +526,7 @@ dlg().addEventListener('close', () => { ui.acc = false; });
   sync.ready = true;
   if (typeof render === 'function' && ui.tab === 'settings') render();
   if (sync.sess) syncRun();
-  if (sync.joinCode) { if (sync.sess) joinSheet(sync.joinCode); else accountSheet(); }
+  if (sync.joinCode) { if (sync.sess) joinPage(sync.joinCode); else accountPage(); }
   setInterval(() => { if (document.visibilityState === 'visible' && sync.sess) syncRun(); }, 10000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncRun(); });
   window.addEventListener('online', () => syncRun());

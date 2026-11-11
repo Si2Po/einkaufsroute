@@ -333,7 +333,7 @@ function viewStores() {
   const cards = S.stores.map((s) => `<li><button type="button" class="card" data-act="openstore" data-id="${s.id}">
       <span><strong>${esc(s.name)}</strong><small>${s.zones.length} ${s.zones.length === 1 ? 'Bereich' : 'Bereiche'}${s.id === S.storeId ? ' · aktiv' : ''}</small></span>
       <span class="go">›</span></button></li>`).join('');
-  return `<div class="edhead"><button type="button" class="link" data-act="tab" data-tab="settings">‹ Einstellungen</button><h2>Läden</h2></div>
+  return `${pageHead('Einstellungen', 'Läden', 'data-act="tab" data-tab="settings"')}
     <p class="hint">Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.</p>
     ${S.stores.length ? `<ul class="cards">${cards}</ul>` : ''}
     <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">+ Neuer Laden</button>`;
@@ -483,7 +483,7 @@ function viewEditor() {
     : `<p class="hint">${S.showPlan ? (st.zones.length ? 'Antippen: bearbeiten · Gedrückt halten: Form ändern' : 'Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.') : (st.zones.length ? 'Reihenfolge = Laufweg. Am Griff ziehen zum Sortieren.' : 'Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.')}</p><button type="button" class="btn small" data-act="addzone">+ Bereich</button>`;
   return `
     <div class="edhead">
-      <button type="button" class="link" data-act="back">‹ Läden</button>
+      <button type="button" class="pageback" data-act="back" aria-label="Zurück zu Läden">${ICON_BACK}<span>Läden</span></button>
       <input id="storeName" value="${esc(st.name)}" aria-label="Name des Ladens">
       <button type="button" class="iconbtn" data-act="editormenu" aria-haspopup="dialog" aria-label="Menü">${ICON_DOTS}</button>
     </div>
@@ -511,6 +511,7 @@ function render() {
     if (ui.editStoreId) { if (S.showPlan) bindPlan(); else planAbort?.abort(); bindZoneDrag(); }
   }
   renderTabs();
+  refreshTopPage();
 }
 // Untere Leiste: Liste | Essen | Einstellungen (Läden und ihr Editor gehören zu Einstellungen)
 const TAB_ICONS = {
@@ -531,9 +532,8 @@ function viewSettings() {
   return `<div class="edhead"><h2>Einstellungen</h2></div>
     <ul class="cards">
       ${row('accountsheet', 'Konto und Haushalt', typeof accountSub === 'function' ? accountSub() : 'Nicht angemeldet')}
-      ${row('listsheet', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
+      ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
       ${row('tab', 'Läden und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Laden' : 'Läden'}`, ' data-tab="stores"')}
-      ${row('datasheet', 'Daten sichern und übertragen', 'Sicherung als Datei oder Text')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
     </ul>
@@ -572,6 +572,149 @@ function openSheet(html) {
   d.querySelector('[autofocus]')?.focus();
 }
 
+// ---------- Seiten (Unterseiten, die von rechts hereingleiten) ----------
+// Einheitlich für alle Unterseiten: oben Zurück-Pfeil und Titel, verlassen mit dem Pfeil oder Wisch vom linken Rand.
+// openPage(key, titel, html, neuZeichnen):
+//   - key ist schon die oberste Seite: nur der Inhalt wird ersetzt (z. B. nach einer Änderung)
+//   - key liegt weiter unten im Stapel: zurück bis dorthin
+//   - sonst: neue Seite gleitet herein
+// Sheets (von unten) bleiben für schnelle Aktionen: Liste wählen, Eintrag bearbeiten, Neues anlegen.
+const pages = []; // [{ key, title, el, refresh }]
+const reduceMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const pageTop = () => (pages.length ? pages[pages.length - 1].key : null);
+const PAGE_EASE = 'cubic-bezier(.25, .8, .25, 1)';
+const ICON_BACK = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const pageHead = (back, title, attrs = 'data-act="pageback"') => `<header class="pagehead">
+    <button type="button" class="pageback" ${attrs} aria-label="Zurück zu ${esc(back)}">${ICON_BACK}<span>${esc(back)}</span></button>
+    <h2 class="pagetitle">${esc(title)}</h2></header>`;
+const rootTitle = () => ({ list: S.lists.length > 1 ? curList().name : 'Liste', meals: 'Essen', stores: 'Läden' }[ui.tab] || 'Einstellungen');
+function setPagesInert() {
+  const n = pages.length;
+  $('.wrap').inert = n > 0;
+  pages.forEach((p, i) => { p.el.inert = i < n - 1; });
+}
+function openPage(key, title, html, refresh) {
+  const i = pages.findIndex((p) => p.key === key);
+  if (i > -1 && i < pages.length - 1) popPages(pages.length - 1 - i);
+  const top = pages[pages.length - 1];
+  if (top && top.key === key) {
+    if (refresh) top.refresh = refresh;
+    if (top.title !== title) { top.title = title; top.el.querySelector('.pagetitle').textContent = title; }
+    top.el.querySelector('.pagebody').innerHTML = html;
+    return;
+  }
+  if (dlg().open) closeSheet();
+  const el = document.createElement('section');
+  el.className = 'page'; el.setAttribute('aria-label', title);
+  el.innerHTML = pageHead(top ? top.title : rootTitle(), title) + `<div class="pagebody">${html}</div>`;
+  const under = top ? top.el : $('.wrap');
+  $('#pages').append(el);
+  pages.push({ key, title, el, refresh });
+  setPagesInert();
+  if (!reduceMotion() && el.animate) {
+    const o = { duration: 320, easing: PAGE_EASE };
+    el.animate([{ transform: 'translateX(100%)' }, { transform: 'none' }], o);
+    under.animate([{ transform: 'none' }, { transform: 'translateX(-25%)' }], o);
+  }
+  el.querySelector('[autofocus]')?.focus({ preventScroll: true });
+}
+// n Seiten zurück. fromX: Seite ist schon so weit nach rechts gezogen (Wisch-zurück).
+function popPages(n = 1, fromX = 0) {
+  n = Math.min(n, pages.length);
+  if (!n) return;
+  flushSheetInputs(); // halb Getipptes (Stichwort, Listenname) nicht verlieren
+  ui.confirmCat = false; ui.confirmList = false;
+  const removed = pages.splice(pages.length - n, n), leaving = removed[removed.length - 1].el;
+  removed.slice(0, -1).forEach((p) => p.el.remove());
+  const top = pages[pages.length - 1], under = top ? top.el : $('.wrap');
+  setPagesInert();
+  under.style.transform = '';
+  if (top) top.refresh?.(); else render();
+  if (reduceMotion() || !leaving.animate) { leaving.remove(); return; }
+  leaving.inert = true;
+  const w = innerWidth, o = { duration: 280, easing: PAGE_EASE };
+  leaving.style.transform = '';
+  const a = leaving.animate([{ transform: `translateX(${fromX}px)` }, { transform: 'translateX(100%)' }], { ...o, fill: 'forwards' });
+  a.finished.then(() => leaving.remove(), () => leaving.remove());
+  under.animate([{ transform: `translateX(${-0.25 * (w - fromX)}px)` }, { transform: 'none' }], o);
+}
+function closeAllPages() {
+  pages.splice(0).forEach((p) => p.el.remove());
+  setPagesInert();
+  $('.wrap').style.transform = '';
+}
+// Zurück zu einer bestimmten Seite, wenn es sie im Stapel gibt (sonst nur eine Seite zurück)
+function backTo(key, fn) { if (pages.some((p) => p.key === key)) fn(); else popPages(1); }
+// Oberste Seite neu zeichnen (nach Abgleich o. Ä.), aber nicht während dort jemand tippt
+function refreshTopPage() {
+  const p = pages[pages.length - 1], a = document.activeElement;
+  if (!p || !p.refresh || (a && p.el.contains(a) && a.matches('input, textarea, select'))) return;
+  p.refresh();
+}
+// Läden und ihr Editor liegen in der Hauptansicht, verhalten sich aber wie Seiten (gleiten herein, Zurück, Wisch-zurück)
+function wrapAnim(kind) {
+  const w = $('.wrap');
+  if (reduceMotion() || !w.animate) return;
+  if (kind === 'push') w.animate([{ transform: 'translateX(100%)' }, { transform: 'none' }], { duration: 320, easing: PAGE_EASE });
+  else if (kind === 'pop') w.animate([{ transform: 'translateX(-25%)', opacity: 0.6 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: PAGE_EASE });
+  else w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' });
+}
+function storesBack() {
+  if (ui.editStoreId) { ui.editStoreId = null; ui.selZone = null; ui.drawing = false; }
+  else ui.tab = 'settings';
+  render(); window.scrollTo(0, 0);
+}
+// Wisch vom linken Rand: Seite folgt dem Finger, darunter sieht man die vorige
+(function edgeBack() {
+  let g = null;
+  const target = () => {
+    if (pages.length) return { el: pages[pages.length - 1].el, under: pages.length > 1 ? pages[pages.length - 2].el : $('.wrap') };
+    return ui.tab === 'stores' ? { el: $('.wrap'), under: null } : null;
+  };
+  document.addEventListener('pointerdown', (e) => {
+    g = null;
+    if (!e.isPrimary || e.clientX > 24 || dlg().open || $('#viewer')?.open || e.target.closest?.('.plan')) return;
+    const t = target();
+    if (t) g = { ...t, id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, vx: 0, lt: e.timeStamp, lx: e.clientX, active: false };
+  }, true);
+  document.addEventListener('pointermove', (e) => {
+    if (!g || e.pointerId !== g.id) return;
+    e.stopPropagation(); // Wischen auf Einträgen nicht gleichzeitig auslösen
+    const dx = e.clientX - g.x, dy = e.clientY - g.y;
+    if (!g.active) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > dx) { g = null; return; }
+      if (dx < 10) return;
+      g.active = true;
+      try { e.target.setPointerCapture(e.pointerId); } catch (_) { /* nicht kritisch */ }
+      if (document.activeElement?.matches?.('input, textarea, select')) document.activeElement.blur();
+    }
+    if (e.timeStamp > g.lt) { g.vx = (e.clientX - g.lx) / (e.timeStamp - g.lt); g.lt = e.timeStamp; g.lx = e.clientX; }
+    g.dx = Math.max(0, dx);
+    g.el.style.transform = `translateX(${g.dx}px)`;
+    if (g.under) g.under.style.transform = `translateX(${-0.25 * (innerWidth - g.dx)}px)`;
+  }, true);
+  const end = (e, cancel) => {
+    if (!g || e.pointerId !== g.id) return;
+    const d = g; g = null;
+    if (!d.active) return;
+    ui.swipedT = Date.now();
+    const w = innerWidth, go = !cancel && (d.dx > w * 0.35 || (d.vx > 0.4 && d.dx > 30));
+    const o = { duration: 220, easing: PAGE_EASE };
+    if (go && pages.length) { popPages(1, d.dx); return; }
+    if (go) { // Läden-Ansicht
+      const a = d.el.animate([{ transform: `translateX(${d.dx}px)` }, { transform: 'translateX(100%)' }], { ...o, fill: 'forwards' });
+      d.el.style.transform = '';
+      a.finished.then(() => { storesBack(); a.cancel(); wrapAnim('pop'); }, () => {});
+      return;
+    }
+    d.el.style.transform = '';
+    d.el.animate([{ transform: `translateX(${d.dx}px)` }, { transform: 'none' }], o);
+    if (d.under) { d.under.style.transform = ''; d.under.animate([{ transform: `translateX(${-0.25 * (w - d.dx)}px)` }, { transform: 'translateX(-25%)' }], o); }
+  };
+  document.addEventListener('pointerup', (e) => end(e, false), true);
+  document.addEventListener('pointercancel', (e) => end(e, true), true);
+})();
+
 // ---------- Tastatur auf dem iPhone ----------
 // Safari macht bei offener Tastatur nicht die Seite kleiner, sondern nur den sichtbaren Ausschnitt (visualViewport).
 // Ein Sheet am unteren Rand läge dann hinter der Tastatur. Deshalb messen wir die Tastatur und schieben das Sheet
@@ -583,7 +726,7 @@ function openSheet(html) {
   let raf = 0, lastKb = 0;
   const showField = () => {
     const a = document.activeElement;
-    if (a && a.matches?.('input, textarea, select') && dlg()?.contains(a)) a.scrollIntoView({ block: 'nearest' });
+    if (a && a.matches?.('input, textarea, select') && a.closest('#dlg, .page')) a.scrollIntoView({ block: 'nearest' });
   };
   const update = () => {
     raf = 0;
@@ -591,6 +734,7 @@ function openSheet(html) {
     const covered = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
     const kb = covered > 80 ? covered : 0;
     root.style.setProperty('--kb', `${kb}px`);
+    root.style.setProperty('--vvt', `${kb ? Math.round(vv.offsetTop) : 0}px`);
     if (kb) root.style.setProperty('--vvh', `${Math.round(vv.height)}px`); else root.style.removeProperty('--vvh');
     root.classList.toggle('kb', kb > 0);
     if (kb && kb !== lastKb) setTimeout(showField, 280); // nach dem Hochschieben des Sheets
@@ -601,7 +745,7 @@ function openSheet(html) {
   vv.addEventListener('scroll', queue);
   // Wechsel in ein anderes Feld, während die Tastatur schon offen ist
   document.addEventListener('focusin', (e) => {
-    if (lastKb && e.target.matches?.('input, textarea, select') && dlg()?.contains(e.target)) setTimeout(showField, 50);
+    if (lastKb && e.target.matches?.('input, textarea, select') && e.target.closest('#dlg, .page')) setTimeout(showField, 50);
   });
   // Tastatur zu: Safari lässt die Seite manchmal verschoben stehen. Dann einmal zurechtrücken.
   document.addEventListener('focusout', () => setTimeout(() => {
@@ -725,18 +869,17 @@ function updatePinSugg() {
   box.hidden = false;
 }
 const insertBeforeFallback = (cat) => { const i = CATS.findIndex((c) => c.id === 'sonst'); CATS.splice(i < 0 ? CATS.length : i, 0, cat); indexCats(); };
-function catListSheet() {
+function catListPage() {
   const missing = DEFAULT_CATS.filter((d) => !CAT_BY_ID[d.id]);
   const rows = CATS.map((c) => `<button type="button" class="sheetbtn" data-act="catdetail" data-id="${c.id}"><span>${esc(c.name)}</span><small>${c.id === 'sonst' && !c.kw.length ? 'Auffangbecken' : `${c.kw.length} Stichwörter`} ›</small></button>`).join('');
-  openSheet(`<div class="sheettitle">Kategorien</div>
-    <input id="catSearch" type="search" class="notein catsearch" placeholder="Produkt suchen: in welcher Kategorie?" aria-label="Stichwort suchen" autocomplete="off" autocapitalize="off" enterkeyhint="search">
-    <div id="catRes" class="scrollbox" hidden></div>
-    <div class="scrollbox" id="catRows">${rows}</div>
-    ${missing.length ? `<button type="button" class="sheetbtn" data-act="restoredefaults">Fehlende Standard-Kategorien zurückholen <small>${missing.length}</small></button>` : ''}
-    <div class="actions" style="margin-top:10px">
-      <button type="button" class="btn ghost" data-act="newcatsheet">+ Neue Kategorie</button>
-      <button type="button" class="btn" style="flex:1" data-act="closedlg">Fertig</button>
-    </div>`);
+  const q = $('#catSearch')?.value || '';
+  openPage('cats', 'Kategorien', `
+    <input id="catSearch" type="search" class="notein catsearch" value="${esc(q)}" placeholder="Produkt suchen: in welcher Kategorie?" aria-label="Stichwort suchen" autocomplete="off" autocapitalize="off" enterkeyhint="search">
+    <div id="catRes" class="group" hidden></div>
+    <div class="group" id="catRows">${rows}</div>
+    ${missing.length ? `<div class="group"><button type="button" class="sheetbtn" data-act="restoredefaults">Fehlende Standard-Kategorien zurückholen <small>${missing.length}</small></button></div>` : ''}
+    <button type="button" class="btn ghost" data-act="newcatsheet">+ Neue Kategorie</button>`, catListPage);
+  if (q) updateCatSearch();
 }
 // Suche über alle Stichwörter: zeigt, in welcher Kategorie ein Produkt steckt (und wo ein neues Wort landen würde)
 function updateCatSearch() {
@@ -774,28 +917,27 @@ function newCatSheet() {
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
 }
-function catDetailSheet(id) {
+function catDetailPage(id) {
   const c = CAT_BY_ID[id];
-  if (!c) { catListSheet(); return; }
+  if (!c) { backTo('cats', catListPage); return; }
   const def = DEFAULT_CATS.find((d) => d.id === id);
   const changed = def && (def.name !== c.name || JSON.stringify([...def.kw].sort()) !== JSON.stringify([...c.kw].sort()));
   const used = S.items.filter((i) => i.cat === id).length;
-  openSheet(`<div class="sheettitle">Kategorie</div>
-    <input id="catName" class="notein" value="${esc(c.name)}" data-id="${id}" aria-label="Name der Kategorie">
+  openPage('cat:' + id, 'Kategorie', `
+    <label class="field"><span>Name</span><input id="catName" value="${esc(c.name)}" data-id="${id}"></label>
     <div class="label" style="margin:12px 0 4px">Stichwörter</div>
     <p class="sheetnote" style="margin:0 0 6px">${id === 'sonst'
       ? 'Hier landet alles ohne Treffer. Ein Stichwort hier hält ein Wort in Sonstiges, auch wenn es sonst woanders passen würde.'
       : 'Die App erkennt sie am Wortanfang. Änderst du bei einem Eintrag die Kategorie, landet sein Name automatisch hier.'}</p>
-    ${c.kw.length ? `<div class="scrollbox kwbox"><div class="chips">${c.kw.map((k) => `<button type="button" class="chip" data-act="delkw" data-id="${id}" data-kw="${esc(k)}" aria-label="${esc(k)} entfernen">${esc(k)} ×</button>`).join('')}</div></div>` : '<p class="sheetnote">Noch keine Stichwörter.</p>'}
+    ${c.kw.length ? `<div class="kwbox"><div class="chips">${c.kw.map((k) => `<button type="button" class="chip" data-act="delkw" data-id="${id}" data-kw="${esc(k)}" aria-label="${esc(k)} entfernen">${esc(k)} ×</button>`).join('')}</div></div>` : '<p class="sheetnote">Noch keine Stichwörter.</p>'}
     <form id="kwForm" class="add" data-id="${id}" autocomplete="off" style="margin:8px 0 0">
       <input id="kwInput" placeholder="Stichwort hinzufügen" aria-label="Stichwort hinzufügen">
       <button type="submit" class="plus" aria-label="Hinzufügen">${ICON_PLUS}</button>
     </form>
-    <div class="actions" style="margin-top:12px">
-      ${id !== 'sonst' ? `<button type="button" class="btn danger" data-act="delcat" data-id="${id}">${ui.confirmCat ? `Wirklich? (${used} Einträge)` : 'Löschen'}</button>` : ''}
-      ${changed ? `<button type="button" class="btn ghost" data-act="restorecat" data-id="${id}">Standard</button>` : ''}
-      <button type="button" class="btn" style="flex:1" data-act="catlist">Fertig</button>
-    </div>`);
+    ${id !== 'sonst' || changed ? `<div class="actions" style="margin-top:16px">
+      ${id !== 'sonst' ? `<button type="button" class="btn danger" data-act="delcat" data-id="${id}">${ui.confirmCat ? `Wirklich löschen? (${used} Einträge)` : 'Kategorie löschen'}</button>` : ''}
+      ${changed ? `<button type="button" class="btn ghost" data-act="restorecat" data-id="${id}">Auf Standard zurücksetzen</button>` : ''}
+    </div>` : ''}`, () => catDetailPage(id));
 }
 function newStoreSheet() {
   openSheet(`<div class="sheettitle">Neuer Laden</div>
@@ -813,8 +955,18 @@ function listSheet() {
     }).join('')}</div>
     <div class="actions" style="margin-top:10px">
       <button type="button" class="btn ghost" data-act="newlistsheet">+ Neue Liste</button>
-      <button type="button" class="btn ghost" data-act="editlist">Bearbeiten</button>
+      <button type="button" class="btn ghost" data-act="editlist" data-id="${S.listId}">Bearbeiten</button>
     </div>`);
+}
+// Einstellungen → Listen: alle Listen, antippen = bearbeiten
+function listsPage() {
+  const rows = S.lists.map((l) => {
+    const n = (l.id === S.listId ? S.items : l.items || []).filter((i) => !i.done).length;
+    return `<button type="button" class="sheetbtn" data-act="editlist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${l.id === S.listId ? 'aktiv · ' : ''}${n} offen ›</small></button>`;
+  }).join('');
+  openPage('lists', 'Listen', `<div class="group">${rows}</div>
+    <p class="sheetnote">Welche Liste du gerade siehst, wählst du mit einem zweiten Tipp auf „Liste“ unten.</p>
+    <button type="button" class="btn ghost" data-act="newlistsheet">+ Neue Liste</button>`, listsPage);
 }
 function newListSheet() {
   openSheet(`<div class="sheettitle">Neue Liste</div>
@@ -823,12 +975,13 @@ function newListSheet() {
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
 }
-function editListSheet() {
-  const l = curList();
-  openSheet(`<div class="sheettitle">Liste bearbeiten</div>
-    <input id="listName" class="notein" data-id="${l.id}" value="${esc(l.name)}" aria-label="Name der Liste">
-    ${S.lists.length > 1 ? `<div class="actions" style="margin-top:12px"><button type="button" class="btn danger" data-act="dellist">${ui.confirmList ? `Wirklich? (${S.items.length} Einträge)` : 'Liste löschen'}</button>
-    <button type="button" class="btn" style="flex:1" data-act="listsheet">Fertig</button></div>` : `<div class="actions" style="margin-top:12px"><button type="button" class="btn" style="flex:1" data-act="listsheet">Fertig</button></div>`}`);
+function listEditPage(id) {
+  const l = S.lists.find((x) => x.id === id);
+  if (!l) { backTo('lists', listsPage); return; }
+  const n = (l.id === S.listId ? S.items : l.items || []).length;
+  openPage('list:' + id, 'Liste bearbeiten', `
+    <label class="field"><span>Name</span><input id="listName" data-id="${l.id}" value="${esc(l.name)}"></label>
+    ${S.lists.length > 1 ? `<div class="actions" style="margin-top:16px"><button type="button" class="btn danger" data-act="dellist" data-id="${l.id}">${ui.confirmList === l.id ? `Wirklich löschen? (${n} Einträge)` : 'Liste löschen'}</button></div>` : ''}`, () => listEditPage(id));
 }
 // Name sofort übernehmen (beim Tippen), nicht erst beim Verlassen des Feldes
 function renameList(v, id) {
@@ -1365,18 +1518,17 @@ function endSwipe(cancel) {
 }
 document.addEventListener('pointerup', () => endSwipe(false));
 document.addEventListener('pointercancel', () => endSwipe(true));
-function swipeSheet() {
+function swipePage() {
   const sel = (id, kind, side, label) => {
     const v = swipeCfg(kind)[side];
     return `<label class="srow"><span class="pl">${label}</span><select id="${id}" aria-label="${label}">${SW_CHOICES[kind].map((k) => `<option value="${k}"${k === v ? ' selected' : ''}>${SW_ACTIONS[k]}</option>`).join('')}</select></label>`;
   };
-  openSheet(`<div class="sheettitle">Wischen</div>
+  openPage('swipe', 'Wischen', `
     <div class="label" style="margin:0 0 4px">Einträge in der Liste</div>
     ${sel('swLeft', 'item', 'left', '← Nach links')}${sel('swRight', 'item', 'right', 'Nach rechts →')}
     <div class="label" style="margin:12px 0 4px">Essen</div>
     ${sel('swmLeft', 'meal', 'left', '← Nach links')}${sel('swmRight', 'meal', 'right', 'Nach rechts →')}
-    <p class="sheetnote">„Zur Liste“ setzt die Zutaten (ohne Basis) für die Standard-Personenzahl auf die aktive Liste. Gelöscht oder hinzugefügt kannst du es kurz danach rückgängig machen.</p>
-    <div class="actions" style="margin-top:10px"><button type="button" class="btn" style="flex:1" data-act="closedlg">Fertig</button></div>`);
+    <p class="sheetnote">„Zur Liste“ setzt die Zutaten (ohne Basis) für die Standard-Personenzahl auf die aktive Liste. Gelöscht oder hinzugefügt kannst du es kurz danach rückgängig machen.</p>`, swipePage);
 }
 document.addEventListener('change', (e) => {
   const t = e.target;
@@ -1450,22 +1602,32 @@ document.addEventListener('click', (e) => {
   const zi = st && ui.selZone ? st.zones.findIndex((z) => z.id === ui.selZone) : -1;
   let keep = false;
   switch (act) {
-    case 'tab': if (el.dataset.tab === 'list' && ui.tab === 'list') { ui.confirmList = false; listSheet(); keep = true; break; } // zweiter Tipp auf "Liste": Listen zur Auswahl
-      ui.tab = el.dataset.tab; ui.drawing = false; ui.confirmDel = false; if (ui.tab !== 'stores') ui.editStoreId = null; render(); window.scrollTo(0, 0); break;
+    case 'tab': {
+      const to = el.dataset.tab, fromBar = !!el.closest('#tabbar'), cur = ui.tab === 'stores' ? 'settings' : ui.tab;
+      if (fromBar && pages.length) { closeAllPages(); if (to === cur) { render(); break; } } // Tipp auf die Leiste: Unterseiten schließen
+      else if (to === 'list' && ui.tab === 'list') { ui.confirmList = false; listSheet(); keep = true; break; } // zweiter Tipp auf "Liste": Listen zur Auswahl
+      const anim = to === 'stores' ? 'push' : ui.tab === 'stores' && to === 'settings' && !fromBar ? 'pop' : to !== cur ? 'fade' : '';
+      ui.tab = to; ui.drawing = false; ui.confirmDel = false; if (ui.tab !== 'stores') ui.editStoreId = null; render(); window.scrollTo(0, 0);
+      if (anim) wrapAnim(anim);
+      break;
+    }
     case 'toggle': toggleItem(id); break;
     case 'storesheet': storeSheet(); keep = true; break;
-    case 'swipesheet': swipeSheet(); keep = true; break;
+    case 'swipesheet': swipePage(); keep = true; break;
+    case 'listspage': listsPage(); keep = true; break;
+    case 'pageback': popPages(1); keep = true; break;
     case 'listsheet': ui.confirmList = false; listSheet(); keep = true; break;
     case 'picklist': switchList(id); commit(); break;
     case 'newlistsheet': newListSheet(); keep = true; break;
-    case 'editlist': ui.confirmList = false; editListSheet(); keep = true; break;
+    case 'editlist': ui.confirmList = false; listEditPage(id || S.listId); keep = true; break;
     case 'dellist': {
-      if (!ui.confirmList) { ui.confirmList = true; editListSheet(); keep = true; break; }
-      const gone = curList(), rest = S.lists.filter((l) => l !== gone);
+      const gone = S.lists.find((l) => l.id === id) || curList(), rest = S.lists.filter((l) => l !== gone);
+      if (ui.confirmList !== gone.id) { ui.confirmList = gone.id; listEditPage(gone.id); keep = true; break; }
       if (!rest.length) { keep = true; break; }
-      S.lists = rest; S.listId = null; ui.confirmList = false;
-      switchList(rest[0].id); S.listId = rest[0].id; S.items = rest[0].items || [];
-      commit(); break;
+      ui.confirmList = false;
+      if (gone.id === S.listId) { S.lists = rest; S.listId = null; switchList(rest[0].id); S.listId = rest[0].id; S.items = rest[0].items || []; }
+      else S.lists = rest;
+      backTo('lists', listsPage); commit(); keep = true; break;
     }
     case 'moresheet': moreSheet(); keep = true; break;
     case 'editormenu': ui.confirmDel = false; editorSheet(); keep = true; break;
@@ -1479,12 +1641,12 @@ document.addEventListener('click', (e) => {
       s2.zones.push({ id: uid(), name: CAT_BY_ID[c]?.name || 'Bereich', cats: [c], prods: {}, rect: null }); commit(); break;
     }
     case 'pickstore': S.storeId = id || null; commit(); break;
-    case 'gostores': ui.tab = 'stores'; ui.editStoreId = null; render(); break;
+    case 'gostores': ui.tab = 'stores'; ui.editStoreId = null; render(); window.scrollTo(0, 0); wrapAnim('push'); break;
     case 'delitem': clearTimeout(ui.pending.get(id)); ui.pending.delete(id); S.items = S.items.filter((i) => i.id !== id); commit(); break;
     case 'closedlg': break;
     case 'showdone': ui.showDone = !ui.showDone; render(); break;
     case 'cleardone': S.items = S.items.filter((i) => !i.done); commit(); break;
-    case 'catlist': flushSheetInputs(); ui.confirmCat = false; catListSheet(); keep = true; break;
+    case 'catlist': flushSheetInputs(); ui.confirmCat = false; catListPage(); keep = true; break;
     case 'pinsugg': {
       const input = $('#pinName');
       const before = input ? input.value.split(',').slice(0, -1).map((x) => x.trim()).filter(Boolean) : [];
@@ -1492,13 +1654,13 @@ document.addEventListener('click', (e) => {
       keep = true; break;
     }
     case 'viewphoto': viewPhoto(el.src); keep = true; break;
-    case 'editcat': { const cid = $('#eCat')?.value; if (cid) { ui.confirmCat = false; catDetailSheet(cid); } keep = true; break; }
-    case 'catdetail': ui.confirmCat = false; catDetailSheet(id); keep = true; break;
+    case 'editcat': { const cid = $('#eCat')?.value; if (cid) { ui.confirmCat = false; catDetailPage(cid); } keep = true; break; }
+    case 'catdetail': ui.confirmCat = false; catDetailPage(id); keep = true; break;
     case 'newcatsheet': newCatSheet(); keep = true; break;
-    case 'delkw': { const c = CAT_BY_ID[id]; c.kw = c.kw.filter((k) => k !== el.dataset.kw); save(); catDetailSheet(id); keep = true; break; }
+    case 'delkw': { const c = CAT_BY_ID[id]; c.kw = c.kw.filter((k) => k !== el.dataset.kw); save(); catDetailPage(id); keep = true; break; }
     case 'restorecat': {
       const d = DEFAULT_CATS.find((x) => x.id === id), c = CAT_BY_ID[id];
-      c.name = d.name; c.kw = [...d.kw]; save(); render(); catDetailSheet(id); keep = true; break;
+      c.name = d.name; c.kw = [...d.kw]; save(); render(); catDetailPage(id); keep = true; break;
     }
     case 'restoredefaults':
       DEFAULT_CATS.filter((d) => !CAT_BY_ID[d.id]).forEach((d) => {
@@ -1507,13 +1669,13 @@ document.addEventListener('click', (e) => {
         const at = later ? CATS.findIndex((c) => c.id === later.id) : CATS.length;
         CATS.splice(at, 0, cloneCat(d)); indexCats();
       });
-      save(); catListSheet(); keep = true; break;
+      save(); catListPage(); keep = true; break;
     case 'delcat': {
-      if (!ui.confirmCat) { ui.confirmCat = true; catDetailSheet(id); keep = true; break; }
+      if (!ui.confirmCat) { ui.confirmCat = true; catDetailPage(id); keep = true; break; }
       S.items.forEach((i) => { if (i.cat === id) i.cat = 'sonst'; });
       S.stores.forEach((s2) => s2.zones.forEach((z) => { z.cats = z.cats.filter((x) => x !== id); }));
       CATS.splice(CATS.findIndex((c) => c.id === id), 1); indexCats();
-      ui.confirmCat = false; commit(); catListSheet(); keep = true; break;
+      ui.confirmCat = false; commit(); backTo('cats', catListPage); keep = true; break;
     }
     case 'newstoresheet': newStoreSheet(); keep = true; break;
     case 'sugg': {
@@ -1534,8 +1696,8 @@ document.addEventListener('click', (e) => {
       input.focus();
       keep = true; break;
     }
-    case 'openstore': ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); break;
-    case 'back': ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); break;
+    case 'openstore': ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('push'); break;
+    case 'back': ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('pop'); break;
     case 'usestore': S.storeId = id; commit(); break;
     case 'delstore':
       if (!ui.confirmDel) { ui.confirmDel = true; editorSheet(); keep = true; break; }
@@ -1590,12 +1752,12 @@ document.addEventListener('submit', (e) => {
     if (!name) return;
     const cat = { id: 'c' + uid(), name, kw: [] };
     insertBeforeFallback(cat);
-    save(); catDetailSheet(cat.id);
+    save(); catDetailPage(cat.id);
   } else if (f.id === 'kwForm') {
     e.preventDefault();
     const c = CAT_BY_ID[f.dataset.id];
     if (!addKeywords(c.id, $('#kwInput').value)) return;
-    save(); catDetailSheet(c.id);
+    save(); catDetailPage(c.id);
     $('#kwInput')?.focus();
   } else if (f.id === 'pinForm') {
     e.preventDefault();
