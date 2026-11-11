@@ -547,8 +547,13 @@ if (IS_LOCAL) {
   // Lokal gibt es keinen Cache: Nummer direkt aus sw.js lesen
   fetch('sw.js').then((r) => r.text()).then((t) => {
     const m = t.match(/einkaufsroute-v([\w.]+)/);
-    if (m) { appVersion = `${m[1]} (lokal)`; if (ui.tab === 'settings') render(); }
-  }).catch(() => {});
+    if (!m) return;
+    appVersion = `${m[1]} · lokal`;
+    // Uhrzeit der zuletzt gespeicherten Datei anhängen: so sieht man, ob das Neuladen schon den neuesten Stand hat
+    const files = ['index.html', 'app.js', 'sync.js', 'style.css', 'sw.js'];
+    return Promise.all(files.map((f) => fetch(f, { cache: 'no-store' }).then((r) => Date.parse(r.headers.get('Last-Modified')) || 0, () => 0)))
+      .then((ts) => { const t = Math.max(...ts); if (t) appVersion += `, Stand ${new Date(t).toLocaleTimeString('de-DE')}`; });
+  }).then(() => { if (ui.tab === 'settings') render(); }).catch(() => {});
 } else if (window.caches) {
   caches.keys().then((keys) => {
     const k = keys.filter((n) => n.startsWith('einkaufsroute-v')).pop();
