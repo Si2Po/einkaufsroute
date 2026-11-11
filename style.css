@@ -558,5 +558,5 @@ dialog > .mings { flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: a
    unten blenden etwa 1,5 Zeilen weich aus */
 dialog[open]:has(> .mings) { max-height: min(60dvh, calc(var(--vvh, 100dvh) - env(safe-area-inset-top, 0px) - 20px)); }
 dialog > .mings { padding-bottom: 0; }
-dialog > .mings.more-b { --fb: 74px; }
+dialog > .mings.more-b { --fb: 96px; }
 dialog:not(.viewer) .mealacts .btn.ghost { background: color-mix(in srgb, var(--surface) 92%, transparent); }
