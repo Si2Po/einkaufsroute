@@ -535,3 +535,4 @@ dialog:not(.viewer) .mrow input { opacity: .95; }
 }
 #tabbar { background-color: color-mix(in srgb, var(--surface) var(--bar-p, 72%), transparent); }
 dialog:not(.viewer) { background-color: color-mix(in srgb, var(--surface) var(--sheet-p, 86%), transparent); }
+.stepbtn { display: inline-grid; place-items: center; padding: 0; vertical-align: middle; } .stepbtn svg { display: block; } .stepbtn.sm svg { width: 15px; height: 15px; }

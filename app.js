@@ -1946,7 +1946,7 @@ function mealSheet() {
   openSheet(`<div class="sheettitle">${esc(m.name)}</div>
     ${m.tags.length ? `<p class="sheetnote" style="margin:-4px 0 8px">${esc(m.tags.join(' · '))}</p>` : ''}
     ${m.photo ? `<img class="mphoto" src="${m.photo}" alt="">` : ''}
-    <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="Weniger Personen"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>−</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="Mehr Personen">+</button></div>
+    <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="Weniger Personen"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="Mehr Personen">${ICON_PLUS_S}</button></div>
     ${m.ing.length ? `<ul class="scrollbox mings">${rows}</ul>` : '<p class="sheetnote">Noch keine Zutaten. Tippe auf „Bearbeiten“.</p>'}
     <button type="button" class="btn" id="mAddBtn" data-act="m_tolist"${ui.mealPick.size ? '' : ' disabled'} style="width:100%;margin-top:10px">${mealBtnText()}</button>
     ${m.steps ? `<details class="mmore"><summary>Kochanleitung</summary><div class="msteps">${esc(m.steps)}</div></details>` : ''}
@@ -1970,7 +1970,7 @@ function mealEditPage() {
     <div class="chips">${tags.map((t) => `<button type="button" class="chip${m.tags.includes(t) ? ' on' : ''}" data-act="m_edtag" data-tag="${esc(t)}" aria-pressed="${m.tags.includes(t)}">${esc(t)}</button>`).join('')}${ui.mealTagInput
       ? '<form id="mTagForm" class="tagadd" autocomplete="off"><input id="mTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
       : '<button type="button" class="chip tagplus" data-act="m_tagplus" aria-label="Neuen Tag anlegen">+</button>'}</div>
-    <div class="label" style="margin:12px 0 4px">Zutaten für <span class="mstep inl"><button type="button" class="stepbtn sm" data-act="m_base" data-d="-0.5" aria-label="Weniger"${(m.base || 2) <= 0.5 ? ' disabled' : ''}>−</button><span class="mpers">${fmtPortions(m.base || 2)}</span><button type="button" class="stepbtn sm" data-act="m_base" data-d="0.5" aria-label="Mehr">+</button></span></div>
+    <div class="label" style="margin:12px 0 4px">Zutaten für <span class="mstep inl"><button type="button" class="stepbtn sm" data-act="m_base" data-d="-0.5" aria-label="Weniger"${(m.base || 2) <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(m.base || 2)}</span><button type="button" class="stepbtn sm" data-act="m_base" data-d="0.5" aria-label="Mehr">${ICON_PLUS_S}</button></span></div>
     <p class="sheetnote" style="margin:0 0 6px">„Basis“ = hast du meist da, wird beim Hinzufügen nicht vorausgewählt.</p>
     ${m.ing.length ? `<ul class="scrollbox mings edit">${ings}</ul>` : ''}
     <form id="mIngForm" class="add" autocomplete="off" style="margin:8px 0 0"><input id="mIng" placeholder="Zutat, z. B. 200g Nudeln" aria-label="Zutat hinzufügen"><button type="submit" class="plus" aria-label="Hinzufügen">${ICON_PLUS}</button></form>
@@ -2328,3 +2328,6 @@ document.addEventListener('input', (e) => {
   try { localStorage.setItem('ek_glass2', String(g)); } catch (_) { /* privat */ }
   applyGlass(g);
 });
+// Plus/Minus für die runden Knöpfe (Personen): gezeichnet statt Schriftzeichen, damit sie genau mittig sitzen
+const ICON_MINUS = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+const ICON_PLUS_S = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
