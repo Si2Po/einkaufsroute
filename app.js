@@ -536,7 +536,7 @@ function viewSettings() {
       ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
       ${row('tab', 'Geschäfte und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}`, ' data-tab="stores"')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
-      ${row('themepage', 'Darstellung', THEME_LABEL[themePref()])}
+      ${row('themepage', 'Darstellung', `${THEME_LABEL[themePref()]} · ${ACCENTS[accentPref()][0]}`)}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
     </ul>
     ${appVersion ? `<p class="tip">Version ${esc(appVersion)}</p>` : ''}`;
@@ -1647,6 +1647,7 @@ document.addEventListener('click', (e) => {
     case 'storesheet': storeSheet(); keep = true; break;
     case 'swipesheet': swipePage(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
+    case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;
     case 'pageback': popPages(1); keep = true; break;
@@ -2251,15 +2252,26 @@ async function syncNow() {
 const THEME_BG = { light: '#F2F4F3', dark: '#0D110F' }; // = --bg in style.css (Farbe der Statusleiste)
 const THEME_LABEL = { auto: 'Automatisch (wie das iPhone)', light: 'Hell', dark: 'Dunkel' };
 function themePref() { try { return localStorage.getItem('ek_theme') || 'auto'; } catch (_) { return 'auto'; } }
+// Akzentfarben: Schlüssel → [Name, Farbe für die Auswahl]. Die eigentlichen Werte (hell/dunkel) stehen in style.css.
+const ACCENTS = { gruen: ['Grün', '#0E7A55'], blau: ['Blau', '#1F6BCF'], lila: ['Lila', '#7A4FD0'], orange: ['Orange', '#C25A00'], pink: ['Pink', '#C2306B'] };
+const ICON_CHECK = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function accentPref() { try { const a = localStorage.getItem('ek_accent'); return ACCENTS[a] ? a : 'gruen'; } catch (_) { return 'gruen'; } }
 function applyTheme() {
   const p = themePref(), root = document.documentElement;
   if (p === 'auto') delete root.dataset.theme; else root.dataset.theme = p;
+  const a = accentPref();
+  if (a === 'gruen') delete root.dataset.accent; else root.dataset.accent = a;
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = THEME_BG[p === 'auto' ? (/dark/.test(m.media) ? 'dark' : 'light') : p]; });
 }
 function themePage() {
   const p = themePref();
   const opt = (v, label, sub) => `<button type="button" class="sheetbtn${p === v ? ' on' : ''}" data-act="settheme" data-id="${v}"><span>${label}${sub ? ` <small>${sub}</small>` : ''}</span></button>`;
-  openPage('theme', 'Darstellung', `<div class="group">${opt('auto', 'Automatisch', 'wie das iPhone')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
+  const a = accentPref();
+  const sw = Object.entries(ACCENTS).map(([k, [name, c]]) => `<button type="button" class="swatch" style="--c:${c}" data-act="setaccent" data-id="${k}" aria-pressed="${a === k}" aria-label="${name}">${a === k ? ICON_CHECK : ''}</button>`).join('');
+  openPage('theme', 'Darstellung', `<div class="sheettitle">Hell oder dunkel</div>
+    <div class="group">${opt('auto', 'Automatisch', 'wie das iPhone')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
+    <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${ACCENTS[a][0]}</small></div>
+    <div class="group swatches">${sw}</div>
     <p class="sheetnote">Gilt nur für dieses Gerät.</p>`, themePage);
 }
 applyTheme();

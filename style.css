@@ -480,3 +480,20 @@ dialog:not(.viewer) {
 }
 html.kb dialog:not(.viewer) { padding-bottom: 14px; }
 dialog::backdrop { background: rgba(0, 0, 0, .32); }
+
+/* Akzentfarbe (Einstellungen → Darstellung): data-accent auf <html>. Je Farbe hell und dunkel. */
+:root[data-accent="blau"] { --accent: #1F6BCF; --on-accent: #FFFFFF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="blau"] { --accent: #6AA8FF; --on-accent: #04172E; } }
+:root[data-theme="dark"][data-accent="blau"] { --accent: #6AA8FF; --on-accent: #04172E; }
+:root[data-accent="lila"] { --accent: #7A4FD0; --on-accent: #FFFFFF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="lila"] { --accent: #B79BFF; --on-accent: #1E0E40; } }
+:root[data-theme="dark"][data-accent="lila"] { --accent: #B79BFF; --on-accent: #1E0E40; }
+:root[data-accent="orange"] { --accent: #C25A00; --on-accent: #FFFFFF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="orange"] { --accent: #FFA552; --on-accent: #2E1500; } }
+:root[data-theme="dark"][data-accent="orange"] { --accent: #FFA552; --on-accent: #2E1500; }
+:root[data-accent="pink"] { --accent: #C2306B; --on-accent: #FFFFFF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="pink"] { --accent: #FF7FAE; --on-accent: #3A0A1D; } }
+:root[data-theme="dark"][data-accent="pink"] { --accent: #FF7FAE; --on-accent: #3A0A1D; }
+.swatches { display: flex; flex-wrap: wrap; gap: 12px; padding: 14px; }
+.swatch { width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: var(--c); display: grid; place-items: center; color: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--c); }
