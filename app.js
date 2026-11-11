@@ -566,6 +566,9 @@ function loadVersion() {
     appVersion = v;
     if (ui.tab === 'settings' && !pages.length) render();
   };
+  // 1. Weg: sw.js selbst lesen (liegt im Offline-Speicher in der Fassung der laufenden Version)
+  fetch('sw.js').then((r) => r.text()).then((t) => set((t.match(/einkaufsroute-v[\w.]+/) || [])[0])).catch(() => {});
+  // 2. und 3. Weg als Ersatz: Service Worker fragen, Namen des Caches lesen
   const sw = navigator.serviceWorker;
   if (sw) {
     if (!loadVersion.on) { loadVersion.on = true; sw.addEventListener('message', (e) => { if (e.data?.version) set(e.data.version); }); }
