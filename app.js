@@ -2250,7 +2250,7 @@ async function syncNow() {
 // ---------- Darstellung: Automatisch / Hell / Dunkel ----------
 // Gilt nur für dieses Gerät (localStorage), wird nicht mit dem Haushalt abgeglichen. index.html setzt sie schon beim Laden.
 const THEME_BG = { light: '#F2F4F3', dark: '#0D110F' }; // = --bg in style.css (Farbe der Statusleiste)
-const THEME_LABEL = { auto: 'Automatisch (wie das iPhone)', light: 'Hell', dark: 'Dunkel' };
+const THEME_LABEL = { auto: 'Automatisch (wie das Gerät)', light: 'Hell', dark: 'Dunkel' };
 function themePref() { try { return localStorage.getItem('ek_theme') || 'auto'; } catch (_) { return 'auto'; } }
 // Akzentfarben: Schlüssel → [Name, Farbe für die Auswahl]. Die eigentlichen Werte (hell/dunkel) stehen in style.css.
 const ACCENTS = { gruen: ['Grün', '#0E7A55'], blau: ['Blau', '#1F6BCF'], lila: ['Lila', '#7A4FD0'], orange: ['Orange', '#C25A00'], pink: ['Pink', '#C2306B'] };
@@ -2269,7 +2269,7 @@ function themePage() {
   const a = accentPref();
   const sw = Object.entries(ACCENTS).map(([k, [name, c]]) => `<button type="button" class="swatch" style="--c:${c}" data-act="setaccent" data-id="${k}" aria-pressed="${a === k}" aria-label="${name}">${a === k ? ICON_CHECK : ''}</button>`).join('');
   openPage('theme', 'Darstellung', `<div class="sheettitle">Hell oder dunkel</div>
-    <div class="group">${opt('auto', 'Automatisch', 'wie das iPhone')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
+    <div class="group">${opt('auto', 'Automatisch', 'wie das Gerät')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
     <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${ACCENTS[a][0]}</small></div>
     <div class="group swatches">${sw}</div>
     <p class="sheetnote">Gilt nur für dieses Gerät.</p>`, themePage);
