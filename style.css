@@ -41,8 +41,8 @@ body {
    nicht unter der Statusleiste durchläuft und dort verschwommen wirkt. Unten blendet sie weich aus. */
 #topcover {
   position: fixed; top: 0; left: 0; right: 0; z-index: 30; pointer-events: none;
-  height: calc(env(safe-area-inset-top, 0px) + 8px);
-  background: linear-gradient(var(--bg) calc(100% - 8px), transparent);
+  height: calc(env(safe-area-inset-top, 0px) + 14px);
+  background: linear-gradient(var(--bg) calc(100% - 6px), transparent);
 }
 .wrap { max-width: 560px; margin: 0 auto; }
 h2 { font: 700 1.25rem var(--font-display); margin: 0; }

@@ -528,6 +528,7 @@ function renderTabs() {
     `<button type="button" data-act="tab" data-tab="${t}"${cur === t ? ' aria-current="page"' : ''}${t === 'list' ? ' aria-haspopup="dialog"' : ''}>${TAB_ICONS[t]}<span>${esc(label)}</span></button>`).join('');
 }
 function viewSettings() {
+  if (!appVersion && !IS_LOCAL) setTimeout(loadVersion, 0); // Nummer noch leer: nochmal nachfragen
   const row = (act, title, sub, extra = '') => `<li><button type="button" class="card" data-act="${act}"${extra}><span><strong>${title}</strong><small>${sub}</small></span><span class="go">›</span></button></li>`;
   return `<div class="edhead"><h2>Einstellungen</h2></div>
     <ul class="cards">
@@ -554,13 +555,23 @@ if (IS_LOCAL) {
     return Promise.all(files.map((f) => fetch(f, { cache: 'no-store' }).then((r) => Date.parse(r.headers.get('Last-Modified')) || 0, () => 0)))
       .then((ts) => { const t = Math.max(...ts); if (t) appVersion += `, Stand ${new Date(t).toLocaleTimeString('de-DE')}`; });
   }).then(() => { if (ui.tab === 'settings') render(); }).catch(() => {});
-} else if (window.caches) {
-  caches.keys().then((keys) => {
-    const k = keys.filter((n) => n.startsWith('einkaufsroute-v')).pop();
-    if (!k) return;
-    appVersion = k.slice('einkaufsroute-v'.length);
-    if (ui.tab === 'settings') render();
-  }).catch(() => { /* ohne Cache keine Anzeige */ });
+} else {
+  loadVersion();
+}
+// Online: den Service Worker fragen, der die App gerade ausliefert. Ersatzweise den Namen des Caches lesen.
+function loadVersion() {
+  const set = (name) => {
+    const v = String(name || '').replace(/^einkaufsroute-v/, '');
+    if (!v || v === appVersion) return;
+    appVersion = v;
+    if (ui.tab === 'settings' && !pages.length) render();
+  };
+  const sw = navigator.serviceWorker;
+  if (sw) {
+    if (!loadVersion.on) { loadVersion.on = true; sw.addEventListener('message', (e) => { if (e.data?.version) set(e.data.version); }); }
+    sw.ready.then((reg) => (sw.controller || reg.active)?.postMessage('version')).catch(() => {});
+  }
+  window.caches?.keys().then((keys) => set(keys.filter((n) => n.startsWith('einkaufsroute-v')).pop())).catch(() => {});
 }
 
 // ---------- Sheets ----------
