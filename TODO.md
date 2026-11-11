@@ -1,7 +1,7 @@
 # Einkaufsroute – Merkliste (noch nicht umgesetzt)
 
 ## Neu aufgenommen
-- [ ] **Design anpassen:** iOS-„Liquid Glass"-Optik, andere Farben, Dunkel-/Hellmodus (u. a.)
+- [ ] **Design anpassen:** Teil 1 erledigt (Farben neutraler, Darstellung Automatisch/Hell/Dunkel, schwebende Glas-Leiste, Glas-Sheets). Offen: Feinschliff nach iPhone-Test (z. B. Glas für Kopfzeilen, Schriftgrößen, Abstände)
 - [x] **Animationen und Übergänge überarbeiten** (Einstellungs-Unterseiten als Seiten mit Zurück-Pfeil und Wisch vom linken Rand, Läden gleiten herein, Tabwechsel blendet weich; Sheets mit einheitlicher Kopfzeile „Fertig“/„Abbrechen“, Schließen behält Änderungen): Wechsel zwischen Bereichen und Öffnen von Details. In den Einstellungen passt das „›“ (deutet eine neue Seite an) nicht zum Bottom-Sheet, das von unten kommt und nach unten weggewischt wird. Vorschlag: Einstellungs-Unterpunkte als echte Seiten mit Einblenden von rechts, Zurück-Pfeil und Wisch-zurück; Sheets nur für Schnellaktionen (Listenwahl, Details eines Eintrags). Dazu sanfter Übergang beim Tabwechsel. **Wichtig: einheitliche Bedienung.** Jede Unterseite lässt sich gleich verlassen (Zurück-Pfeil und Wisch vom linken Rand), jedes Sheet gleich (Wisch nach unten, Fertig). Eine gemeinsame Seiten- und Sheet-Komponente statt Einzellösungen. „Bewegung reduzieren“ (prefers-reduced-motion) beachten.
 - [x] **Einstellungen aufräumen:** „Daten sichern und übertragen" in „Konto und Haushalt" einordnen
 - [ ] **Stichwörter überarbeiten:** manche Wörter in Obst & Gemüse sollten im Plural stehen

@@ -536,6 +536,7 @@ function viewSettings() {
       ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
       ${row('tab', 'Geschäfte und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}`, ' data-tab="stores"')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
+      ${row('themepage', 'Darstellung', THEME_LABEL[themePref()])}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
     </ul>
     ${appVersion ? `<p class="tip">Version ${esc(appVersion)}</p>` : ''}`;
@@ -1645,6 +1646,8 @@ document.addEventListener('click', (e) => {
     case 'toggle': toggleItem(id); break;
     case 'storesheet': storeSheet(); keep = true; break;
     case 'swipesheet': swipePage(); keep = true; break;
+    case 'themepage': themePage(); keep = true; break;
+    case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;
     case 'pageback': popPages(1); keep = true; break;
     case 'listsheet': ui.confirmList = false; listSheet(); keep = true; break;
@@ -2242,3 +2245,21 @@ async function syncNow() {
   document.addEventListener('touchend', end);
   document.addEventListener('touchcancel', () => { y0 = null; hide(); });
 })();
+
+// ---------- Darstellung: Automatisch / Hell / Dunkel ----------
+// Gilt nur für dieses Gerät (localStorage), wird nicht mit dem Haushalt abgeglichen. index.html setzt sie schon beim Laden.
+const THEME_BG = { light: '#F2F4F3', dark: '#0D110F' }; // = --bg in style.css (Farbe der Statusleiste)
+const THEME_LABEL = { auto: 'Automatisch (wie das iPhone)', light: 'Hell', dark: 'Dunkel' };
+function themePref() { try { return localStorage.getItem('ek_theme') || 'auto'; } catch (_) { return 'auto'; } }
+function applyTheme() {
+  const p = themePref(), root = document.documentElement;
+  if (p === 'auto') delete root.dataset.theme; else root.dataset.theme = p;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = THEME_BG[p === 'auto' ? (/dark/.test(m.media) ? 'dark' : 'light') : p]; });
+}
+function themePage() {
+  const p = themePref();
+  const opt = (v, label, sub) => `<button type="button" class="sheetbtn${p === v ? ' on' : ''}" data-act="settheme" data-id="${v}"><span>${label}${sub ? ` <small>${sub}</small>` : ''}</span></button>`;
+  openPage('theme', 'Darstellung', `<div class="group">${opt('auto', 'Automatisch', 'wie das iPhone')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
+    <p class="sheetnote">Gilt nur für dieses Gerät.</p>`, themePage);
+}
+applyTheme();
