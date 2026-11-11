@@ -17,6 +17,7 @@
 - [ ] Konto und Haushalt: einladen, beitreten, abgleichen, Sicherung
 - [ ] Wichtiges: Offline-Betrieb, was bei „Abmelden“ passiert, neue Version laden (App einmal schließen und neu öffnen). Versionsnummer anzeigen (steht bisher unten in den Einstellungen)
 - [ ] Als eigene Unterseite mit der gemeinsamen Seiten-Komponente umsetzen; ggf. beim ersten Start kurze Einführung
+- [ ] Schalter „Hinweise anzeigen“: blendet alle kleinen Bedienhinweise (z. B. „Tippen: … · Gedrückt halten: …“ unter Liste und Essen) überall ein oder aus. Heute verschwindet nur der Hinweis in der Liste nach einer Weile von selbst (S.tipSeen).
 
 ## Idee: Einkaufsverhalten lernen
 - [ ] Beim Abhaken merkt sich die App Produkt + Datum (Kaufhistorie, im Haushalt geteilt)
