@@ -2295,7 +2295,7 @@ function themePage() {
     <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
     <div class="group swatches">${sw}</div>
     <div class="sheettitle" style="margin-top:12px">Glas <small style="text-transform:none;letter-spacing:0;font-weight:600">· untere Leiste und Sheets</small></div>
-    <div class="group glassrow"><span aria-hidden="true">klar</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">frostig</span><output id="glassOut">${glassPref()} %</output></div>
+    <div class="group glassrow"><span aria-hidden="true">klar</span><input type="range" id="glassRange" min="50" max="150" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">frostig</span><output id="glassOut">${glassPref()} %</output></div>
     <p class="sheetnote">Der bunte Kreis öffnet die Farbauswahl. Zu helle oder zu dunkle Farben passt die App automatisch an, damit alles lesbar bleibt. Gilt nur für dieses Gerät.</p>`, themePage);
 }
 // Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
@@ -2307,14 +2307,16 @@ function pickAccent(hex, done) {
 document.addEventListener('input', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, false); });
 document.addEventListener('change', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, true); });
 applyTheme();
-// Glas-Stärke 0–100 %: 0 = fast undurchsichtig, 100 = sehr durchsichtig und stark verschwommen (35 = Standard)
-function glassPref() { try { const g = parseInt(localStorage.getItem('ek_glass'), 10); return g >= 0 && g <= 100 ? g : 35; } catch (_) { return 35; } }
+// Glas-Stärke 50–150 %: 50 = kaum durchsichtig, 150 = sehr durchsichtig und stark verschwommen (50 = Standard)
+function glassPref() { try { const g = parseInt(localStorage.getItem('ek_glass'), 10); return g >= 50 && g <= 150 ? g : 50; } catch (_) { return 50; } }
 function applyGlass(g) {
   const s = document.documentElement.style;
-  s.setProperty('--bar-p', `${Math.round(95 - g * 0.65)}%`);
+  s.setProperty('--bar-p', `${Math.max(8, Math.round(95 - g * 0.58))}%`);       // Deckkraft der Leiste
   s.setProperty('--bar-blur', `${Math.round(12 + g * 0.3)}px`);
-  s.setProperty('--sheet-p', `${Math.round(97 - g * 0.4)}%`);
+  s.setProperty('--sheet-p', `${Math.max(10, Math.round(97 - g * 0.58))}%`);    // Deckkraft der Sheets
   s.setProperty('--sheet-blur', `${Math.round(16 + g * 0.34)}px`);
+  s.setProperty('--field-p', `${Math.max(30, Math.round(100 - g * 0.45))}%`);   // Eingabefelder in Sheets
+  s.setProperty('--dim', Math.max(0.06, 0.32 - g * 0.0017).toFixed(2));        // Abdunkelung hinter dem Sheet
 }
 document.addEventListener('input', (e) => {
   if (e.target.id !== 'glassRange') return;

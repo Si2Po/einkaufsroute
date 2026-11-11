@@ -511,3 +511,8 @@ dialog::backdrop { background: rgba(0, 0, 0, .32); }
 .glassrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
 .glassrow input { flex: 1; accent-color: var(--accent); }
 .glassrow output { min-width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+dialog::backdrop { background: rgba(0, 0, 0, var(--dim, .32)); }
+dialog:not(.viewer) .notein, dialog:not(.viewer) .field input, dialog:not(.viewer) .namerow input, dialog:not(.viewer) .srow,
+dialog:not(.viewer) .camlabel, dialog:not(.viewer) .btn.danger, dialog:not(.viewer) .btn.ghost, dialog:not(.viewer) .prow {
+  background: color-mix(in srgb, var(--bg) var(--field-p, 100%), transparent);
+}
