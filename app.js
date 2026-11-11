@@ -1948,15 +1948,25 @@ function mealSheet() {
     ${m.photo ? `<img class="mphoto" src="${m.photo}" alt="">` : ''}
     <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="Weniger Personen"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="Mehr Personen">${ICON_PLUS_S}</button></div>
     ${m.ing.length ? `<ul class="scrollbox mings">${rows}</ul>` : '<p class="sheetnote">Noch keine Zutaten. Tippe auf „Bearbeiten“.</p>'}
-    ${m.steps ? `<details class="mmore"><summary>Kochanleitung</summary><div class="msteps">${esc(m.steps)}</div></details>` : ''}
-    <div class="actions mealacts" style="margin-top:10px">
+    <div class="actions mealacts${m.ing.length ? ' over' : ''}">
       <button type="button" class="btn ghost" data-act="m_edit">Bearbeiten</button>
-      ${ui.mealRandom ? `<button type="button" class="btn ghost diceBtn" data-act="m_random" aria-label="Nochmal würfeln">${ICON_DICE}</button>` : ''}
+      ${ui.mealRandom ? `<button type="button" class="btn ghost diceBtn${ui.diceRoll ? ' roll' : ''}" data-act="m_random" aria-label="Nochmal würfeln">${ICON_DICE}</button>` : ''}
       <button type="button" class="btn" id="mAddBtn" data-act="m_tolist"${ui.mealPick.size ? '' : ' disabled'}>${mealBtnText()}</button>
-    </div>`);
+    </div>
+    ${m.steps ? `<details class="mmore"><summary>Kochanleitung</summary><div class="msteps">${esc(m.steps)}</div></details>` : ''}`);
+  ui.diceRoll = false;
 }
 const mealBtnText = () => `Zu „${curList()?.name || 'Liste'}“ (${ui.mealPick.size})`;
-const ICON_DICE = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="15" cy="15" r="1.5" fill="currentColor"/><circle cx="15" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="15" r="1.5" fill="currentColor"/></svg>';
+// Würfel schräg von oben: drei sichtbare Seiten mit 1, 2 und 3 Augen
+const ICON_DICE = `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+  <path d="M12 2.8l8.2 4.6v9.2L12 21.2l-8.2-4.6V7.4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12 2.8l8.2 4.6L12 12 3.8 7.4z" fill="currentColor" fill-opacity=".14"/>
+  <path d="M12 12l8.2-4.6v9.2L12 21.2z" fill="currentColor" fill-opacity=".3"/>
+  <path d="M3.8 7.4L12 12l8.2-4.6M12 12v9.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+  <ellipse cx="12" cy="7.4" rx="1.5" ry=".9" fill="currentColor"/>
+  <circle cx="6.3" cy="11.2" r="1.1" fill="currentColor"/><circle cx="9.5" cy="17.2" r="1.1" fill="currentColor"/>
+  <circle cx="14.4" cy="18" r="1.05" fill="currentColor"/><circle cx="16.1" cy="14.3" r="1.05" fill="currentColor"/><circle cx="17.8" cy="10.6" r="1.05" fill="currentColor"/>
+</svg>`;
 // Gedrückt halten auf einem Essen: Bearbeiten als eigene Seite
 function openMealEdit(id) { ui.mealId = id; ui.confirmMeal = false; ui.mealTagInput = false; mealEditPage(); }
 function mealEditPage() {
@@ -2074,7 +2084,7 @@ document.addEventListener('click', (e) => {
  ui.mealTags = ui.mealTags.includes(t) ? ui.mealTags.filter((x) => x !== t) : [...ui.mealTags, t]; render(); break; }
     case 'm_new': newMealSheet(); break;
     case 'm_open': if (lpFired) { lpFired = false; break; } startMeal(id, false); break; // nicht nach langem Drücken
-    case 'm_random': randomMeal(); break;
+    case 'm_random': ui.diceRoll = !!el.closest('#dlg'); randomMeal(); break; // im Sheet wackelt der Würfel
     case 'm_pick': ui.mealPick.has(id) ? ui.mealPick.delete(id) : ui.mealPick.add(id); { const b = $('#mAddBtn'); if (b) { b.textContent = mealBtnText(); b.disabled = !ui.mealPick.size; } } break;
     case 'm_pm': ui.mealPortions = Math.max(0.5, Math.min(50, ui.mealPortions + parseFloat(el.dataset.d))); mealSheet(); break;
     case 'm_tolist': mealToList(); break;

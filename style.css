@@ -545,3 +545,14 @@ dialog .mings { max-height: 48vh; }
 .mealacts { flex-wrap: nowrap; }
 .mealacts #mAddBtn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .diceBtn { flex: none; display: grid; place-items: center; padding: 0 12px; }
+/* Essen-Sheet: Zutaten laufen bis unten, die Knöpfe liegen darüber; lange Ausblendung unter den Knöpfen */
+dialog .mings { max-height: 56vh; padding-bottom: 72px; }
+dialog .mings.more-b { --fb: 130px; }
+.mealacts.over { position: relative; z-index: 2; margin-top: -68px; }
+.mealacts { margin-top: 10px; }
+.mealacts .btn.ghost { background: color-mix(in srgb, var(--surface) 70%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+/* Würfel wackelt beim Neu-Würfeln */
+.diceBtn svg { display: block; }
+.diceBtn.roll svg { animation: diceroll .6s cubic-bezier(.3, .7, .3, 1); }
+@keyframes diceroll { 0% { transform: rotate(0) scale(1); } 20% { transform: rotate(-28deg) scale(1.15); } 45% { transform: rotate(22deg) scale(1.1); } 65% { transform: rotate(-12deg); } 85% { transform: rotate(5deg); } 100% { transform: rotate(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .diceBtn.roll svg { animation: none; } }
