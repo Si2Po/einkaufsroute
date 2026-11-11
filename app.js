@@ -2295,7 +2295,7 @@ function themePage() {
     <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
     <div class="group swatches">${sw}</div>
     <div class="sheettitle" style="margin-top:12px">Glas <small style="text-transform:none;letter-spacing:0;font-weight:600">· untere Leiste und Sheets</small></div>
-    <div class="group glassrow"><span aria-hidden="true">klar</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">frostig</span><output id="glassOut">${glassPref()} %</output></div>
+    <div class="group glassrow"><span aria-hidden="true">deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">durchsichtig</span><output id="glassOut">${glassPref()} %</output></div>
     <p class="sheetnote">Der bunte Kreis öffnet die Farbauswahl. Zu helle oder zu dunkle Farben passt die App automatisch an, damit alles lesbar bleibt. Gilt nur für dieses Gerät.</p>`, themePage);
 }
 // Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
@@ -2307,19 +2307,19 @@ function pickAccent(hex, done) {
 document.addEventListener('input', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, false); });
 document.addEventListener('change', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, true); });
 applyTheme();
-// Glas-Stärke 0–100 %: 0 = kaum durchsichtig, 50 = Standard (deutlich Glas), 100 = fast nur noch Unschärfe
+// Glas-Stärke 0–100 %: 0 = fast deckend, 50 = Standard (frostig), 100 = fast durchsichtig (wenig Fläche, wenig Unschärfe)
 function glassPref() { try { const g = parseInt(localStorage.getItem('ek_glass2'), 10); return g >= 0 && g <= 100 ? g : 50; } catch (_) { return 50; } }
 function applyGlass(n) {
   const s = document.documentElement.style;
   // bis 50 gleichmäßig von „kaum“ zum Standard, darüber weiter bis ganz durchsichtig (t = 0…1)
   const lo = Math.min(n, 50) / 50, t = Math.max(0, n - 50) / 50;
   const step = (a, b, c) => (n <= 50 ? a + (b - a) * lo : b + (c - b) * t); // Wert bei 0 → 50 → 100
-  s.setProperty('--bar-p', `${Math.round(step(66, 8, 0))}%`);        // Deckkraft der Leiste
-  s.setProperty('--bar-blur', `${Math.round(step(27, 57, 87))}px`);
-  s.setProperty('--sheet-p', `${Math.round(step(68, 10, 0))}%`);     // Deckkraft der Sheets
-  s.setProperty('--sheet-blur', `${Math.round(step(33, 67, 100))}px`);
-  s.setProperty('--field-p', `${Math.round(step(78, 32, 8))}%`);     // Eingabefelder in Sheets
-  s.setProperty('--dim', step(0.24, 0.065, 0).toFixed(3));           // Abdunkelung hinter dem Sheet
+  s.setProperty('--bar-p', `${Math.round(step(90, 8, 0))}%`);        // Deckkraft der Leiste
+  s.setProperty('--bar-blur', `${Math.round(step(20, 57, 3))}px`);   // Unschärfe: bei 100 % fast klar
+  s.setProperty('--sheet-p', `${Math.round(step(92, 10, 0))}%`);     // Deckkraft der Sheets
+  s.setProperty('--sheet-blur', `${Math.round(step(24, 67, 4))}px`);
+  s.setProperty('--field-p', `${Math.round(step(95, 32, 6))}%`);     // Eingabefelder, Knöpfe, Listen in Sheets
+  s.setProperty('--dim', step(0.28, 0.065, 0).toFixed(3));           // Abdunkelung hinter dem Sheet
 }
 document.addEventListener('input', (e) => {
   if (e.target.id !== 'glassRange') return;

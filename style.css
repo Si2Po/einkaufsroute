@@ -516,3 +516,12 @@ dialog:not(.viewer) .notein, dialog:not(.viewer) .field input, dialog:not(.viewe
 dialog:not(.viewer) .camlabel, dialog:not(.viewer) .btn.danger, dialog:not(.viewer) .btn.ghost, dialog:not(.viewer) .prow {
   background: color-mix(in srgb, var(--bg) var(--field-p, 100%), transparent);
 }
+/* Mehr Teile im Sheet folgen der Glas-Stärke (Essen: ± Knöpfe, Zutatenliste, Haken) */
+dialog:not(.viewer) .stepbtn, dialog:not(.viewer) .chipbtn, dialog:not(.viewer) .chip, dialog:not(.viewer) .bgadd {
+  background: color-mix(in srgb, var(--surface) var(--field-p, 100%), transparent);
+}
+dialog:not(.viewer) .mrow input { opacity: .95; }
+/* Untere Leiste verschwindet, solange ein Sheet offen ist (wie in iOS) */
+#tabbar { transition: transform .28s cubic-bezier(.25, .8, .25, 1), opacity .2s; }
+html:has(#dlg[open]) #tabbar { transform: translateY(140%); opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { #tabbar { transition: none; } }
