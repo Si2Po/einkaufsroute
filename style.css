@@ -434,3 +434,17 @@ html, body { touch-action: pan-y; }
    In Eingabefeldern bleibt Markieren möglich. */
 dialog, .page { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 dialog input, dialog textarea, .page input, .page textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+
+/* Ziehen zum Aktualisieren: kleiner Kreis oben in der Mitte */
+#pull {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 4px); z-index: 40; pointer-events: none;
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); border: 1px solid var(--line); color: var(--accent); box-shadow: 0 4px 14px rgba(0, 0, 0, .15);
+  opacity: 0; transform: translateX(-50%); transition: opacity .2s, transform .2s, background-color .15s;
+}
+#pull.pulling { transition: none; }
+#pull.ready { transition: transform .15s; background: var(--accent); color: var(--on-accent); }
+#pull.spin { background: var(--accent); color: var(--on-accent); }
+#pull.spin svg { animation: pullspin .9s linear infinite; }
+@keyframes pullspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { #pull.spin svg { animation: none; } }

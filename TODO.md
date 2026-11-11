@@ -8,7 +8,7 @@
 - [x] **Oberer Rand auf dem iPhone:** Inhalt scrollt unter den Rand und wirkt verschwommen → mehr Abstand (safe-area-inset-top, Margin)
 - [x] **Tastatur prüfen:** darf keine Eingabefelder verdecken. Teilweise muss man das Feld verlassen und neu antippen, bis sich alles richtig verschiebt.
 - [x] **PWA-Icon** gestalten (Regale + Laufweg + Haken)
-- [ ] **Ziehen zum Aktualisieren:** In der Mitte der Liste nach unten wischen; ist man schon ganz oben und zieht weiter, startet ein Abgleich (wie „Pull to Refresh“ in iOS-Apps). Mit kleinem Kreis/Pfeil oben, der zeigt, dass gleich aktualisiert wird. Darf nicht mit dem Wischen auf Einträgen (links/rechts) oder dem Scrollen kollidieren.
+- [x] **Ziehen zum Aktualisieren:** (Liste = Abgleich, Einstellungen = nach Update suchen) In der Mitte der Liste nach unten wischen; ist man schon ganz oben und zieht weiter, startet ein Abgleich (wie „Pull to Refresh“ in iOS-Apps). Mit kleinem Kreis/Pfeil oben, der zeigt, dass gleich aktualisiert wird. Darf nicht mit dem Wischen auf Einträgen (links/rechts) oder dem Scrollen kollidieren.
 - [ ] **Standardreihenfolge „Kein Laden“** ansehen und ändern können (Reihenfolge der Kategorien, z. B. per Hoch/Runter in „Kategorien und Stichwörter“; die Reihenfolge wird schon mit dem Haushalt synchronisiert)
 
 ## Idee: Hilfe-Bereich in den Einstellungen

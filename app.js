@@ -2178,3 +2178,53 @@ document.addEventListener('keydown', (e) => {
     box.hidden = true;
   }
 }, true);
+
+// ---------- Ziehen zum Aktualisieren ----------
+// Ganz oben weiter nach unten ziehen: in der Liste = Abgleich mit dem Haushalt, in den Einstellungen = nach neuer Version suchen.
+async function checkUpdate() {
+  const reg = await navigator.serviceWorker?.getRegistration?.();
+  if (!reg) { toast('Hier gibt es keine Updates (lokale Version)'); return; }
+  try { await reg.update(); } catch (_) { toast('Keine Verbindung – später nochmal versuchen'); return; }
+  if (reg.installing || reg.waiting) toast('Neue Version gefunden – wird geladen …'); // lädt danach von selbst neu (controllerchange)
+  else toast(`Du hast die neueste Version (${appVersion})`);
+}
+async function syncNow() {
+  if (typeof syncRun !== 'function' || !sync.sess) { toast('Nicht angemeldet – nichts abzugleichen'); return; }
+  sync.dirty = true; sync.ver++;
+  await syncRun();
+  toast(sync.status === 'ok' ? 'Abgeglichen' : (sync.err || 'Abgleich später'));
+}
+(function pullToRefresh() {
+  const PULL = 70; // so weit ziehen, bis es auslöst
+  const ind = document.createElement('div');
+  ind.id = 'pull'; ind.setAttribute('aria-hidden', 'true');
+  ind.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v12M6.5 11.5L12 17l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.append(ind);
+  let y0 = null, d = 0, busy = false;
+  const action = () => (dlg().open || pages.length ? null : ui.tab === 'settings' ? checkUpdate : ui.tab === 'list' ? syncNow : null);
+  const hide = () => { ind.className = ''; ind.style.opacity = ''; ind.style.transform = ''; };
+  document.addEventListener('touchstart', (e) => {
+    y0 = null;
+    if (busy || e.touches.length !== 1 || window.scrollY > 0 || !action() || e.target.closest?.('input, textarea, select, .plan')) return;
+    y0 = e.touches[0].clientY; d = 0;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (y0 === null) return;
+    d = e.touches[0].clientY - y0;
+    if (d <= 0 || window.scrollY > 0) { d = 0; hide(); return; }
+    ind.className = d > PULL ? 'ready' : 'pulling';
+    ind.style.opacity = String(Math.min(1, d / PULL));
+    ind.style.transform = `translate(-50%, ${Math.min(d, PULL * 1.3) * 0.6}px) rotate(${d > PULL ? 180 : 0}deg)`;
+  }, { passive: true });
+  const end = () => {
+    if (y0 === null) return;
+    y0 = null;
+    const fn = action();
+    if (d <= PULL || !fn) { hide(); return; }
+    busy = true; ind.className = 'spin'; ind.style.opacity = '1'; ind.style.transform = `translate(-50%, ${PULL * 0.6}px)`;
+    try { navigator.vibrate?.(10); } catch (_) { /* egal */ }
+    Promise.resolve().then(fn).catch(() => {}).finally(() => { busy = false; hide(); });
+  };
+  document.addEventListener('touchend', end);
+  document.addEventListener('touchcancel', () => { y0 = null; hide(); });
+})();
