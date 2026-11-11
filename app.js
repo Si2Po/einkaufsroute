@@ -2314,12 +2314,12 @@ function applyGlass(n) {
   // bis 50 gleichmäßig von „kaum“ zum Standard, darüber weiter bis ganz durchsichtig (t = 0…1)
   const lo = Math.min(n, 50) / 50, t = Math.max(0, n - 50) / 50;
   const step = (a, b, c) => (n <= 50 ? a + (b - a) * lo : b + (c - b) * t); // Wert bei 0 → 50 → 100
-  s.setProperty('--bar-p', `${Math.round(step(90, 8, 0))}%`);        // Deckkraft der Leiste
-  s.setProperty('--bar-blur', `${Math.round(step(20, 57, 3))}px`);   // Unschärfe: bei 100 % fast klar
-  s.setProperty('--sheet-p', `${Math.round(step(92, 10, 0))}%`);     // Deckkraft der Sheets
-  s.setProperty('--sheet-blur', `${Math.round(step(24, 67, 4))}px`);
-  s.setProperty('--field-p', `${Math.round(step(95, 32, 6))}%`);     // Eingabefelder, Knöpfe, Listen in Sheets
-  s.setProperty('--dim', step(0.28, 0.065, 0).toFixed(3));           // Abdunkelung hinter dem Sheet
+  s.setProperty('--bar-p', `${Math.round(step(90, 8, 3))}%`);        // Deckkraft der Leiste
+  s.setProperty('--bar-blur', `${Math.round(step(20, 57, 25))}px`);  // Unschärfe: zum Ende hin wieder klarer
+  s.setProperty('--sheet-p', `${Math.round(step(92, 10, 4))}%`);     // Deckkraft der Sheets
+  s.setProperty('--sheet-blur', `${Math.round(step(24, 67, 29))}px`);
+  s.setProperty('--field-p', `${Math.round(step(95, 32, 16))}%`);    // Eingabefelder, Knöpfe, Listen in Sheets
+  s.setProperty('--dim', step(0.28, 0.065, 0.026).toFixed(3));       // Abdunkelung hinter dem Sheet
 }
 document.addEventListener('input', (e) => {
   if (e.target.id !== 'glassRange') return;
