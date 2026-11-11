@@ -563,6 +563,13 @@ const dlg = () => $('#dlg');
 function openSheet(html) {
   const d = dlg();
   d.innerHTML = html;
+  // Einheitliche Kopfzeile: Titel links, rechts „Fertig“ (bei Neu-Anlegen „Abbrechen“). Schließen geht auch per Wisch nach unten.
+  const title = d.querySelector(':scope > .sheettitle'), head = document.createElement('div');
+  head.className = 'sheethead';
+  const isNew = !!d.querySelector('form[id^="new"]');
+  head.innerHTML = `<button type="button" class="sheetdone" data-act="closedlg">${isNew ? 'Abbrechen' : 'Fertig'}</button>`;
+  if (title) head.prepend(title); else head.prepend(Object.assign(document.createElement('div'), { className: 'sheettitle' }));
+  d.prepend(head);
   if (!d.open) {
     d.showModal(); ui.sheetT = Date.now();
     // showModal() fokussiert das erste Feld; auf dem iPhone würde dann die Tastatur aufgehen. Nur Felder mit autofocus behalten den Fokus.
@@ -801,7 +808,14 @@ function flushSheetInputs() {
   if (pin && pin.value.trim() && addPins(pin.value)) { pin.value = ''; commit(); }
   if (kw && kw.value.trim() && addKeywords($('#kwForm')?.dataset.id, kw.value)) { kw.value = ''; save(); }
 }
-const closeSheet = () => { if (dlg().open) { flushSheetInputs(); dlg().close(); } };
+// Schließen (Fertig, Wisch nach unten, Tipp daneben) behält immer die Änderungen
+const closeSheet = () => {
+  if (!dlg().open) return;
+  flushSheetInputs();
+  const ef = dlg().querySelector('#editForm');
+  if (ef && ef.checkValidity()) ef.requestSubmit(); // Eintrag speichern (das Formular schließt das Sheet selbst)
+  if (dlg().open) dlg().close();
+};
 
 function storeSheet() {
   openSheet(`<div class="sheettitle">Einkauf bei</div>
@@ -829,15 +843,13 @@ function catSheet() {
   }).join('');
   openSheet(`<div class="sheettitle">Kategorien · ${esc(z.name)}</div>
     <div class="chips big">${chips}</div>
-    <p class="sheetnote" style="margin:10px 0">Eine Kategorie darf in mehreren Bereichen liegen, zum Beispiel bei zwei Kühltheken.</p>
+    <p class="sheetnote" style="margin:10px 0">Eine Kategorie darf in mehreren Bereichen liegen, zum Beispiel bei zwei Kühltheken.</p>`);
 
-    <button type="button" class="btn" style="width:100%;margin-top:10px" data-act="closedlg">Fertig</button>`);
 }
 function starSheet() {
   openSheet(`<div class="sheettitle">Standard-Bereich</div>
     <p class="sheetnote" style="margin:0 0 10px">Liegt eine Kategorie in mehreren Bereichen, zum Beispiel bei mehreren Kühltheken, landen Produkte dieser Kategorie ohne festen Bereich im Standard-Bereich.</p>
-    <p class="sheetnote" style="margin:0 0 10px">★ = dieser Bereich ist der Standard. ☆ = tippen, um ihn dazu zu machen. Ohne Auswahl gilt der erste Bereich in der Laufreihenfolge.</p>
-    <button type="button" class="btn" style="width:100%" data-act="closedlg">Fertig</button>`);
+    <p class="sheetnote" style="margin:0 0 10px">★ = dieser Bereich ist der Standard. ☆ = tippen, um ihn dazu zu machen. Ohne Auswahl gilt der erste Bereich in der Laufreihenfolge.</p>`);
 }
 function prodSheet() {
   const z = selZoneOrNull();
@@ -850,8 +862,7 @@ function prodSheet() {
       <input id="pinName" placeholder="Produkt hinzufügen, z. B. Tofu" aria-label="Produkt hinzufügen">
       <button type="submit" class="plus" aria-label="Hinzufügen">${ICON_PLUS}</button>
     </form>
-    <div id="pinSugg" class="sugg inl" role="listbox" aria-label="Vorschläge" hidden></div>
-    <button type="button" class="btn" style="width:100%" data-act="closedlg">Fertig</button>`);
+    <div id="pinSugg" class="sugg inl" role="listbox" aria-label="Vorschläge" hidden></div>`);
 }
 // Vorschläge unter dem Produktfeld: schon festgelegte fehlen, liegt ein Produkt in einem anderen Bereich, steht das dabei
 function updatePinSugg() {
@@ -1045,7 +1056,7 @@ function openEdit(id) {
   const it = S.items.find((i) => i.id === id);
   if (!it) return;
   if (!S.tipSeen) { S.tipSeen = true; save(); $('#listBody') && ($('#listBody').innerHTML = listBody()); }
-  openSheet(`<form method="dialog" id="editForm" data-id="${it.id}" data-cat="${it.cat}">
+  openSheet(`<div class="sheettitle">Eintrag</div><form method="dialog" id="editForm" data-id="${it.id}" data-cat="${it.cat}">
     <div class="namerow">
       <input id="eName" class="nameinput" value="${esc(it.name)}" placeholder="Name" aria-label="Name" required>
       <input id="eQty" value="${esc(it.qty)}" placeholder="Menge" aria-label="Menge">
@@ -1064,7 +1075,7 @@ function openEdit(id) {
     </div></div>
     <div class="actions">
       <button type="button" class="btn danger" data-act="delitem" data-id="${it.id}">Löschen</button>
-      <button type="submit" class="btn" style="flex:1">Speichern</button>
+      <button type="submit" hidden>Speichern</button>
     </div></form>`);
 }
 
@@ -1168,7 +1179,7 @@ function bindSheetGestures() {
     if (!done.active) {
       // Tipp auf den Griff oben: Details ein-/ausblenden
       const m = parts(), r = d.getBoundingClientRect();
-      if (!cancel && m && Math.abs(e.clientY - done.y) < 6 && Math.abs(e.clientX - done.x) < 6 && e.clientY >= r.top && e.clientY - r.top < 26) {
+      if (!cancel && m && Math.abs(e.clientY - done.y) < 6 && Math.abs(e.clientX - done.x) < 6 && e.clientY >= r.top && e.clientY - r.top < 26 && !e.target.closest?.('button')) {
         ui.sheetDragT = Date.now();
         const to = !m.f.classList.contains('expanded'), mt = metrics(m);
         m.more.inert = true; setP(m, mt, to ? 0 : 1, false); void m.more.offsetHeight; setP(m, mt, to ? 1 : 0, true);
