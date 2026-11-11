@@ -1427,14 +1427,14 @@ function startRedraw(id) {
 document.addEventListener('pointerdown', (e) => {
   if (ui.drawing && e.target.closest?.('#planSvg')) return; // beim Zeichnen nicht als langes Drücken werten
   if (e.target.closest?.('.grab')) return;
-  const el = e.target.closest?.('.row, .zone, .zitem, .star');
+  const el = e.target.closest?.('.row, .zone, .zitem, .star, .mcard');
   if (!el) return;
   const id = el.dataset.id;
   lpFired = false; lpStar = false;
   lp = { x: e.clientX, y: e.clientY, t: setTimeout(() => {
     lpFired = true; lp = null;
     try { navigator.vibrate?.(15); } catch (_) { /* kein Haptik-Support */ }
-    if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else startRedraw(id);
+    if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else if (el.classList.contains('mcard')) openMealEdit(id); else startRedraw(id);
   }, 450) };
 });
 document.addEventListener('pointermove', (e) => {
@@ -1474,7 +1474,7 @@ function mealSwipeToList(id) {
 }
 function runSwipe(kind, act, id) {
   if (kind === 'meal') {
-    if (act === 'delete') deleteMealUndo(id); else if (act === 'open') startMeal(id, false); else if (act === 'edit') { ui.mealId = id; ui.confirmMeal = false; ui.mealTagInput = false; mealEditSheet(); } else if (act === 'tolist') mealSwipeToList(id);
+    if (act === 'delete') deleteMealUndo(id); else if (act === 'open') startMeal(id, false); else if (act === 'edit') { ui.mealId = id; ui.confirmMeal = false; ui.mealTagInput = false; mealEditPage(); } else if (act === 'tolist') mealSwipeToList(id);
     return;
   }
   if (act === 'delete') deleteItemUndo(id);
@@ -1540,8 +1540,9 @@ document.addEventListener('change', (e) => {
 });
 document.addEventListener('contextmenu', (e) => {
   if (e.target.closest?.('.zone, .zitem')) { e.preventDefault(); return; }
-  const row = e.target.closest?.('.row');
+  const row = e.target.closest?.('.row'), mc = e.target.closest?.('.mcard');
   if (row) { e.preventDefault(); if (!dlg().open) { lpFired = true; openEdit(row.dataset.id); } }
+  else if (mc) { e.preventDefault(); lpFired = true; openMealEdit(mc.dataset.id); }
 });
 document.addEventListener('keydown', (e) => {
   const row = e.target.closest?.('.row');
@@ -1877,12 +1878,12 @@ function scaleQty(qty, f) {
 }
 function mealCard(m) {
   const sub = [m.tags.join(' · '), `${m.ing.length} ${m.ing.length === 1 ? 'Zutat' : 'Zutaten'}`].filter(Boolean).join(' · ');
-  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${esc(m.name)}</strong><small>${esc(sub)}</small></span><span class="go">›</span></button></li>`;
+  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${esc(m.name)}</strong><small>${esc(sub)}</small></span></button></li>`;
 }
 function mealListHtml() {
   if (!meals().length) return '<p class="empty">Noch kein Essen. Lege eins an, dann kommen seine Zutaten mit einem Tipp auf die Liste.</p>';
   const list = filteredMeals();
-  return list.length ? `<ul class="cards">${list.map(mealCard).join('')}</ul>` : '<p class="empty">Nichts passt zu dieser Auswahl.</p>';
+  return list.length ? `<ul class="cards">${list.map(mealCard).join('')}</ul><p class="tip">Tippen: auf die Liste · Gedrückt halten: bearbeiten</p>` : '<p class="empty">Nichts passt zu dieser Auswahl.</p>';
 }
 function viewMeals() {
   const tags = allTags();
@@ -1921,12 +1922,15 @@ function mealSheet() {
     </div>`);
 }
 const mealBtnText = () => `Zu „${curList()?.name || 'Liste'}“ hinzufügen (${ui.mealPick.size})`;
-function mealEditSheet() {
+// Gedrückt halten auf einem Essen: Bearbeiten als eigene Seite
+function openMealEdit(id) { ui.mealId = id; ui.confirmMeal = false; ui.mealTagInput = false; mealEditPage(); }
+function mealEditPage() {
   const m = mealById(ui.mealId);
   if (!m) return;
   const tags = [...new Set([...allTags(), ...m.tags, ...DEFAULT_TAGS])];
   const ings = ingSorted(m).map((i) => `<li class="ming"><input class="mqty" data-ing="${i.id}" value="${esc(i.qty || '')}" placeholder="Menge" aria-label="Menge für ${esc(i.name)}" autocomplete="off" autocapitalize="off" enterkeyhint="done"><span class="mn">${esc(i.name)}</span><button type="button" class="chipbtn basicbtn${i.basic ? ' on' : ''}" data-act="m_basic" data-id="${i.id}" aria-pressed="${!!i.basic}">Basis</button><button type="button" class="chipbtn" data-act="m_deling" data-id="${i.id}" aria-label="${esc(i.name)} entfernen">×</button></li>`).join('');
-  openSheet(`<div class="sheettitle">Essen bearbeiten</div>
+  const mid = m.id;
+  openPage('meal:' + mid, 'Essen bearbeiten', `
     <input id="mName" class="notein" value="${esc(m.name)}" aria-label="Name">
     <div class="label" style="margin:12px 0 4px">Tags</div>
     <div class="chips">${tags.map((t) => `<button type="button" class="chip${m.tags.includes(t) ? ' on' : ''}" data-act="m_edtag" data-tag="${esc(t)}" aria-pressed="${m.tags.includes(t)}">${esc(t)}</button>`).join('')}${ui.mealTagInput
@@ -1942,10 +1946,9 @@ function mealEditSheet() {
       <div class="bgrow"><label for="mPhoto" class="bgadd">${ICON_CAM}<span>${m.photo ? 'Foto ersetzen' : 'Foto hinzufügen'}</span></label><input type="file" id="mPhoto" accept="image/*" hidden>${m.photo ? '<button type="button" class="chipbtn" data-act="m_delphoto" aria-label="Foto entfernen">×</button>' : ''}</div>
       <textarea id="mSteps" class="notein" rows="5" placeholder="Kochanleitung" aria-label="Kochanleitung">${esc(m.steps || '')}</textarea>
     </details>
-    <div class="actions" style="margin-top:12px">
-      <button type="button" class="btn danger" data-act="m_del">${ui.confirmMeal ? 'Wirklich löschen?' : 'Löschen'}</button>
-      <button type="button" class="btn" style="flex:1" data-act="m_view">Fertig</button>
-    </div>`);
+    <div class="actions" style="margin-top:16px">
+      <button type="button" class="btn danger" data-act="m_del">${ui.confirmMeal ? 'Wirklich löschen?' : 'Essen löschen'}</button>
+    </div>`, () => { if (mealById(mid)) { ui.mealId = mid; mealEditPage(); } });
 }
 function addIngredients(id, text) {
   const m = mealById(id);
@@ -2032,31 +2035,31 @@ document.addEventListener('click', (e) => {
       if (!tagUsed(t)) { S.customTags = (S.customTags || []).filter((x) => x !== t); ui.mealTags = ui.mealTags.filter((x) => x !== t); save(); render(); break; } // Tag ohne Essen: entfernen
  ui.mealTags = ui.mealTags.includes(t) ? ui.mealTags.filter((x) => x !== t) : [...ui.mealTags, t]; render(); break; }
     case 'm_new': newMealSheet(); break;
-    case 'm_open': startMeal(id, false); break;
+    case 'm_open': if (lpFired) { lpFired = false; break; } startMeal(id, false); break; // nicht nach langem Drücken
     case 'm_random': randomMeal(); break;
     case 'm_pick': ui.mealPick.has(id) ? ui.mealPick.delete(id) : ui.mealPick.add(id); { const b = $('#mAddBtn'); if (b) { b.textContent = mealBtnText(); b.disabled = !ui.mealPick.size; } } break;
     case 'm_pm': ui.mealPortions = Math.max(0.5, Math.min(50, ui.mealPortions + parseFloat(el.dataset.d))); mealSheet(); break;
     case 'm_tolist': mealToList(); break;
-    case 'm_edit': ui.confirmMeal = false; ui.mealTagInput = false; mealEditSheet(); break;
-    case 'm_tagplus': ui.mealTagInput = true; mealEditSheet(); break;
+    case 'm_edit': ui.confirmMeal = false; ui.mealTagInput = false; mealEditPage(); break;
+    case 'm_tagplus': ui.mealTagInput = true; mealEditPage(); break;
     case 'm_view': flushSheetInputs(); render(); startMeal(ui.mealId, false); break;
-    case 'm_edtag': if (m) { const t = el.dataset.tag; m.tags = m.tags.includes(t) ? m.tags.filter((x) => x !== t) : [...m.tags, t]; save(); mealEditSheet(); } break;
-    case 'm_base': if (m) { m.base = Math.max(0.5, Math.min(50, (m.base || 2) + parseFloat(el.dataset.d))); save(); mealEditSheet(); } break;
-    case 'm_basic': { const i = m?.ing.find((x) => x.id === id); if (i) { i.basic = !i.basic; save(); mealEditSheet(); } break; }
+    case 'm_edtag': if (m) { const t = el.dataset.tag; m.tags = m.tags.includes(t) ? m.tags.filter((x) => x !== t) : [...m.tags, t]; save(); mealEditPage(); } break;
+    case 'm_base': if (m) { m.base = Math.max(0.5, Math.min(50, (m.base || 2) + parseFloat(el.dataset.d))); save(); mealEditPage(); } break;
+    case 'm_basic': { const i = m?.ing.find((x) => x.id === id); if (i) { i.basic = !i.basic; save(); mealEditPage(); } break; }
     case 'm_ingsugg': {
       const input = $('#mIng');
       if (!m || !input) break;
       const parts = input.value.split(',').map((x) => x.trim());
       const last = parseEntry(parts.pop());
       const txt = [...parts.filter(Boolean), `${last.qty ? last.qty + ' ' : ''}${el.dataset.name}`].join(',');
-      if (addIngredients(m.id, txt)) { save(); mealEditSheet(); $('#mIng')?.focus(); }
+      if (addIngredients(m.id, txt)) { save(); mealEditPage(); $('#mIng')?.focus(); }
       break;
     }
-    case 'm_deling': if (m) { m.ing = m.ing.filter((x) => x.id !== id); save(); mealEditSheet(); } break;
-    case 'm_delphoto': if (m) { m.photo = null; save(); mealEditSheet(); } break;
+    case 'm_deling': if (m) { m.ing = m.ing.filter((x) => x.id !== id); save(); mealEditPage(); } break;
+    case 'm_delphoto': if (m) { m.photo = null; save(); mealEditPage(); } break;
     case 'm_del':
-      if (!ui.confirmMeal) { ui.confirmMeal = true; mealEditSheet(); break; }
-      S.meals = meals().filter((x) => x !== m); ui.confirmMeal = false; closeSheet(); commit(); break;
+      if (!ui.confirmMeal) { ui.confirmMeal = true; mealEditPage(); break; }
+      S.meals = meals().filter((x) => x !== m); ui.confirmMeal = false; popPages(1); commit(); break;
   }
 }, true);
 document.addEventListener('input', (e) => {
@@ -2074,22 +2077,22 @@ document.addEventListener('submit', (e) => {
     const name = $('#newMealName').value.trim();
     if (!name) return;
     const nm = { id: uid(), name, tags: [...ui.mealTags], base: 2, ing: [], photo: null, steps: '' };
-    meals().push(nm); ui.mealId = nm.id; ui.mealTagInput = false; save(); render(); mealEditSheet();
+    meals().push(nm); ui.mealId = nm.id; ui.mealTagInput = false; save(); render(); mealEditPage();
   } else if (f.id === 'mOvTagForm') {
     e.preventDefault();
     addCustomTag($('#mOvTagNew').value);
   } else if (f.id === 'mIngForm') {
     e.preventDefault();
-    if (m && addIngredients(m.id, $('#mIng').value)) { save(); mealEditSheet(); $('#mIng')?.focus(); }
+    if (m && addIngredients(m.id, $('#mIng').value)) { save(); mealEditPage(); $('#mIng')?.focus(); }
   } else if (f.id === 'mTagForm') {
     e.preventDefault();
-    if (m) { addTagsTo(m, $('#mTagNew').value); ui.mealTagInput = false; save(); mealEditSheet(); }
+    if (m) { addTagsTo(m, $('#mTagNew').value); ui.mealTagInput = false; save(); mealEditPage(); }
   }
 }, true);
 document.addEventListener('change', async (e) => {
   const t = e.target, m = mealById(ui.mealId);
   if (t.id === 'mPhoto' && t.files[0] && m) {
-    try { m.photo = (await photoToDataUrl(t.files[0], 900)).url; save(); mealEditSheet(); } catch (err) { /* Bild nicht lesbar */ }
+    try { m.photo = (await photoToDataUrl(t.files[0], 900)).url; save(); mealEditPage(); } catch (err) { /* Bild nicht lesbar */ }
   }
 });
 

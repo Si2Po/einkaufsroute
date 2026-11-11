@@ -414,3 +414,5 @@ html.kb .page { padding-bottom: 16px; }
 .group .sheetbtn:active { background: var(--soft); }
 .group > .sheetnote { padding: 12px 14px; }
 .pagebody .kwbox { max-height: none; padding: 2px 0; }
+.pagebody .mings { max-height: none; overflow: visible; }
+.mcard { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; } /* langes Drücken ohne iOS-Menü */
