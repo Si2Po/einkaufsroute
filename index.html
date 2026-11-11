@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
-<script>/* Darstellung (Hell/Dunkel) sofort setzen, damit nichts aufblitzt */ try { var t = localStorage.getItem("ek_theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; var a = localStorage.getItem("ek_accent"); if (a) document.documentElement.dataset.accent = a; } catch (e) {}</script>
+<script>/* Darstellung (Hell/Dunkel) sofort setzen, damit nichts aufblitzt */ try { var t = localStorage.getItem("ek_theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; var a = localStorage.getItem("ek_accent"), r = document.documentElement; if (a) r.dataset.accent = a; if (a === "custom") { var c = JSON.parse(localStorage.getItem("ek_accent_c")); r.style.setProperty("--cust-l", c.l); r.style.setProperty("--cust-d", c.d); r.style.setProperty("--cust-od", c.od); } } catch (e) {}</script>
 </head>
 <body>
 <div id="topcover" aria-hidden="true"></div>

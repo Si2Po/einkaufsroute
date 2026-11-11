@@ -536,7 +536,7 @@ function viewSettings() {
       ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
       ${row('tab', 'Geschäfte und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}`, ' data-tab="stores"')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
-      ${row('themepage', 'Darstellung', `${THEME_LABEL[themePref()]} · ${ACCENTS[accentPref()][0]}`)}
+      ${row('themepage', 'Darstellung', `${THEME_LABEL[themePref()]} · ${accentName()}`)}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
     </ul>
     ${appVersion ? `<p class="tip">Version ${esc(appVersion)}</p>` : ''}`;
@@ -2255,23 +2255,52 @@ function themePref() { try { return localStorage.getItem('ek_theme') || 'auto'; 
 // Akzentfarben: Schlüssel → [Name, Farbe für die Auswahl]. Die eigentlichen Werte (hell/dunkel) stehen in style.css.
 const ACCENTS = { gruen: ['Grün', '#0E7A55'], blau: ['Blau', '#1F6BCF'], lila: ['Lila', '#7A4FD0'], orange: ['Orange', '#C25A00'], pink: ['Pink', '#C2306B'] };
 const ICON_CHECK = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-function accentPref() { try { const a = localStorage.getItem('ek_accent'); return ACCENTS[a] ? a : 'gruen'; } catch (_) { return 'gruen'; } }
+function customAccentStored() { try { const c = JSON.parse(localStorage.getItem('ek_accent_c')); return c && c.l ? c : null; } catch (_) { return null; } }
+function accentPref() {
+  try { const a = localStorage.getItem('ek_accent'); return ACCENTS[a] || (a === 'custom' && customAccentStored()) ? a : 'gruen'; } catch (_) { return 'gruen'; }
+}
+const accentName = () => (accentPref() === 'custom' ? 'Eigene Farbe' : ACCENTS[accentPref()][0]);
+// Eigene Farbe lesbar machen: im hellen Modus so weit abdunkeln, im dunklen so weit aufhellen, bis der Kontrast reicht (4,5 : 1)
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const rgbHex = (c) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+const lumi = (c) => { const [r, g, b] = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const contrastOf = (a, b) => { const x = lumi(a), y = lumi(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const mixRgb = (c, t, f) => c.map((v, i) => v + (t[i] - v) * f);
+function customAccent(hex) {
+  const c = hexRgb(hex), W = [255, 255, 255], DARK = [23, 28, 25]; // DARK = --surface im Dunkelmodus
+  let l = c, d = c;
+  for (let f = 0.05; contrastOf(l, W) < 4.5 && f <= 1; f += 0.05) l = mixRgb(c, [0, 0, 0], f);
+  for (let f = 0.05; contrastOf(d, DARK) < 4.5 && f <= 1; f += 0.05) d = mixRgb(c, W, f);
+  return { hex, l: rgbHex(l), d: rgbHex(d), od: contrastOf(d, [0, 0, 0]) >= contrastOf(d, W) ? '#0B0F0D' : '#FFFFFF' };
+}
 function applyTheme() {
   const p = themePref(), root = document.documentElement;
   if (p === 'auto') delete root.dataset.theme; else root.dataset.theme = p;
-  const a = accentPref();
+  const a = accentPref(), c = a === 'custom' ? customAccentStored() : null;
   if (a === 'gruen') delete root.dataset.accent; else root.dataset.accent = a;
+  ['l', 'd', 'od'].forEach((k) => { if (c) root.style.setProperty(`--cust-${k}`, c[k]); else root.style.removeProperty(`--cust-${k}`); });
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = THEME_BG[p === 'auto' ? (/dark/.test(m.media) ? 'dark' : 'light') : p]; });
 }
 function themePage() {
   const p = themePref();
   const opt = (v, label, sub) => `<button type="button" class="sheetbtn${p === v ? ' on' : ''}" data-act="settheme" data-id="${v}"><span>${label}${sub ? ` <small>${sub}</small>` : ''}</span></button>`;
-  const a = accentPref();
-  const sw = Object.entries(ACCENTS).map(([k, [name, c]]) => `<button type="button" class="swatch" style="--c:${c}" data-act="setaccent" data-id="${k}" aria-pressed="${a === k}" aria-label="${name}">${a === k ? ICON_CHECK : ''}</button>`).join('');
+  const a = accentPref(), cust = customAccentStored();
+  const sw = Object.entries(ACCENTS).map(([k, [name, c]]) => `<button type="button" class="swatch" style="--c:${c}" data-act="setaccent" data-id="${k}" aria-pressed="${a === k}" aria-label="${name}">${a === k ? ICON_CHECK : ''}</button>`).join('')
+    + `<label class="swatch custom${a === 'custom' ? ' on' : ''}" style="--c:${cust?.hex || '#888'}" aria-label="Eigene Farbe wählen">
+        ${a === 'custom' ? `<span class="dot" style="background:${cust.hex}">${ICON_CHECK}</span>` : ''}
+        <input type="color" id="accentPicker" value="${cust?.hex || '#0E7A55'}"></label>`;
   openPage('theme', 'Darstellung', `<div class="sheettitle">Hell oder dunkel</div>
     <div class="group">${opt('auto', 'Automatisch', 'wie das Gerät')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
-    <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${ACCENTS[a][0]}</small></div>
+    <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
     <div class="group swatches">${sw}</div>
-    <p class="sheetnote">Gilt nur für dieses Gerät.</p>`, themePage);
+    <p class="sheetnote">Der bunte Kreis öffnet die Farbauswahl. Zu helle oder zu dunkle Farben passt die App automatisch an, damit alles lesbar bleibt. Gilt nur für dieses Gerät.</p>`, themePage);
 }
+// Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
+function pickAccent(hex, done) {
+  try { localStorage.setItem('ek_accent', 'custom'); localStorage.setItem('ek_accent_c', JSON.stringify(customAccent(hex))); } catch (_) { /* privat */ }
+  applyTheme();
+  if (done) themePage();
+}
+document.addEventListener('input', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, false); });
+document.addEventListener('change', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, true); });
 applyTheme();

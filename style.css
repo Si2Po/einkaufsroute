@@ -497,3 +497,11 @@ dialog::backdrop { background: rgba(0, 0, 0, .32); }
 .swatches { display: flex; flex-wrap: wrap; gap: 12px; padding: 14px; }
 .swatch { width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: var(--c); display: grid; place-items: center; color: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
 .swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--c); }
+/* Eigene Akzentfarbe: Werte für hell/dunkel berechnet app.js (lesbar gemacht) und setzt sie als --cust-* auf <html> */
+:root[data-accent="custom"] { --accent: var(--cust-l); --on-accent: #FFFFFF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="custom"] { --accent: var(--cust-d); --on-accent: var(--cust-od); } }
+:root[data-theme="dark"][data-accent="custom"] { --accent: var(--cust-d); --on-accent: var(--cust-od); }
+.swatch.custom { position: relative; overflow: hidden; background: conic-gradient(#f33, #fc3, #3c6, #3cf, #36f, #c3f, #f33); cursor: pointer; }
+.swatch.custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; cursor: pointer; }
+.swatch.custom .dot { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; pointer-events: none; }
+.swatch.on { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--c, var(--accent)); }
