@@ -2129,3 +2129,27 @@ document.addEventListener('change', async (e) => {
     navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
   }
 })();
+
+// ---------- Vorschläge mit der Tastatur (am PC) ----------
+// Pfeil runter/hoch markiert einen Vorschlag, Enter übernimmt ihn, Esc blendet die Vorschläge aus.
+const SUGG_BOX = { addName: '#sugg', mIng: '#mIngSugg', pinName: '#pinSugg' };
+document.addEventListener('keydown', (e) => {
+  const sel = SUGG_BOX[e.target.id];
+  if (!sel || e.isComposing) return;
+  const box = $(sel);
+  const opts = box && !box.hidden ? [...box.querySelectorAll('.sg')] : [];
+  if (!opts.length) return;
+  const cur = opts.findIndex((o) => o.classList.contains('kb'));
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const next = e.key === 'ArrowDown' ? (cur + 1) % opts.length : (cur <= 0 ? opts.length : cur) - 1;
+    opts.forEach((o, i) => { o.classList.toggle('kb', i === next); o.setAttribute('aria-selected', String(i === next)); });
+    opts[next].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && cur > -1) {
+    e.preventDefault(); e.stopPropagation(); // nicht das Getippte, sondern den Vorschlag übernehmen
+    opts[cur].click();
+    e.target.focus();
+  } else if (e.key === 'Escape') {
+    box.hidden = true;
+  }
+}, true);
