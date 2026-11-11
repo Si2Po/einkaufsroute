@@ -1948,14 +1948,15 @@ function mealSheet() {
     ${m.photo ? `<img class="mphoto" src="${m.photo}" alt="">` : ''}
     <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="Weniger Personen"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="Mehr Personen">${ICON_PLUS_S}</button></div>
     ${m.ing.length ? `<ul class="scrollbox mings">${rows}</ul>` : '<p class="sheetnote">Noch keine Zutaten. Tippe auf „Bearbeiten“.</p>'}
-    <button type="button" class="btn" id="mAddBtn" data-act="m_tolist"${ui.mealPick.size ? '' : ' disabled'} style="width:100%;margin-top:10px">${mealBtnText()}</button>
     ${m.steps ? `<details class="mmore"><summary>Kochanleitung</summary><div class="msteps">${esc(m.steps)}</div></details>` : ''}
-    <div class="actions" style="margin-top:10px">
+    <div class="actions mealacts" style="margin-top:10px">
       <button type="button" class="btn ghost" data-act="m_edit">Bearbeiten</button>
-      ${ui.mealRandom ? '<button type="button" class="btn ghost" data-act="m_random" style="flex:1">Nochmal würfeln</button>' : ''}
+      ${ui.mealRandom ? `<button type="button" class="btn ghost diceBtn" data-act="m_random" aria-label="Nochmal würfeln">${ICON_DICE}</button>` : ''}
+      <button type="button" class="btn" id="mAddBtn" data-act="m_tolist"${ui.mealPick.size ? '' : ' disabled'}>${mealBtnText()}</button>
     </div>`);
 }
-const mealBtnText = () => `Zu „${curList()?.name || 'Liste'}“ hinzufügen (${ui.mealPick.size})`;
+const mealBtnText = () => `Zu „${curList()?.name || 'Liste'}“ (${ui.mealPick.size})`;
+const ICON_DICE = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="15" cy="15" r="1.5" fill="currentColor"/><circle cx="15" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="15" r="1.5" fill="currentColor"/></svg>';
 // Gedrückt halten auf einem Essen: Bearbeiten als eigene Seite
 function openMealEdit(id) { ui.mealId = id; ui.confirmMeal = false; ui.mealTagInput = false; mealEditPage(); }
 function mealEditPage() {
@@ -2331,3 +2332,11 @@ document.addEventListener('input', (e) => {
 // Plus/Minus für die runden Knöpfe (Personen): gezeichnet statt Schriftzeichen, damit sie genau mittig sitzen
 const ICON_MINUS = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
 const ICON_PLUS_S = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+// Scrollbare Listen in Sheets: unten (und nach dem Scrollen oben) weich ausblenden, solange dort noch mehr kommt
+function updateFade(sb) {
+  sb.classList.toggle('more-b', sb.scrollHeight - sb.scrollTop - sb.clientHeight > 4);
+  sb.classList.toggle('more-t', sb.scrollTop > 4);
+}
+document.addEventListener('scroll', (e) => { if (e.target.classList?.contains('scrollbox')) updateFade(e.target); }, true);
+new MutationObserver(() => requestAnimationFrame(() => dlg().querySelectorAll('.scrollbox').forEach(updateFade)))
+  .observe(dlg(), { childList: true, subtree: true });

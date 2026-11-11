@@ -536,3 +536,12 @@ dialog:not(.viewer) .mrow input { opacity: .95; }
 #tabbar { background-color: color-mix(in srgb, var(--surface) var(--bar-p, 72%), transparent); }
 dialog:not(.viewer) { background-color: color-mix(in srgb, var(--surface) var(--sheet-p, 86%), transparent); }
 .stepbtn { display: inline-grid; place-items: center; padding: 0; vertical-align: middle; } .stepbtn svg { display: block; } .stepbtn.sm svg { width: 15px; height: 15px; }
+/* Ausblenden am Rand scrollbarer Listen (app.js setzt more-t / more-b) */
+.scrollbox { --ft: 0px; --fb: 0px; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--ft), #000 calc(100% - var(--fb)), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 var(--ft), #000 calc(100% - var(--fb)), transparent 100%); }
+.scrollbox.more-b { --fb: 44px; }
+.scrollbox.more-t { --ft: 24px; }
+/* Essen-Sheet: Knöpfe in einer Reihe, Zutaten bekommen mehr Platz */
+dialog .mings { max-height: 48vh; }
+.mealacts { flex-wrap: nowrap; }
+.mealacts #mAddBtn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.diceBtn { flex: none; display: grid; place-items: center; padding: 0 12px; }
