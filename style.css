@@ -524,9 +524,10 @@ dialog:not(.viewer) .mrow input { opacity: .95; }
 
 /* Glas-Eindruck (Nachahmung von Liquid Glass; echte Lichtbrechung kann Safari nicht):
    schräger Lichtreflex über der Fläche, helle Lichtkante oben, feine Kante unten, weicher Schatten. */
-:root { --glass-hi: rgba(255, 255, 255, .55); --glass-sheen: rgba(255, 255, 255, .28); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --glass-hi: rgba(255, 255, 255, .16); --glass-sheen: rgba(255, 255, 255, .07); } }
-:root[data-theme="dark"] { --glass-hi: rgba(255, 255, 255, .16); --glass-sheen: rgba(255, 255, 255, .07); }
+:root { --glass-hi-0: rgba(255, 255, 255, .55); --glass-sheen-0: rgba(255, 255, 255, .28); }
+:root { --glass-hi: color-mix(in srgb, var(--glass-hi-0) var(--sheen-p, 100%), transparent); --glass-sheen: color-mix(in srgb, var(--glass-sheen-0) var(--sheen-p, 100%), transparent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --glass-hi-0: rgba(255, 255, 255, .16); --glass-sheen-0: rgba(255, 255, 255, .07); } }
+:root[data-theme="dark"] { --glass-hi-0: rgba(255, 255, 255, .16); --glass-sheen-0: rgba(255, 255, 255, .07); }
 #tabbar, dialog:not(.viewer) {
   background-image: linear-gradient(135deg, var(--glass-sheen) 0%, transparent 38%, transparent 68%, var(--glass-sheen) 100%);
   box-shadow: inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 color-mix(in srgb, var(--glass-hi) 40%, transparent),

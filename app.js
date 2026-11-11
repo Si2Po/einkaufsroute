@@ -2295,8 +2295,8 @@ function themePage() {
     <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
     <div class="group swatches">${sw}</div>
     <div class="sheettitle" style="margin-top:12px">Glas <small style="text-transform:none;letter-spacing:0;font-weight:600">· untere Leiste und Sheets</small></div>
-    <div class="group glassrow"><span aria-hidden="true">deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">durchsichtig</span><output id="glassOut">${glassPref()} %</output></div>
-    <p class="sheetnote">Der bunte Kreis öffnet die Farbauswahl. Zu helle oder zu dunkle Farben passt die App automatisch an, damit alles lesbar bleibt. Gilt nur für dieses Gerät.</p>`, themePage);
+    <div class="group glassrow"><span aria-hidden="true">Deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">Glas</span></div>
+    `, themePage);
 }
 // Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
 function pickAccent(hex, done) {
@@ -2320,11 +2320,11 @@ function applyGlass(n) {
   s.setProperty('--sheet-blur', `${Math.round(step(24, 67, 29))}px`);
   s.setProperty('--field-p', `${Math.round(step(95, 32, 16))}%`);    // Eingabefelder, Knöpfe, Listen in Sheets
   s.setProperty('--dim', step(0.28, 0.065, 0.026).toFixed(3));       // Abdunkelung hinter dem Sheet
+  s.setProperty('--sheen-p', `${Math.round(Math.min(1, n / 50) * 100)}%`); // Lichtreflex: bei 0 aus, ab 50 voll
 }
 document.addEventListener('input', (e) => {
   if (e.target.id !== 'glassRange') return;
   const g = +e.target.value;
   try { localStorage.setItem('ek_glass2', String(g)); } catch (_) { /* privat */ }
   applyGlass(g);
-  const o = $('#glassOut'); if (o) o.textContent = `${g} %`;
 });
