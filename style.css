@@ -416,3 +416,4 @@ html.kb .page { padding-bottom: 16px; }
 .pagebody .kwbox { max-height: none; padding: 2px 0; }
 .pagebody .mings { max-height: none; overflow: visible; }
 .mcard { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; } /* langes Drücken ohne iOS-Menü */
+.mmore #mSteps { display: block; margin-top: 12px; }
