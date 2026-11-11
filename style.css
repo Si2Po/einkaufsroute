@@ -421,9 +421,9 @@ html.kb .page { padding-bottom: 16px; }
 .ming .mname:focus { border-color: var(--line); background: var(--surface); outline: none; }
 .sg.kb { background: var(--soft); box-shadow: inset 3px 0 0 var(--accent); } /* mit Pfeiltasten markierter Vorschlag */
 
-/* Einheitliche Kopfzeile in Sheets: Titel links, „Fertig“ / „Abbrechen“ rechts */
+/* Einheitliche Kopfzeile in Sheets: Titel links, rechts runder ✕-Knopf (wie iOS 26) */
 .sheethead { display: flex; align-items: center; gap: 8px; margin: -4px 0 6px; min-height: 40px; }
 .sheethead .sheettitle { flex: 1; min-width: 0; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sheetdone { flex: none; background: none; border: 0; border-radius: 10px; color: var(--accent); font-weight: 700; font-size: 1rem; padding: 8px 6px 8px 12px; }
-.sheetdone:active { background: var(--soft); }
+.sheetdone { flex: none; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--soft); color: var(--muted); }
+.sheetdone:active { background: var(--line); }
 #editForm .actions { justify-content: flex-start; }

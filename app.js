@@ -563,11 +563,11 @@ const dlg = () => $('#dlg');
 function openSheet(html) {
   const d = dlg();
   d.innerHTML = html;
-  // Einheitliche Kopfzeile: Titel links, rechts „Fertig“ (bei Neu-Anlegen „Abbrechen“). Schließen geht auch per Wisch nach unten.
+  // Einheitliche Kopfzeile: Titel links, rechts ein runder ✕-Knopf (schließt, Änderungen bleiben; bei Neu-Anlegen = Abbrechen). Schließen geht auch per Wisch nach unten.
   const title = d.querySelector(':scope > .sheettitle'), head = document.createElement('div');
   head.className = 'sheethead';
   const isNew = !!d.querySelector('form[id^="new"]');
-  head.innerHTML = `<button type="button" class="sheetdone" data-act="closedlg">${isNew ? 'Abbrechen' : 'Fertig'}</button>`;
+  head.innerHTML = `<button type="button" class="sheetdone" data-act="closedlg" aria-label="${isNew ? 'Abbrechen' : 'Schließen'}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if (title) head.prepend(title); else head.prepend(Object.assign(document.createElement('div'), { className: 'sheettitle' }));
   d.prepend(head);
   if (!d.open) {
