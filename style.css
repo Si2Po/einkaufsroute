@@ -624,3 +624,4 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
 /* Kleiner Gruppen-Hinweis (z. B. „Einkauf“) bei Listen, Geschäften, Essen */
 .gtag { display: inline-block; margin-right: 6px; padding: 0 7px; border-radius: 999px; background: var(--soft); color: var(--muted); font-size: .72rem; font-weight: 600; line-height: 1.6; vertical-align: middle; }
 .srow:has(#catGroupSel) .pl { width: auto; white-space: nowrap; } /* „Stichwörter von“ nicht umbrechen */
+.acct > .sheetnote { padding: 0; } /* Kontokarte: Status nicht extra einrücken */

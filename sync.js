@@ -1,10 +1,10 @@
 'use strict';
-/* Konto, Haushalt und Synchronisation (Supabase, nur über fetch – keine Bibliothek).
+/* Konto, Gruppen und Synchronisation (Supabase, nur über fetch – keine Bibliothek).
 
    Jeder Laden, jede Kategorie, Liste, jeder Eintrag und jedes Essen ist ein "Dokument" in der Tabelle docs.
-   Die Dokument-ID wird aus Haushalt + Art + lokaler ID berechnet. Dadurch müssen lokale IDs nicht umgeschrieben werden,
+   Die Dokument-ID wird aus Gruppe (household) + Art + lokaler ID berechnet. Dadurch müssen lokale IDs nicht umgeschrieben werden,
    und zwei Geräte, die dieselbe Standard-Kategorie haben, meinen automatisch dasselbe Dokument.
-   Ablauf eines Durchgangs: erst eigene Änderungen hochladen (Vergleich über Hash), dann Änderungen der anderen holen.
+   Ablauf eines Durchgangs (für jede eigene Gruppe): erst eigene Änderungen hochladen (Vergleich über Hash), dann Änderungen der anderen holen.
    Gewinnt bei gleichzeitiger Änderung am selben Dokument: wer zuletzt hochlädt. Gelöschtes bleibt als Markierung (deleted) erhalten. */
 
 const EK = Object.assign({
@@ -142,7 +142,9 @@ async function refreshGroups(force) {
     const list = await api('/rest/v1/rpc/my_groups', { method: 'POST', body: '{}' });
     if (Array.isArray(list) && list.length) { sync.groups = list; return true; }
   } catch (e) {
-    if (isOffline(e)) throw e;
+    // Nur wenn die Funktion in der Datenbank fehlt (404), auf den alten Weg ausweichen. Bei anderen Fehlern lieber abbrechen,
+    // sonst würden Gruppen kurz „verschwinden“ und ihre Daten hier ausgeblendet.
+    if (isOffline(e) || e.status !== 404) throw e;
     // Datenbank noch ohne Gruppen-Ergänzung: wie früher mit dem einen aktiven Haushalt weiterarbeiten
     const p = await api(`/rest/v1/profiles?select=household_id&user_id=eq.${sync.sess.user.id}`);
     const hid = p && p[0] && p[0].household_id;
@@ -351,7 +353,7 @@ async function syncRun() {
         for (const r of rows) { if (r.deleted) known[r.id] = { del: 1, kind: r.kind }; if (!gsOf(g).cursor || r.updated_at > gsOf(g).cursor) gsOf(g).cursor = r.updated_at; }
         changed = true;
       }
-      if (!S.catGroup) setCatGroup(personalGroup());
+      if (!S.catGroup) { if (S.cats.length) S.catGroup = personalGroup(); else setCatGroup(personalGroup()); } // eigene Kategorien vom Gerät behalten
       repairState();
     }
     sync.legacyHid = null;
@@ -439,7 +441,7 @@ function accountPage(msg) {
   }
   const gRows = sync.groups.map((g) => `<button type="button" class="sheetbtn" data-act="acc_group" data-id="${g.id}"><span>${esc(g.name)}</span><small>${g.kind === 'personal' ? 'nur du' : `${(g.members || []).length} ${(g.members || []).length === 1 ? 'Mitglied' : 'Mitglieder'}`} ›</small></button>`).join('');
   openPage('account', 'Konto und Gruppen', `
-    <div class="group" style="padding:12px 14px">
+    <div class="group acct" style="padding:12px 14px">
       <strong style="overflow-wrap:anywhere">${esc(sync.sess.user.email)}</strong>
       <p class="sheetnote" style="margin:2px 0 0">${STATUS_TXT[sync.status] || ''}${sync.status === 'ok' && sync.last ? ' · ' + ago(sync.last) : ''}${sync.err && sync.status !== 'ok' ? '<br>' + esc(sync.err) : ''}</p>
     </div>

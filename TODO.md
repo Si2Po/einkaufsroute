@@ -27,7 +27,7 @@
 - [ ] Wenn ein Produkt „fällig" ist, als Vorschlag anzeigen („Klopapier? zuletzt vor 3 Wochen") mit Tipp = auf die Liste, Wisch = „nicht jetzt"
 - [ ] Nur Produkte vorschlagen, die mindestens 2–3 Mal gekauft wurden; Rhythmus manuell überschreibbar; Vorschläge abschaltbar
 
-## Großer Umbau: Gruppen (nächster Schritt nach dem Test der jetzigen Version)
+## Großer Umbau: Gruppen – umgesetzt (lokal, 0.7.0), siehe PLAN-GRUPPEN.md. Die Punkte unten sind der ursprüngliche Entwurf, teils anders gelöst.
 Entscheidung: Mehrere Gruppen pro Konto. Eine Gruppe ist ein eigener Bereich mit eigenen Listen, Kategorien, Stichwörtern, Läden, Essen und Mitgliedern. Technisch ist eine Gruppe ein „household“ in der Datenbank.
 - [ ] **„Persönlich“** entsteht automatisch mit dem Konto. Feste Gruppe: nicht verlassen, löschen, teilen, und niemand kann beitreten. Dort liegen auch Listen ohne Gruppe (z. B. Baumarkt). Der heutige Haushalt wird zu „Persönlich“.
 - [ ] Weitere Gruppen anlegen (Name + Typ), z. B. „Einkaufen“ (mit Läden, Route, Essen) oder „Filme“ (nur Kategorien/Listen)
