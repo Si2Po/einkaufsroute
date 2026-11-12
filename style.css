@@ -601,11 +601,23 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
 /* Einheitlicher Abstand zwischen Karten in allen Listen (Einstellungen, Geschäfte, Essen, Kategorien, Bereiche) */
 :root { --list-gap: 4px; }
 .cards, .zlist, #catRows { gap: var(--list-gap); }
-/* Nur Hochformat: im Querformat (Handys) ein Hinweis über allem */
-#rotateHint { display: none; }
-@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
-  html.portraitonly #rotateHint { display: grid; place-items: center; position: fixed; inset: 0; z-index: 1000; background: var(--bg); color: var(--ink); text-align: center; padding: 24px; }
-  html.portraitonly #rotateHint svg { color: var(--accent); }
-  html.portraitonly #rotateHint small { color: var(--muted); }
-  html.portraitonly dialog[open] { visibility: hidden; }
+
+/* ---------- Querformat auf dem Handy: wenig Höhe, also alles flacher ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  /* Leiste: flach, Symbol neben dem Text, schmaler */
+  #tabbar { max-width: 420px; padding: 3px; bottom: max(6px, calc(env(safe-area-inset-bottom, 0px) - 14px)); }
+  #tabbar button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; font-size: 12px; }
+  #tabbar button svg { width: 20px; height: 20px; }
+  .wrap { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  .page { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-bottom, 0px) + 58px); }
+  /* Seiten: kleinere Kopfzeile */
+  .pagehead { padding-bottom: 4px; }
+  .pagetitle { font-size: 1.3rem; }
+  .pageback { min-height: 36px; }
+  /* Sheets dürfen fast die ganze Höhe nutzen (auch das Essen-Sheet) */
+  dialog:not(.viewer), dialog[open]:has(> .mings), dialog.tall[open]:has(> .mings) { max-height: calc(var(--vvh, 100dvh) - 12px); }
+  dialog:not(.viewer) { margin-bottom: calc(var(--kb, 0px) + 6px); }
+  /* Grundriss nicht höher als der Bildschirm */
+  .plan svg { width: auto; max-width: 100%; max-height: calc(100dvh - 130px); margin: 0 auto; }
 }

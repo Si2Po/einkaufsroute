@@ -1289,6 +1289,7 @@ function bindSheetGestures() {
   // Essen-Sheet: zwei Höhen – normal (60 %) und groß (90 %). Nur wenn die Zutatenliste nicht ganz hineinpasst.
   function growInfo() {
     const list = d.querySelector(':scope > .mings');
+    if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) return null; // quer: Sheet ist schon so hoch wie möglich
     if (!list || (!d.classList.contains('tall') && list.scrollHeight <= list.clientHeight + 2)) return null;
     const vvh = window.visualViewport?.height || innerHeight;
     const sat = Math.max(0, (document.getElementById('topcover')?.offsetHeight || 14) - 14); // Höhe der Statusleiste
@@ -1775,7 +1776,6 @@ document.addEventListener('click', (e) => {
     case 'swipesheet': swipePage(); keep = true; break;
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
-    case 'togportrait': try { localStorage.setItem('ek_portrait', portraitPref() ? '0' : '1'); } catch (_) { /* privat */ } applyPortrait(); themePage(); keep = true; break;
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;
@@ -2438,8 +2438,6 @@ function themePage() {
     <div class="group swatches">${sw}</div>
     <div class="sheettitle" style="margin-top:12px">Glas</div>
     <div class="group glassrow"><span aria-hidden="true">Deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">Glas</span></div>
-    <div class="sheettitle" style="margin-top:12px">Drehen</div>
-    <div class="group"><button type="button" class="sheetbtn${portraitPref() ? ' on' : ''}" data-act="togportrait" aria-pressed="${portraitPref()}"><span>Nur Hochformat</span></button></div>
     `, themePage);
 }
 // Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
@@ -2535,20 +2533,3 @@ function haptic() {
   try { l.click(); } catch (_) { /* egal */ }
 }
 
-// ---------- Nur Hochformat (Einstellungen → Darstellung) ----------
-// Web-Apps auf dem iPhone können das Drehen nicht sperren. Ist die Option an, erscheint im Querformat ein Hinweis.
-// Wo der Browser es erlaubt (Android, installierte App), wird zusätzlich echt gesperrt.
-function portraitPref() { try { return localStorage.getItem('ek_portrait') === '1'; } catch (_) { return false; } }
-function applyPortrait() {
-  const on = portraitPref();
-  document.documentElement.classList.toggle('portraitonly', on);
-  if (on && !document.getElementById('rotateHint')) {
-    const d = document.createElement('div');
-    d.id = 'rotateHint'; d.setAttribute('role', 'alert');
-    d.innerHTML = `<div><svg viewBox="0 0 24 24" width="56" height="56" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 18.5h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <p><strong>Bitte das Handy drehen</strong><br>Die App ist auf Hochformat eingestellt.<br><small>Ändern: Einstellungen → Darstellung</small></p></div>`;
-    document.body.append(d);
-  }
-  try { if (on) screen.orientation?.lock?.('portrait').catch(() => {}); else screen.orientation?.unlock?.(); } catch (_) { /* nicht unterstützt */ }
-}
-applyPortrait();
