@@ -1587,7 +1587,7 @@ document.addEventListener('pointerdown', (e) => {
   lp = { x: e.clientX, y: e.clientY, t: setTimeout(() => {
     lpFired = true; lp = null;
     holdAfterLongPress();
-    try { navigator.vibrate?.(15); } catch (_) { /* kein Haptik-Support */ }
+    haptic();
     if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else if (el.classList.contains('mcard')) openMealEdit(id);
     else if (el.matches('.zitem, .catrow')) startWiggle(e, el); // Liste der Bereiche / Kategorien: sortieren
     else startRedraw(id); // Bereich im Grundriss: neu einzeichnen
@@ -1775,6 +1775,7 @@ document.addEventListener('click', (e) => {
     case 'swipesheet': swipePage(); keep = true; break;
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
+    case 'togportrait': try { localStorage.setItem('ek_portrait', portraitPref() ? '0' : '1'); } catch (_) { /* privat */ } applyPortrait(); themePage(); keep = true; break;
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;
@@ -2213,7 +2214,7 @@ document.addEventListener('click', (e) => {
  ui.mealTags = ui.mealTags.includes(t) ? ui.mealTags.filter((x) => x !== t) : [...ui.mealTags, t]; render(); break; }
     case 'm_new': newMealSheet(); break;
     case 'm_open': if (lpFired) { lpFired = false; break; } startMeal(id, false); break; // nicht nach langem Drücken
-    case 'm_random': ui.diceRoll = !!el.closest('#dlg'); randomMeal(); break; // im Sheet wackelt der Würfel
+    case 'm_random': haptic(); ui.diceRoll = !!el.closest('#dlg'); randomMeal(); break; // im Sheet wackelt der Würfel
     case 'm_pick': ui.mealPick.has(id) ? ui.mealPick.delete(id) : ui.mealPick.add(id); { const b = $('#mAddBtn'); if (b) { b.textContent = mealBtnText(); b.disabled = !ui.mealPick.size; } } break;
     case 'm_pm': ui.mealPortions = Math.max(0.5, Math.min(50, ui.mealPortions + parseFloat(el.dataset.d))); mealSheet(); break;
     case 'm_tolist': mealToList(); break;
@@ -2381,7 +2382,7 @@ async function syncNow() {
     const fn = action();
     if (d <= PULL || !fn) { hide(); return; }
     busy = true; ind.className = 'spin'; ind.style.opacity = '1'; ind.style.transform = `translate(-50%, ${PULL * 0.6}px)`;
-    try { navigator.vibrate?.(10); } catch (_) { /* egal */ }
+    haptic();
     Promise.resolve().then(fn).catch(() => {}).finally(() => { busy = false; hide(); });
   };
   document.addEventListener('touchend', end);
@@ -2437,6 +2438,8 @@ function themePage() {
     <div class="group swatches">${sw}</div>
     <div class="sheettitle" style="margin-top:12px">Glas</div>
     <div class="group glassrow"><span aria-hidden="true">Deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">Glas</span></div>
+    <div class="sheettitle" style="margin-top:12px">Drehen</div>
+    <div class="group"><button type="button" class="sheetbtn${portraitPref() ? ' on' : ''}" data-act="togportrait" aria-pressed="${portraitPref()}"><span>Nur Hochformat</span></button></div>
     `, themePage);
 }
 // Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
@@ -2513,3 +2516,39 @@ function migrateKeywords() {
   if (changed) indexCats();
   return changed;
 }
+
+// ---------- Haptik (kurzes Klicken) ----------
+// Android: Vibration. iPhone: Web-Apps dürfen nicht vibrieren, aber seit iOS 18 klickt Safari spürbar,
+// wenn ein Schalter (<input type="checkbox" switch>) umgeschaltet wird. Ein unsichtbarer Schalter macht das nach.
+// Wirkt nur direkt nach einem Tipp (nicht zeitverzögert), sonst bleibt es einfach still.
+function haptic() {
+  try { if (navigator.vibrate && navigator.vibrate(12)) return; } catch (_) { /* weiter mit dem Schalter */ }
+  let l = document.getElementById('hapticSwitch');
+  if (!l) {
+    l = document.createElement('label');
+    l.id = 'hapticSwitch'; l.setAttribute('aria-hidden', 'true');
+    l.style.cssText = 'position:fixed;left:-200px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
+    l.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+  }
+  const host = dlg().open ? dlg() : document.body; // bei offenem Sheet ist alles daneben gesperrt
+  if (l.parentNode !== host) host.append(l);
+  try { l.click(); } catch (_) { /* egal */ }
+}
+
+// ---------- Nur Hochformat (Einstellungen → Darstellung) ----------
+// Web-Apps auf dem iPhone können das Drehen nicht sperren. Ist die Option an, erscheint im Querformat ein Hinweis.
+// Wo der Browser es erlaubt (Android, installierte App), wird zusätzlich echt gesperrt.
+function portraitPref() { try { return localStorage.getItem('ek_portrait') === '1'; } catch (_) { return false; } }
+function applyPortrait() {
+  const on = portraitPref();
+  document.documentElement.classList.toggle('portraitonly', on);
+  if (on && !document.getElementById('rotateHint')) {
+    const d = document.createElement('div');
+    d.id = 'rotateHint'; d.setAttribute('role', 'alert');
+    d.innerHTML = `<div><svg viewBox="0 0 24 24" width="56" height="56" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 18.5h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <p><strong>Bitte das Handy drehen</strong><br>Die App ist auf Hochformat eingestellt.<br><small>Ändern: Einstellungen → Darstellung</small></p></div>`;
+    document.body.append(d);
+  }
+  try { if (on) screen.orientation?.lock?.('portrait').catch(() => {}); else screen.orientation?.unlock?.(); } catch (_) { /* nicht unterstützt */ }
+}
+applyPortrait();
