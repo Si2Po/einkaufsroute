@@ -440,7 +440,7 @@ function accountPage(msg) {
       ${dataRow}`, () => accountPage(ui.accMsg));
     return;
   }
-  const gRows = sync.groups.map((g) => `<button type="button" class="sheetbtn" data-act="acc_group" data-id="${g.id}"><span>${esc(g.name)}</span><small>${g.kind === 'personal' ? 'nur du' : `${(g.members || []).length} ${(g.members || []).length === 1 ? 'Mitglied' : 'Mitglieder'}`} ›</small></button>`).join('');
+  const gRows = sync.groups.map((g) => `<button type="button" class="sheetbtn" data-act="acc_group" data-id="${g.id}"><span class="gname">${ICON_GROUP}${esc(g.name)}</span><small>${g.kind === 'personal' ? 'nur du' : `${(g.members || []).length} ${(g.members || []).length === 1 ? 'Mitglied' : 'Mitglieder'}`} ›</small></button>`).join('');
   openPage('account', 'Konto und Gruppen', `
     <div class="group acct" style="padding:12px 14px">
       <strong style="overflow-wrap:anywhere">${esc(sync.sess.user.email)}</strong>
