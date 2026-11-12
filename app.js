@@ -1351,8 +1351,8 @@ function sortDrag(e, handle, li, list, sel, scroller, done) {
   place(e.clientY);
 }
 // ---------- Wackelmodus (wie auf dem iPhone-Home-Bildschirm) ----------
-// Lange drücken auf eine Zeile startet ihn, die gedrückte Zeile lässt sich sofort verschieben. Danach verschiebt jedes Ziehen
-// eine Zeile, Antippen öffnet nichts. „Fertig“ oder Verlassen der Seite beendet ihn.
+// Lange drücken auf eine Zeile startet ihn. Danach greift kurzes Halten einer Zeile sie zum Verschieben (sofort wischen scrollt),
+// Antippen öffnet nichts. „Fertig“ oder Verlassen der Seite beendet ihn.
 //   cats  = Kategorien (Reihenfolge der Liste ohne Geschäft; „Sonstiges“ bleibt immer unten)
 //   zones = Bereiche eines Geschäfts (Laufweg)
 const WIGGLE = {
@@ -1379,7 +1379,7 @@ function startWiggle(e, el) {
   list.classList.add('wiggle');
   list.parentElement.querySelector('.zpanelli')?.remove(); // offenes Bereichs-Panel stört beim Sortieren
   if (!list.previousElementSibling?.classList.contains('wigglebar')) list.insertAdjacentHTML('beforebegin', wiggleBar());
-  dragRow(e, kind, row); // Finger liegt noch: gleich verschieben
+  // Nur den Modus starten: verschoben wird erst, wenn danach eine Zeile kurz gehalten wird
 }
 function endWiggle() {
   if (!ui.wiggle) return;
