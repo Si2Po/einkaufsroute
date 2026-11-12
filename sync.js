@@ -12,7 +12,7 @@ const EK = Object.assign({
   key: 'sb_publishable_yxlkJ_Na6A0s-3guPHAUYQ_j2y4JMpO'
 }, window.EK_CONFIG || {});
 
-const sync = { sess: null, hid: null, cursor: null, known: {}, status: 'out', last: 0, err: '', busy: false, again: false, dirty: false, ver: 0, quiet: false, joinCode: null, renderLater: false, ready: false };
+const sync = { sess: null, groups: [], gs: {}, legacyHid: null, status: 'out', last: 0, err: '', busy: false, again: false, dirty: false, ver: 0, quiet: false, joinCode: null, renderLater: false, ready: false };
 
 // ---------- Speicher für Anmeldung und Abgleichstand ----------
 async function kvGet(k) {
@@ -25,7 +25,7 @@ async function kvSet(k, v) {
   try { const db = await openDb(); db.transaction('kv', 'readwrite').objectStore('kv').put(v, k); }
   catch (_) { try { localStorage.setItem('ek_' + k, JSON.stringify(v)); } catch (__) { /* gesperrt */ } }
 }
-const persistSync = () => kvSet('sync', { sess: sync.sess, hid: sync.hid, cursor: sync.cursor, known: sync.known });
+const persistSync = () => kvSet('sync', { sess: sync.sess, groups: sync.groups, gs: sync.gs, v: 2 });
 
 // ---------- Hilfen ----------
 const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((q) => [q, x[q]])) : x));
@@ -37,8 +37,8 @@ function h53(str) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
 const idCache = new Map();
-async function docId(kind, lid) {
-  const key = sync.hid + '|' + kind + '|' + lid;
+async function docId(g, kind, lid) {
+  const key = g + '|' + kind + '|' + lid; // g = Gruppe (household)
   if (idCache.has(key)) return idCache.get(key);
   const b = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key)));
   b[6] = (b[6] & 0x0f) | 0x50; b[8] = (b[8] & 0x3f) | 0x80;
@@ -113,53 +113,117 @@ async function authCall(kind, email, password) {
     const r = await api(path, { method: 'POST', body: JSON.stringify({ email, password }) }, true);
     if (!r || !r.access_token) { sync.sess = saved; return { needsConfirm: true }; }
     takeSession(r);
-    sync.hid = null; sync.known = {}; sync.cursor = null; sync.err = '';
+    forgetGroups(); sync.err = '';
     persistSync();
     return { ok: true };
   } catch (e) { sync.sess = saved; throw e; }
 }
-async function ensureHousehold() {
-  const p = await api(`/rest/v1/profiles?select=household_id&user_id=eq.${sync.sess.user.id}`);
-  const hid = p && p[0] && p[0].household_id;
-  if (!hid) throw new Error('Kein Haushalt gefunden');
-  if (hid !== sync.hid) { sync.hid = hid; sync.known = {}; sync.cursor = null; persistSync(); }
+// Anmelden/Abmelden: Gruppen-Zuordnung vergessen. Die Daten bleiben auf dem Gerät, gelten aber als „noch keiner Gruppe zugeordnet“.
+function forgetGroups() {
+  sync.groups = []; sync.gs = {}; sync.legacyHid = null;
+  if (typeof S === 'undefined' || !S || !S.lists) return;
+  for (const arr of [S.lists, S.stores, S.meals || []]) for (const x of arr) delete x.g;
+  S.catGroup = null; S.gcats = {}; S.gset = {}; S.lastGroup = null;
 }
 
-// ---------- Lokale Daten -> Dokumente ----------
+// ---------- Gruppen ----------
+// Eine Gruppe ist technisch ein „household“. Die App hält die Daten ALLER eigenen Gruppen gleichzeitig:
+//   Listen, Geschäfte und Essen merken sich ihre Gruppe im Feld g.
+//   Kategorien/Stichwörter: S.cats = die gewählte Stichwortliste (Gruppe S.catGroup); die der anderen Gruppen liegen in S.gcats[g].
+//   Einstellungen (Tags, zuletzt getippt): aktive in S.customTags/S.recent, die der anderen Gruppen in S.gset[g].
+// Pro Gruppe gibt es einen eigenen Abgleich-Stand: sync.gs[g] = { cursor, known }.
+const gsOf = (g) => (sync.gs[g] = sync.gs[g] || { cursor: null, known: {} });
+const personalGroup = () => sync.groups.find((x) => x.kind === 'personal')?.id || sync.groups[0]?.id || null;
+const groupName = (g) => sync.groups.find((x) => x.id === g)?.name || '';
+let groupsRun = 0;
+async function refreshGroups(force) {
+  if (!force && sync.groups.length && groupsRun++ % 6) return true; // nicht bei jedem Durchgang
+  try {
+    const list = await api('/rest/v1/rpc/my_groups', { method: 'POST', body: '{}' });
+    if (Array.isArray(list) && list.length) { sync.groups = list; return true; }
+  } catch (e) {
+    if (isOffline(e)) throw e;
+    // Datenbank noch ohne Gruppen-Ergänzung: wie früher mit dem einen aktiven Haushalt weiterarbeiten
+    const p = await api(`/rest/v1/profiles?select=household_id&user_id=eq.${sync.sess.user.id}`);
+    const hid = p && p[0] && p[0].household_id;
+    if (hid) { sync.groups = [{ id: hid, name: 'Haushalt', kind: 'shopping', members: [] }]; return true; }
+  }
+  throw new Error('Keine Gruppe gefunden');
+}
+// Gruppe der Stichwortliste wechseln (Einstellungen → Kategorien)
+function setCatGroup(g) {
+  if (!g || g === S.catGroup) return;
+  S.gcats = S.gcats || {}; S.gset = S.gset || {};
+  if (S.catGroup) { S.gcats[S.catGroup] = S.cats; S.gset[S.catGroup] = { customTags: S.customTags || [], recent: S.recent || [] }; }
+  S.catGroup = g;
+  S.cats = S.gcats[g] && S.gcats[g].length ? S.gcats[g] : DEFAULT_CATS.map(cloneCat);
+  const st = S.gset[g] || {};
+  S.customTags = st.customTags || []; S.recent = st.recent || [];
+  delete S.gcats[g]; delete S.gset[g];
+  CATS = S.cats; indexCats();
+}
+// Alles ohne Gruppe (neu angelegt, aus einer Sicherung, aus der Zeit vor den Gruppen) bekommt eine
+function assignGroups(def) {
+  if (!def) return false;
+  let n = 0;
+  for (const arr of [S.lists, S.stores, S.meals || []]) for (const x of arr) if (!x.g || !sync.groups.some((gr) => gr.id === x.g)) { x.g = def; n++; }
+  if (!S.catGroup) { S.catGroup = def; n++; }
+  return n > 0;
+}
+// Gruppe verlassen oder aufgelöst: ihre Daten verschwinden hier
+function dropGone() {
+  const ids = new Set(sync.groups.map((x) => x.id));
+  const gone = (x) => x.g && !ids.has(x.g);
+  const before = S.lists.length + S.stores.length + (S.meals || []).length;
+  S.lists = S.lists.filter((x) => !gone(x)); S.stores = S.stores.filter((x) => !gone(x)); S.meals = (S.meals || []).filter((x) => !gone(x));
+  Object.keys(sync.gs).forEach((g) => { if (!ids.has(g)) delete sync.gs[g]; });
+  Object.keys(S.gcats || {}).forEach((g) => { if (!ids.has(g)) delete S.gcats[g]; });
+  Object.keys(S.gset || {}).forEach((g) => { if (!ids.has(g)) delete S.gset[g]; });
+  if (S.catGroup && !ids.has(S.catGroup)) { const c = S.catGroup; S.catGroup = null; setCatGroup(personalGroup()); delete (S.gcats || {})[c]; }
+  return before !== S.lists.length + S.stores.length + (S.meals || []).length;
+}
+
+// ---------- Lokale Daten -> Dokumente (je Gruppe) ----------
 async function buildDocs() {
   const snap = snapshot();
   const uidv = sync.sess.user.id;
-  const out = new Map();
-  const put = async (kind, lid, data, listLid, priv) => {
-    const id = await docId(kind, lid);
-    const list_id = kind === 'list' ? id : (listLid ? await docId('list', listLid) : null);
-    const row = { id, household_id: sync.hid, kind, list_id, visible_to: priv ? uidv : null, data, deleted: false };
-    out.set(id, { row, kind, lid, h: rowHash(row) });
+  const out = new Map(); // g -> Map(docId -> { row, kind, lid, h })
+  const put = async (g, kind, lid, data, listLid, priv) => {
+    if (!g) return;
+    const id = await docId(g, kind, lid);
+    const list_id = kind === 'list' ? id : (listLid ? await docId(g, 'list', listLid) : null);
+    const row = { id, household_id: g, kind, list_id, visible_to: priv ? uidv : null, data, deleted: false };
+    if (!out.has(g)) out.set(g, new Map());
+    out.get(g).set(id, { row, kind, lid, h: rowHash(row) });
   };
-  await put('settings', 'main', { customTags: snap.customTags || [], recent: snap.recent || [] });
-  for (const [i, c] of (snap.cats || []).entries()) await put('cat', c.id, { ...c, _o: i });
-  for (const [i, s] of (snap.stores || []).entries()) await put('store', s.id, { ...s, _o: i });
-  for (const m of snap.meals || []) await put('meal', m.id, m);
+  if (snap.catGroup) {
+    await put(snap.catGroup, 'settings', 'main', { customTags: snap.customTags || [], recent: snap.recent || [] });
+    for (const [i, c] of (snap.cats || []).entries()) await put(snap.catGroup, 'cat', c.id, { ...c, _o: i });
+  }
+  for (const [g, st] of Object.entries(snap.gset || {})) await put(g, 'settings', 'main', { customTags: st.customTags || [], recent: st.recent || [] });
+  for (const [g, cats] of Object.entries(snap.gcats || {})) for (const [i, c] of cats.entries()) await put(g, 'cat', c.id, { ...c, _o: i });
+  for (const [i, s] of (snap.stores || []).entries()) { const { g, ...rest } = s; await put(g, 'store', s.id, { ...rest, _o: i }); }
+  for (const m of snap.meals || []) { const { g, ...rest } = m; await put(g, 'meal', m.id, rest); }
   for (const [i, l] of (snap.lists || []).entries()) {
-    const { items, ...rest } = l;
-    await put('list', l.id, { ...rest, _o: i }, null, l.private);
-    for (const it of items || []) await put('item', it.id, { ...it, _list: l.id }, l.id, l.private);
+    const { items, g, ...rest } = l;
+    await put(g, 'list', l.id, { ...rest, _o: i }, null, l.private);
+    for (const it of items || []) await put(g, 'item', it.id, { ...it, _list: l.id }, l.id, l.private);
   }
   return out;
 }
 const knownEntry = (d) => ({ h: d.h, lid: d.lid, kind: d.row.kind, l: d.row.list_id, v: d.row.visible_to });
 
-async function pushChanges(cur) {
-  const rows = [];
-  for (const [id, d] of cur) if (!sync.known[id] || sync.known[id].h !== d.h) rows.push({ row: d.row, k: knownEntry(d) });
-  for (const [id, k] of Object.entries(sync.known)) {
-    if (!cur.has(id) && !k.del) rows.push({ row: { id, household_id: sync.hid, kind: k.kind, list_id: k.l, visible_to: k.v, data: {}, deleted: true }, k: { del: 1, kind: k.kind } });
+async function pushChanges(g, cur) {
+  const known = gsOf(g).known, rows = [];
+  for (const [id, d] of cur) if (!known[id] || known[id].h !== d.h) rows.push({ row: d.row, k: knownEntry(d) });
+  for (const [id, k] of Object.entries(known)) {
+    if (!cur.has(id) && !k.del) rows.push({ row: { id, household_id: g, kind: k.kind, list_id: k.l, visible_to: k.v, data: {}, deleted: true }, k: { del: 1, kind: k.kind } });
   }
   let batch = [], size = 0;
   const flush = async () => {
     if (!batch.length) return;
     await api('/rest/v1/docs?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(batch.map((b) => b.row)) });
-    batch.forEach((b) => { sync.known[b.row.id] = b.k; });
+    batch.forEach((b) => { known[b.row.id] = b.k; });
     batch = []; size = 0;
     persistSync();
   };
@@ -172,11 +236,11 @@ async function pushChanges(cur) {
   return rows.length;
 }
 
-// ---------- Dokumente -> lokale Daten ----------
-async function pullRows() {
-  const rows = [];
+// ---------- Dokumente -> lokale Daten (je Gruppe) ----------
+async function pullRows(g) {
+  const cursor = gsOf(g).cursor, rows = [];
   for (let off = 0; ; off += 500) {
-    const q = `/rest/v1/docs?select=*&household_id=eq.${sync.hid}` + (sync.cursor ? `&updated_at=gte.${encodeURIComponent(sync.cursor)}` : '') + `&order=updated_at.asc,id.asc&limit=500&offset=${off}`;
+    const q = `/rest/v1/docs?select=*&household_id=eq.${g}` + (cursor ? `&updated_at=gte.${encodeURIComponent(cursor)}` : '') + `&order=updated_at.asc,id.asc&limit=500&offset=${off}`;
     const page = await api(q);
     rows.push(...page);
     if (page.length < 500) break;
@@ -188,61 +252,65 @@ function upsertIn(arr, ent) {
   const i = arr.findIndex((x) => x.id === ent.id);
   if (i >= 0) arr[i] = ent; else arr.push(ent);
 }
-function removeFrom(arr, id) { const i = arr.findIndex((x) => x.id === id); if (i >= 0) arr.splice(i, 1); }
+const removeWhere = (arr, fn) => { const i = arr.findIndex(fn); if (i >= 0) arr.splice(i, 1); };
 
-// rows: Zeilen vom Server; pending: Menge der Dokument-IDs mit noch nicht hochgeladener lokaler Änderung
-async function applyRows(rows, pending) {
-  const touched = [];
+// rows: Zeilen der Gruppe g vom Server; pending: Dokument-IDs mit noch nicht hochgeladener lokaler Änderung
+async function applyRows(rows, pending, g) {
+  const touched = [], known = gsOf(g).known;
   snapshot();
+  S.gcats = S.gcats || {}; S.gset = S.gset || {};
+  const catArr = () => (g === S.catGroup ? S.cats : (S.gcats[g] = S.gcats[g] || []));
   const ord = { cat: new Map(), store: new Map(), list: new Map() };
-  S.cats.forEach((x, i) => ord.cat.set(x.id, i)); S.stores.forEach((x, i) => ord.store.set(x.id, i)); S.lists.forEach((x, i) => ord.list.set(x.id, i));
+  catArr().forEach((x, i) => ord.cat.set(x.id, i)); S.stores.forEach((x, i) => ord.store.set(x.id, i)); S.lists.forEach((x, i) => ord.list.set(x.id, i));
   const todo = [];
   for (const r of rows) {
-    const k = sync.known[r.id];
+    const k = known[r.id];
     if (!r.deleted && k && k.h === rowHash(r)) continue;     // haben wir schon
-    if (r.deleted && (!k || k.del)) { if (!k) sync.known[r.id] = { del: 1, kind: r.kind }; continue; }
+    if (r.deleted && (!k || k.del)) { if (!k) known[r.id] = { del: 1, kind: r.kind }; continue; }
     if (pending.has(r.id)) continue;                         // lokale Änderung gewinnt, wird gleich hochgeladen
     todo.push(r);
   }
   todo.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind));
   for (const r of todo) {
     const d = r.data || {};
-    const lid = d.id ?? (sync.known[r.id] && sync.known[r.id].lid);
+    const lid = d.id ?? (known[r.id] && known[r.id].lid);
     if (r.deleted) {
-      const kl = sync.known[r.id] && sync.known[r.id].lid;
-      if (r.kind === 'cat') removeFrom(S.cats, kl);
-      else if (r.kind === 'store') removeFrom(S.stores, kl);
-      else if (r.kind === 'meal') removeFrom(S.meals, kl);
-      else if (r.kind === 'list') removeFrom(S.lists, kl);
-      else if (r.kind === 'item') S.lists.forEach((l) => removeFrom(l.items, kl));
-      sync.known[r.id] = { del: 1, kind: r.kind }; touched.push({ id: r.id, gone: true });
+      const kl = known[r.id] && known[r.id].lid;
+      const mine = (x) => x.id === kl && x.g === g; // nur, was hier noch in dieser Gruppe liegt (sonst wurde es verschoben)
+      if (r.kind === 'cat') removeWhere(catArr(), (x) => x.id === kl);
+      else if (r.kind === 'store') removeWhere(S.stores, mine);
+      else if (r.kind === 'meal') removeWhere(S.meals, mine);
+      else if (r.kind === 'list') removeWhere(S.lists, mine);
+      else if (r.kind === 'item') S.lists.forEach((l) => { if (l.g === g) removeWhere(l.items, (x) => x.id === kl); });
+      known[r.id] = { del: 1, kind: r.kind }; touched.push({ id: r.id, gone: true, g });
       continue;
     }
     const { _o, _list, ...ent } = d;
-    if (r.kind === 'settings') { S.customTags = ent.customTags || []; S.recent = ent.recent || []; }
-    else if (r.kind === 'cat') { upsertIn(S.cats, ent); ord.cat.set(ent.id, _o ?? 999); }
-    else if (r.kind === 'store') { upsertIn(S.stores, ent); ord.store.set(ent.id, _o ?? 999); }
-    else if (r.kind === 'meal') upsertIn(S.meals, ent);
+    if (r.kind === 'settings') {
+      if (g === S.catGroup) { S.customTags = ent.customTags || []; S.recent = ent.recent || []; } else S.gset[g] = { customTags: ent.customTags || [], recent: ent.recent || [] };
+    } else if (r.kind === 'cat') { upsertIn(catArr(), ent); ord.cat.set(ent.id, _o ?? 999); }
+    else if (r.kind === 'store') { ent.g = g; upsertIn(S.stores, ent); ord.store.set(ent.id, _o ?? 999); }
+    else if (r.kind === 'meal') { ent.g = g; upsertIn(S.meals, ent); }
     else if (r.kind === 'list') {
       const old = S.lists.find((l) => l.id === ent.id);
-      ent.items = old ? old.items : [];
+      ent.items = old ? old.items : []; ent.g = g;
       upsertIn(S.lists, ent); ord.list.set(ent.id, _o ?? 999);
     } else if (r.kind === 'item') {
       const l = S.lists.find((x) => x.id === _list);
       if (!l) continue;
-      S.lists.forEach((o) => { if (o !== l) removeFrom(o.items, ent.id); });   // Eintrag in andere Liste verschoben
+      S.lists.forEach((o) => { if (o !== l) removeWhere(o.items, (x) => x.id === ent.id); });   // Eintrag in andere Liste verschoben
       upsertIn(l.items, ent);
     }
-    touched.push({ id: r.id, lid });
+    touched.push({ id: r.id, lid, g });
   }
   const sortBy = (arr, m) => arr.sort((a, b) => (m.get(a.id) ?? 999) - (m.get(b.id) ?? 999));
-  sortBy(S.cats, ord.cat); sortBy(S.stores, ord.store); sortBy(S.lists, ord.list);
+  sortBy(catArr(), ord.cat); sortBy(S.stores, ord.store); sortBy(S.lists, ord.list);
   S.items.sort((a, b) => a.ts - b.ts);
   return touched;
 }
-// Nach dem Anwenden: aktive Liste/Laden/Kategorien wieder zusammenbringen
+// Nach dem Anwenden: aktive Liste/Geschäft/Kategorien wieder zusammenbringen
 function repairState() {
-  if (!S.lists.length) S.lists = [{ id: uid(), name: 'Einkaufsliste', items: [] }];
+  if (!S.lists.length) S.lists = [{ id: uid(), name: 'Einkaufsliste', items: [], g: personalGroup() || undefined }];
   if (!S.lists.some((l) => l.id === S.listId)) S.listId = S.lists[0].id;
   const l = curList();
   S.items = l.items;
@@ -252,37 +320,65 @@ function repairState() {
   CATS = S.cats; indexCats();
 }
 
-// ---------- Ein Durchgang ----------
+// ---------- Ein Durchgang (alle Gruppen) ----------
 async function syncRun() {
   if (!sync.sess || !sync.ready) return;
   if (sync.busy) { sync.again = true; return; }
   sync.busy = true; sync.status = 'busy'; paintStatus();
   try {
     if (sync.sess.expires_at - Date.now() / 1000 < 90 && !(await refreshSession())) { if (!sync.sess) throw new Error('Bitte neu anmelden.'); }
-    if (!sync.hid) await ensureHousehold();
-    const first = sync.cursor === null && !Object.keys(sync.known).length;
-    let changed = false;
-    if (first) {
-      const rows = await pullRows();
-      if (rows.some((r) => !r.deleted)) await adoptServer(rows);   // Server hat Daten: sie ersetzen die lokalen
-      else { sync.dirty = true; }
-      changed = rows.length > 0;
+    await refreshGroups(false);
+    let changed = dropGone();
+    const groups = sync.groups.map((x) => x.id);
+    // Erster Abgleich einer Gruppe auf diesem Gerät: erst schauen, was der Server hat
+    const firstRows = new Map();
+    for (const g of groups) { const st = gsOf(g); if (st.cursor === null && !Object.keys(st.known).length) firstRows.set(g, await pullRows(g)); }
+    if (firstRows.size) {
+      const serverHas = [...firstRows.values()].some((rows) => rows.some((r) => !r.deleted));
+      const unassigned = S.lists.some((x) => !x.g) || S.stores.some((x) => !x.g) || (S.meals || []).some((x) => !x.g);
+      if (unassigned && serverHas && !sync.legacyHid) {
+        // Neues Gerät / neue Anmeldung: Daten vom Server ersetzen die (unzugeordneten) Daten hier – Sicherung bleibt
+        await kvSet('backup', { t: Date.now(), state: snapshot() });
+        S.lists = S.lists.filter((x) => x.g); S.stores = S.stores.filter((x) => x.g); S.meals = (S.meals || []).filter((x) => x.g);
+        if (!S.catGroup) { S.cats = []; S.customTags = []; S.recent = []; }
+      }
+      for (const [g, rows] of firstRows) {
+        if (!rows.some((r) => !r.deleted)) { sync.dirty = true; continue; } // Server leer: unsere Daten hochladen
+        if (!S.catGroup && rows.some((r) => r.kind === 'cat' && !r.deleted)) { S.catGroup = g; S.cats = S.cats.length ? S.cats : []; }
+        await applyRows(rows, new Set(), g);
+        const cur = (await buildDocs()).get(g) || new Map(), known = gsOf(g).known;
+        for (const [id, d] of cur) known[id] = knownEntry(d);
+        for (const r of rows) { if (r.deleted) known[r.id] = { del: 1, kind: r.kind }; if (!gsOf(g).cursor || r.updated_at > gsOf(g).cursor) gsOf(g).cursor = r.updated_at; }
+        changed = true;
+      }
+      if (!S.catGroup) setCatGroup(personalGroup());
+      repairState();
     }
+    sync.legacyHid = null;
+    if (assignGroups(S.lastGroup && groups.includes(S.lastGroup) ? S.lastGroup : (S.catGroup || personalGroup()))) { sync.dirty = true; changed = true; }
+    // Hochladen
     const v0 = sync.ver;
-    let cur = null;
-    if (sync.dirty) { cur = await buildDocs(); await pushChanges(cur); if (sync.ver === v0) sync.dirty = false; }
-    const rows = await pullRows();
-    const pending = new Set();
-    if (sync.ver !== v0 || sync.dirty) { cur = await buildDocs(); for (const [id, d] of cur) { const k = sync.known[id]; if (!k || k.h !== d.h) pending.add(id); } }
-    const touched = await applyRows(rows, pending);
+    if (sync.dirty) {
+      const cur = await buildDocs();
+      for (const g of groups) await pushChanges(g, cur.get(g) || new Map());
+      if (sync.ver === v0) sync.dirty = false;
+    }
+    // Holen
+    let touched = [];
+    for (const g of groups) {
+      const rows = await pullRows(g);
+      const pending = new Set();
+      if (sync.ver !== v0 || sync.dirty) { const cur = (await buildDocs()).get(g) || new Map(), known = gsOf(g).known; for (const [id, d] of cur) { const k = known[id]; if (!k || k.h !== d.h) pending.add(id); } }
+      touched = touched.concat(await applyRows(rows, pending, g));
+      for (const r of rows) if (!gsOf(g).cursor || r.updated_at > gsOf(g).cursor) gsOf(g).cursor = r.updated_at;
+    }
     if (touched.length) {
       repairState();
       const cur2 = await buildDocs();
-      for (const t of touched) { if (t.gone) continue; const d = cur2.get(t.id); if (d) sync.known[t.id] = knownEntry(d); }
-      sync.quiet = true; save();
+      for (const t of touched) { if (t.gone) continue; const d = cur2.get(t.g)?.get(t.id); if (d) gsOf(t.g).known[t.id] = knownEntry(d); }
       changed = true;
     }
-    for (const r of rows) if (!sync.cursor || r.updated_at > sync.cursor) sync.cursor = r.updated_at;
+    if (changed) { sync.quiet = true; save(); }
     persistSync();
     sync.status = 'ok'; sync.err = ''; sync.last = Date.now();
     if (changed) renderSoon();
@@ -294,22 +390,6 @@ async function syncRun() {
     sync.busy = false; paintStatus();
     if (sync.again) { sync.again = false; setTimeout(syncRun, 300); }
   }
-}
-// Erster Abgleich auf diesem Gerät, Server hat schon Daten: lokale Daten sichern und durch die vom Server ersetzen
-async function adoptServer(rows) {
-  await kvSet('backup', { t: Date.now(), state: snapshot() });
-  const keep = { swipe: S.swipe, swipeM: S.swipeM, v: S.v };
-  const listId = S.listId;
-  S = { ...keep, storeId: null, stores: [], cats: [], lists: [], meals: [], recent: [], customTags: [], items: [], listId };
-  const touched = await applyRows(rows, new Set());
-  repairState();
-  const cur = await buildDocs();
-  sync.known = {};
-  for (const [id, d] of cur) sync.known[id] = knownEntry(d);
-  for (const r of rows) if (r.deleted) sync.known[r.id] = { del: 1, kind: r.kind };
-  sync.dirty = false;
-  sync.quiet = true; save();
-  return touched;
 }
 function renderSoon() {
   const a = document.activeElement;
@@ -376,7 +456,7 @@ function joinPage(code, msg) {
   openPage('join', 'Einladung annehmen', `
     <form id="joinForm" autocomplete="off" style="display:grid;gap:10px">
       <label class="field"><span>Einladungscode</span><input id="joinCode" value="${esc(code || '')}" autocapitalize="characters" autocomplete="off" ${code ? '' : 'autofocus'} required></label>
-      <p class="sheetnote" style="color:var(--warn)">Achtung: Die Daten auf diesem Gerät (Geschäfte, Listen, Essen) werden durch die Daten des Haushalts ersetzt. Eine Sicherung bleibt auf dem Gerät.</p>
+      <p class="sheetnote">Die Gruppe kommt zu deinen dazu. Deine eigenen Listen, Geschäfte und Essen bleiben, wie sie sind.</p>
       ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg)}</p>` : ''}
       <button type="submit" class="btn">Beitreten</button>
     </form>`);
@@ -399,10 +479,11 @@ async function acceptInvite(code) {
   try {
     const hid = await api('/rest/v1/rpc/accept_invite', { method: 'POST', body: JSON.stringify({ c: code }) });
     sync.joinCode = null; try { localStorage.removeItem('ek_join'); } catch (_) { /* egal */ }
-    sync.hid = hid; sync.known = {}; sync.cursor = null; persistSync();
+    S.lastGroup = hid; // Neues landet erst einmal in der neuen Gruppe
+    await refreshGroups(true);
     await syncRun();
     render();
-    accountPage(sync.status === 'ok' ? 'Du bist jetzt im Haushalt.' : '!' + (sync.err || 'Abgleich später'));
+    accountPage(sync.status === 'ok' ? `Du bist jetzt in der Gruppe „${groupName(hid) || 'Neue Gruppe'}“.` : '!' + (sync.err || 'Abgleich später'));
   } catch (e) { joinPage(code, niceError(e)); }
 }
 
@@ -507,7 +588,8 @@ document.addEventListener('click', async (e) => {
     if (navigator.share) { try { await navigator.share({ title: 'Einkaufsroute', text: 'Komm in meinen Haushalt bei Einkaufsroute:', url: link }); } catch (_) { /* abgebrochen */ } }
     else { const ok = await copyText(link); const i = $('#invLink'); if (i) { i.select(); } toast(ok ? 'Link kopiert' : 'Link markiert – bitte kopieren'); }
   } else if (act === 'acc_logout') {
-    sync.sess = null; sync.hid = null; sync.known = {}; sync.cursor = null; sync.status = 'out'; sync.err = '';
+    sync.sess = null; forgetGroups(); sync.status = 'out'; sync.err = '';
+    save();
     await persistSync();
     accountPage('Abgemeldet. Deine Daten bleiben auf diesem Gerät.');
     render();
@@ -517,12 +599,23 @@ document.addEventListener('click', async (e) => {
 // ---------- Start ----------
 (async function syncInit() {
   const saved = await kvGet('sync');
-  if (saved && saved.sess) { sync.sess = saved.sess; sync.hid = saved.hid || null; sync.cursor = saved.cursor ?? null; sync.known = saved.known || {}; sync.status = 'busy'; }
+  if (saved && saved.sess) {
+    sync.sess = saved.sess; sync.status = 'busy';
+    sync.groups = saved.groups || []; sync.gs = saved.gs || {};
+    // Stand aus der Zeit vor den Gruppen: der bisherige Haushalt wird zur Gruppe, sein Abgleich-Stand bleibt erhalten
+    if (saved.hid && !saved.gs) { sync.legacyHid = saved.hid; sync.gs[saved.hid] = { cursor: saved.cursor ?? null, known: saved.known || {} }; }
+  }
   const m = /^#join=([A-Za-z0-9]+)/.exec(location.hash);
   if (m) { sync.joinCode = m[1].toUpperCase(); try { localStorage.setItem('ek_join', sync.joinCode); } catch (_) { /* egal */ } history.replaceState(null, '', location.pathname + location.search); }
   else { try { sync.joinCode = localStorage.getItem('ek_join'); } catch (_) { /* egal */ } }
   // auf den Start von app.js warten (S wird dort geladen)
   for (let i = 0; i < 200 && !(typeof S !== 'undefined' && S && S.lists); i++) await new Promise((r) => setTimeout(r, 50));
+  if (sync.legacyHid) { // alle bisherigen Daten gehören zum bisherigen Haushalt (jetzt Gruppe „Einkauf“)
+    for (const arr of [S.lists, S.stores, S.meals || []]) for (const x of arr) if (!x.g) x.g = sync.legacyHid;
+    if (!S.catGroup) S.catGroup = sync.legacyHid;
+    S.lastGroup = S.lastGroup || sync.legacyHid;
+    sync.quiet = true; save(); persistSync();
+  }
   sync.ready = true;
   if (typeof render === 'function' && ui.tab === 'settings') render();
   if (sync.sess) syncRun();
