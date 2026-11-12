@@ -37,9 +37,9 @@ aus allen eigenen Gruppen. Die Gruppe regelt nur, **wer etwas mitsieht**.
 - Die Dokument-Kennung bleibt „Gruppe + Art + lokale ID“, lokale IDs ändern sich nie.
 
 ## Reihenfolge
-1. ✅ SQL (`supabase/gruppen.sql`) – vom Besitzer in Supabase auszuführen.
-2. App: Abgleich für mehrere Gruppen, alles bekommt eine Gruppe, Anzeige über alle Gruppen.
-3. App: Einstellungen → Gruppen (anlegen, umbenennen, einladen, beitreten, austreten) + Auswahl der Stichwortliste.
-4. App: Gruppe bei Listen/Geschäften/Essen wählen und verschieben, Nachfrage beim Geschäft.
+1. ✅ SQL (`supabase/gruppen.sql`) – in Supabase ausgeführt (12.11.2026).
+2. ✅ App: Abgleich für mehrere Gruppen, alles bekommt eine Gruppe, Anzeige über alle Gruppen.
+3. ✅ App: Einstellungen → Konto und Gruppen (anlegen, umbenennen, einladen, beitreten, austreten) + Auswahl der Stichwortliste.
+4. ✅ App: Gruppe bei Listen/Geschäften/Essen wählen und verschieben, Nachfrage beim Geschäft.
 5. Test mit Test-Konto, dann bei euch.
 6. Später: Gruppentyp „Einfache Listen“.

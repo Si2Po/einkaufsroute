@@ -425,7 +425,7 @@ function accountPage(msg) {
     <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>Daten sichern und übertragen</span><small>Datei oder Text ›</small></button></div>`;
   if (!sync.sess) {
     const mail = $('#accMail')?.value || '', pass = $('#accPass')?.value || ''; // beim Neuzeichnen nichts Getipptes verlieren
-    openPage('account', 'Konto und Haushalt', `
+    openPage('account', 'Konto und Gruppen', `
       <p class="sheetnote">Mit einem Konto liegen deine Daten sicher online, laufen auf mehreren Geräten und lassen sich mit anderen teilen. Ohne Konto bleibt alles wie bisher nur auf diesem Gerät.</p>
       ${sync.joinCode ? '<p class="sheetnote" style="color:var(--accent)">Du hast eine Einladung bekommen. Melde dich an oder registriere dich, danach kannst du sie annehmen.</p>' : ''}
       <form id="accForm" autocomplete="on" style="display:grid;gap:10px;margin-top:8px">
@@ -437,20 +437,49 @@ function accountPage(msg) {
       ${dataRow}`, () => accountPage(ui.accMsg));
     return;
   }
-  openPage('account', 'Konto und Haushalt', `
+  const gRows = sync.groups.map((g) => `<button type="button" class="sheetbtn" data-act="acc_group" data-id="${g.id}"><span>${esc(g.name)}</span><small>${g.kind === 'personal' ? 'nur du' : `${(g.members || []).length} ${(g.members || []).length === 1 ? 'Mitglied' : 'Mitglieder'}`} ›</small></button>`).join('');
+  openPage('account', 'Konto und Gruppen', `
     <div class="group" style="padding:12px 14px">
       <strong style="overflow-wrap:anywhere">${esc(sync.sess.user.email)}</strong>
       <p class="sheetnote" style="margin:2px 0 0">${STATUS_TXT[sync.status] || ''}${sync.status === 'ok' && sync.last ? ' · ' + ago(sync.last) : ''}${sync.err && sync.status !== 'ok' ? '<br>' + esc(sync.err) : ''}</p>
     </div>
     ${note}
-    <div class="sheettitle" style="margin-top:16px">Haushalt</div>
-    <p class="sheetnote" style="margin:0 4px 8px">Wer zu deinem Haushalt gehört, teilt Geschäfte, Stichwörter, Essen und Listen.</p>
-    <div class="group">
-      <button type="button" class="sheetbtn" data-act="acc_invite"><span>Person einladen</span><small>Link erstellen ›</small></button>
-      <button type="button" class="sheetbtn" data-act="acc_joinsheet"><span>Einladung annehmen</span><small>Code eingeben ›</small></button>
+    <div class="sheettitle" style="margin-top:16px">Gruppen</div>
+    <p class="sheetnote" style="margin:0 4px 8px">Was in einer Gruppe liegt, sehen alle ihre Mitglieder. Du selbst siehst immer alles aus allen deinen Gruppen.</p>
+    ${gRows ? `<div class="group">${gRows}</div>` : '<p class="sheetnote">Gruppen werden geladen …</p>'}
+    <div class="actions" style="margin-top:8px">
+      <button type="button" class="btn ghost" data-act="acc_newgroup">+ Neue Gruppe</button>
+      <button type="button" class="btn ghost" data-act="acc_joinsheet">Einladung annehmen</button>
     </div>
     ${dataRow}
     <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>`, () => accountPage(ui.accMsg));
+}
+// Eine Gruppe: Name, Mitglieder, einladen, verlassen
+function groupPage(id, msg) {
+  const g = sync.groups.find((x) => x.id === id);
+  if (!g) { backTo('account', () => accountPage()); return; }
+  const personal = g.kind === 'personal', me = sync.sess?.user.email;
+  const count = (arr) => arr.filter((x) => x.g === id).length;
+  const what = [`${count(S.lists)} ${count(S.lists) === 1 ? 'Liste' : 'Listen'}`, `${count(S.stores)} ${count(S.stores) === 1 ? 'Geschäft' : 'Geschäfte'}`, `${count(S.meals || [])} Essen`].join(' · ');
+  openPage('group:' + id, g.name, `
+    ${personal ? '' : `<label class="field"><span>Name</span><input id="grpName" data-id="${id}" value="${esc(g.name)}" autocomplete="off"></label>`}
+    <p class="sheetnote" style="margin:4px">${personal ? 'Nur für dich. Diese Gruppe kann nicht geteilt oder verlassen werden.' : 'Alle Mitglieder sehen, was in dieser Gruppe liegt.'} Darin: ${what}.</p>
+    ${msg ? `<p class="sheetnote" role="status" style="color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : ''}
+    <div class="sheettitle" style="margin-top:12px">Mitglieder</div>
+    <div class="group">${(g.members || []).map((m) => `<div class="sheetbtn"><span style="overflow-wrap:anywhere">${esc(m)}</span>${m === me ? '<small>du</small>' : ''}</div>`).join('') || '<p class="sheetnote">–</p>'}</div>
+    ${personal ? '' : `<div class="actions" style="margin-top:12px">
+      <button type="button" class="btn" data-act="acc_invite" data-id="${id}">Person einladen</button>
+      <button type="button" class="btn danger" data-act="acc_leave" data-id="${id}">${ui.confirmLeave === id ? 'Wirklich verlassen?' : 'Gruppe verlassen'}</button>
+    </div>
+    ${ui.confirmLeave === id ? `<p class="sheetnote" style="color:var(--warn);margin:6px 4px">Danach siehst du die Listen, Geschäfte und Essen dieser Gruppe nicht mehr.${(g.members || []).length <= 1 ? ' Du bist das letzte Mitglied: die Gruppe wird mit allem gelöscht.' : ''}</p>` : ''}`}`, () => groupPage(id));
+}
+function newGroupSheet(msg) {
+  openSheet(`<div class="sheettitle">Neue Gruppe</div>
+    <form id="newGroupForm" autocomplete="off">
+      <input id="newGroupName" autofocus class="notein" placeholder="Name, z. B. Einkauf oder Familie" aria-label="Name der Gruppe" required>
+      ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg)}</p>` : ''}
+      <button type="submit" class="btn">Anlegen</button>
+    </form>`);
 }
 function joinPage(code, msg) {
   openPage('join', 'Einladung annehmen', `
@@ -464,12 +493,12 @@ function joinPage(code, msg) {
 async function copyText(t) {
   try { await navigator.clipboard.writeText(t); return true; } catch (_) { return false; }
 }
-async function createInvite() {
+async function createInvite(g) {
   try {
-    const code = await api('/rest/v1/rpc/create_invite', { method: 'POST', body: '{}' });
+    const code = await api('/rest/v1/rpc/create_invite', { method: 'POST', body: JSON.stringify({ g }) });
     const link = location.origin + location.pathname + '#join=' + code;
     openPage('invite', 'Person einladen', `
-      <p class="sheetnote" style="margin:0 4px 8px">Schick diesen Link an die Person. Er gilt 7 Tage. Sie öffnet ihn auf ihrem Handy, meldet sich an und ist danach im Haushalt.</p>
+      <p class="sheetnote" style="margin:0 4px 8px">Schick diesen Link an die Person. Er gilt 7 Tage. Sie öffnet ihn auf ihrem Handy, meldet sich an und ist danach in der Gruppe „${esc(groupName(g))}“.</p>
       <input class="notein" id="invLink" readonly value="${esc(link)}" aria-label="Einladungslink">
       <p class="sheetnote" style="margin:8px 4px">Oder der Code zum Eintippen: <strong>${esc(code)}</strong></p>
       <button type="button" class="btn" data-act="acc_share" data-link="${esc(link)}">${navigator.share ? 'Teilen' : 'Link kopieren'}</button>`);
@@ -580,7 +609,16 @@ document.addEventListener('click', async (e) => {
     return;
   }
   if (act === 'acc_back') accountPage();
-  else if (act === 'acc_invite') createInvite();
+  else if (act === 'acc_invite') createInvite(el.dataset.id);
+  else if (act === 'acc_group') { ui.confirmLeave = null; groupPage(el.dataset.id); }
+  else if (act === 'acc_newgroup') newGroupSheet();
+  else if (act === 'acc_leave') {
+    const g = el.dataset.id;
+    if (ui.confirmLeave !== g) { ui.confirmLeave = g; groupPage(g); return; }
+    ui.confirmLeave = null;
+    try { await api('/rest/v1/rpc/leave_group', { method: 'POST', body: JSON.stringify({ g }) }); await refreshGroups(true); await syncRun(); render(); accountPage('Gruppe verlassen.'); }
+    catch (err) { groupPage(g, '!' + niceError(err)); }
+  }
   else if (act === 'acc_joinsheet') joinPage('');
   else if (act === 'acc_sync') { sync.dirty = true; sync.ver++; await syncRun(); accountPage(sync.status === 'ok' ? 'Abgeglichen.' : '!' + sync.err); }
   else if (act === 'acc_share') {
@@ -624,3 +662,28 @@ document.addEventListener('click', async (e) => {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncRun(); });
   window.addEventListener('online', () => syncRun());
 })();
+
+// ---------- Gruppe anlegen und umbenennen ----------
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'newGroupForm') return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const n = $('#newGroupName').value.trim();
+  if (!n) return;
+  try {
+    const g = await api('/rest/v1/rpc/create_group', { method: 'POST', body: JSON.stringify({ n }) });
+    closeSheet();
+    await refreshGroups(true);
+    await syncRun();
+    accountPage(); groupPage(g, `Gruppe „${n}“ angelegt. Lade jetzt jemanden ein, oder verschiebe Listen hierher.`);
+  } catch (err) { newGroupSheet(niceError(err)); }
+}, true);
+document.addEventListener('change', async (e) => {
+  if (e.target.id !== 'grpName') return;
+  const g = e.target.dataset.id, n = e.target.value.trim(), old = groupName(g);
+  if (!n || n === old) { e.target.value = old; return; }
+  try {
+    await api('/rest/v1/rpc/rename_group', { method: 'POST', body: JSON.stringify({ g, n }) });
+    await refreshGroups(true);
+    render(); groupPage(g, 'Umbenannt.');
+  } catch (err) { e.target.value = old; groupPage(g, '!' + niceError(err)); }
+});

@@ -337,7 +337,7 @@ function viewList() {
 
 function viewStores() {
   const cards = S.stores.map((s) => `<li><button type="button" class="card" data-act="openstore" data-id="${s.id}">
-      <span><strong>${esc(s.name)}</strong><small>${s.zones.length} ${s.zones.length === 1 ? 'Bereich' : 'Bereiche'}${s.id === S.storeId ? ' · aktiv' : ''}</small></span>
+      <span><strong>${esc(s.name)}</strong><small>${groupTag(s.g)}${s.zones.length} ${s.zones.length === 1 ? 'Bereich' : 'Bereiche'}${s.id === S.storeId ? ' · aktiv' : ''}</small></span>
       <span class="go">›</span></button></li>`).join('');
   return `${pageHead('Einstellungen', 'Geschäfte', 'data-act="tab" data-tab="settings"')}
     <p class="hint">Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.</p>
@@ -539,7 +539,7 @@ function viewSettings() {
   const row = (act, title, sub, extra = '') => `<li><button type="button" class="card" data-act="${act}"${extra}><span><strong>${title}</strong><small>${sub}</small></span><span class="go">›</span></button></li>`;
   return `<div class="edhead"><h2>Einstellungen</h2></div>
     <ul class="cards">
-      ${row('accountsheet', 'Konto und Haushalt', typeof accountSub === 'function' ? accountSub() : 'Nicht angemeldet')}
+      ${row('accountsheet', 'Konto und Gruppen', typeof accountSub === 'function' ? accountSub() : 'Nicht angemeldet')}
       ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
       ${row('tab', 'Geschäfte und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}`, ' data-tab="stores"')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
@@ -879,7 +879,7 @@ const closeSheet = () => {
 function storeSheet() {
   openSheet(`<div class="sheettitle">Einkauf bei</div>
     <button type="button" class="sheetbtn${S.storeId ? '' : ' on'}" data-act="pickstore" data-id="">Kein Geschäft <small>Standardreihenfolge</small></button>
-    ${S.stores.map((s) => `<button type="button" class="sheetbtn${s.id === S.storeId ? ' on' : ''}" data-act="pickstore" data-id="${s.id}">${esc(s.name)}</button>`).join('')}
+    ${S.stores.map((s) => `<button type="button" class="sheetbtn${s.id === S.storeId ? ' on' : ''}" data-act="pickstore" data-id="${s.id}"><span>${esc(s.name)}</span><small>${groupTag(s.g)}</small></button>`).join('')}
     <button type="button" class="sheetbtn accent" data-act="newstoresheet">+ Neues Geschäft</button>
     <button type="button" class="sheetbtn accent" data-act="gostores">Geschäfte bearbeiten …</button>`);
 }
@@ -945,6 +945,7 @@ function catListPage() {
   const rows = CATS.map((c) => `<div class="catrow" data-key="${c.id}"><button type="button" class="sheetbtn" data-act="catdetail" data-id="${c.id}"><span>${esc(c.name)}</span><small>${c.id === 'sonst' && !c.kw.length ? 'Auffangbecken' : `${c.kw.length} Stichwörter`} ›</small></button></div>`).join('');
   const q = $('#catSearch')?.value || '';
   openPage('cats', 'Kategorien', `
+    ${groupSelect('catGroupSel', S.catGroup, 'Stichwörter von')}
     <input id="catSearch" type="search" class="notein catsearch" value="${esc(q)}" placeholder="Produkt suchen: in welcher Kategorie?" aria-label="Stichwort suchen" autocomplete="off" autocapitalize="off" enterkeyhint="search">
     <div id="catRes" class="group" hidden></div>
     <p class="sheetnote" style="margin:4px 4px 0">In dieser Reihenfolge sortiert sich die Liste, wenn kein Geschäft gewählt ist. Lange drücken zum Sortieren.</p>
@@ -1017,6 +1018,7 @@ function newStoreSheet() {
     <form id="newStoreForm" autocomplete="off">
       <input id="newStoreName" autofocus class="notein" placeholder="Name, z. B. Rewe Hauptstraße" aria-label="Name des Geschäfts" required>
       ${S.stores.length ? `<label class="srow"><span class="pl">Vorlage</span><select id="nsTemplate" aria-label="Bereiche übernehmen von"><option value="">Leer beginnen</option>${S.stores.map((x) => `<option value="${x.id}">Kopie von ${esc(x.name)}</option>`).join('')}</select></label>` : ''}
+      ${groupSelect('nsGroup', curList()?.g || defaultGroup())}
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
 }
@@ -1024,7 +1026,7 @@ function listSheet() {
   openSheet(`<div class="sheettitle">Listen</div>
     <div class="scrollbox">${S.lists.map((l) => {
       const n = (l.id === S.listId ? S.items : l.items || []).filter((i) => !i.done).length;
-      return `<button type="button" class="sheetbtn${l.id === S.listId ? ' on' : ''}" data-act="picklist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${n} offen</small></button>`;
+      return `<button type="button" class="sheetbtn${l.id === S.listId ? ' on' : ''}" data-act="picklist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${groupTag(l.g)}${n} offen</small></button>`;
     }).join('')}</div>
     <div class="actions" style="margin-top:10px">
       <button type="button" class="btn ghost" data-act="newlistsheet">+ Neue Liste</button>
@@ -1035,7 +1037,7 @@ function listSheet() {
 function listsPage() {
   const rows = S.lists.map((l) => {
     const n = (l.id === S.listId ? S.items : l.items || []).filter((i) => !i.done).length;
-    return `<button type="button" class="sheetbtn" data-act="editlist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${l.id === S.listId ? 'aktiv · ' : ''}${n} offen ›</small></button>`;
+    return `<button type="button" class="sheetbtn" data-act="editlist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${groupTag(l.g)}${l.id === S.listId ? 'aktiv · ' : ''}${n} offen ›</small></button>`;
   }).join('');
   openPage('lists', 'Listen', `<div class="group">${rows}</div>
     <p class="sheetnote">Welche Liste du gerade siehst, wählst du mit einem zweiten Tipp auf „Liste“ unten.</p>
@@ -1045,6 +1047,7 @@ function newListSheet() {
   openSheet(`<div class="sheettitle">Neue Liste</div>
     <form id="newListForm" autocomplete="off">
       <input id="newListName" autofocus class="notein" placeholder="Name, z. B. Drogerie oder Party" aria-label="Name der Liste" required>
+      ${groupSelect('nlGroup', defaultGroup())}
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
 }
@@ -1054,6 +1057,7 @@ function listEditPage(id) {
   const n = (l.id === S.listId ? S.items : l.items || []).length;
   openPage('list:' + id, 'Liste bearbeiten', `
     <label class="field"><span>Name</span><input id="listName" data-id="${l.id}" value="${esc(l.name)}"></label>
+    ${groupSelect('leGroup', l.g, 'Gruppe', ` data-id="${l.id}"`)}
     ${S.lists.length > 1 ? `<div class="actions" style="margin-top:16px"><button type="button" class="btn danger" data-act="dellist" data-id="${l.id}">${ui.confirmList === l.id ? `Wirklich löschen? (${n} Einträge)` : 'Liste löschen'}</button></div>` : ''}`, () => listEditPage(id));
 }
 // Name sofort übernehmen (beim Tippen), nicht erst beim Verlassen des Feldes
@@ -1085,6 +1089,7 @@ function editorSheet() {
   const st = editStore();
   openSheet(`<div class="sheettitle">${esc(st.name)}</div>
     ${S.storeId === st.id ? '' : `<button type="button" class="sheetbtn" data-act="usestore" data-id="${st.id}">In der Liste verwenden</button>`}
+    ${groupSelect('stGroup', st.g, 'Gruppe', ` data-id="${st.id}"`)}
     <button type="button" class="sheetbtn danger" data-act="delstore">${ui.confirmDel ? 'Wirklich löschen?' : 'Geschäft löschen'}</button>`);
 }
 function zoneField(it) {
@@ -1813,7 +1818,8 @@ document.addEventListener('click', (e) => {
       const s2 = curStore(), c = el.dataset.cat;
       s2.zones.push({ id: uid(), name: CAT_BY_ID[c]?.name || 'Bereich', cats: [c], prods: {}, rect: null }); commit(); break;
     }
-    case 'pickstore': S.storeId = id || null; commit(); break;
+    case 'pickstore': S.storeId = id || null; commit(); if (offerStoreMove()) keep = true; break; // ggf. fragen, ob das Geschäft in die Gruppe der Liste umzieht
+    case 'movestore': { const st = S.stores.find((x) => x.id === id); if (st) { st.g = el.dataset.g; commit(); toast(`„${st.name}“ ist jetzt in „${gName(st.g)}“`); } break; }
     case 'gostores': { const gh = wrapGhost(); ui.tab = 'stores'; ui.editStoreId = null; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
     case 'delitem': clearTimeout(ui.pending.get(id)); ui.pending.delete(id); S.items = S.items.filter((i) => i.id !== id); commit(); break;
     case 'closedlg': break;
@@ -1871,7 +1877,7 @@ document.addEventListener('click', (e) => {
     }
     case 'openstore': { const gh = wrapGhost(); ui.wiggle = null; ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
     case 'back': { const gh = wrapGhost(); ui.wiggle = null; ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('pop', gh); break; }
-    case 'usestore': S.storeId = id; commit(); break;
+    case 'usestore': S.storeId = id; commit(); if (offerStoreMove()) keep = true; break;
     case 'delstore':
       if (!ui.confirmDel) { ui.confirmDel = true; editorSheet(); keep = true; break; }
       S.stores = S.stores.filter((s) => s.id !== st.id);
@@ -1942,7 +1948,9 @@ document.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = $('#newListName').value.trim();
     if (!name) return;
-    const l = { id: uid(), name, items: [], storeId: null }; // neue Listen starten ohne Laden
+    const g = $('#nlGroup')?.value || defaultGroup();
+    const l = { id: uid(), name, items: [], storeId: null, g }; // neue Listen starten ohne Geschäft
+    if (g) S.lastGroup = g;
     S.lists.push(l);
     switchList(l.id);
     closeSheet(); commit();
@@ -1955,6 +1963,7 @@ document.addEventListener('submit', (e) => {
     const s = { id: uid(), name, bg: tpl?.bg || null, h: tpl?.h || 640,
       zones: tpl ? JSON.parse(JSON.stringify(tpl.zones)).map((z) => { const id = uid(); idMap[z.id] = id; return { ...z, id }; }) : [] };
     if (tpl?.main) s.main = Object.fromEntries(Object.entries(tpl.main).filter(([, zid]) => idMap[zid]).map(([c, zid]) => [c, idMap[zid]]));
+    s.g = $('#nsGroup')?.value || curList()?.g || defaultGroup(); // Gruppe des neuen Geschäfts
     S.stores.push(s);
     S.storeId = s.id;
     ui.tab = 'stores'; ui.editStoreId = s.id; ui.selZone = null; ui.drawing = false; ui.view = fitView(s);
@@ -2051,7 +2060,7 @@ function scaleQty(qty, f) {
 }
 function mealCard(m) {
   const sub = [m.tags.join(' · '), `${m.ing.length} ${m.ing.length === 1 ? 'Zutat' : 'Zutaten'}`].filter(Boolean).join(' · ');
-  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${esc(m.name)}</strong><small>${esc(sub)}</small></span></button></li>`;
+  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${esc(m.name)}</strong><small>${groupTag(m.g)}${esc(sub)}</small></span></button></li>`;
 }
 function mealListHtml() {
   if (!meals().length) return '<p class="empty">Noch kein Essen. Lege eins an, dann kommen seine Zutaten mit einem Tipp auf die Liste.</p>';
@@ -2116,6 +2125,7 @@ function mealEditPage() {
   const mid = m.id;
   openPage('meal:' + mid, 'Essen bearbeiten', `
     <input id="mName" class="notein" value="${esc(m.name)}" aria-label="Name">
+    ${groupSelect('meGroup', m.g, 'Gruppe', ` data-id="${m.id}"`)}
     <div class="label" style="margin:12px 0 4px">Tags</div>
     <div class="chips">${tags.map((t) => `<button type="button" class="chip${m.tags.includes(t) ? ' on' : ''}" data-act="m_edtag" data-tag="${esc(t)}" aria-pressed="${m.tags.includes(t)}">${esc(t)}</button>`).join('')}${ui.mealTagInput
       ? '<form id="mTagForm" class="tagadd" autocomplete="off"><input id="mTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
@@ -2206,6 +2216,7 @@ function newMealSheet() {
   openSheet(`<div class="sheettitle">Neues Essen</div>
     <form id="newMealForm" autocomplete="off">
       <input id="newMealName" autofocus class="notein" placeholder="Name, z. B. Spaghetti Bolognese" aria-label="Name des Essens" required>
+      ${groupSelect('nmGroup', defaultGroup())}
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
 }
@@ -2264,7 +2275,8 @@ document.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = $('#newMealName').value.trim();
     if (!name) return;
-    const nm = { id: uid(), name, tags: [...ui.mealTags], base: 2, ing: [], photo: null, steps: '' };
+    const nm = { id: uid(), name, tags: [...ui.mealTags], base: 2, ing: [], photo: null, steps: '', g: $('#nmGroup')?.value || defaultGroup() };
+    if (nm.g) S.lastGroup = nm.g;
     meals().push(nm); ui.mealId = nm.id; ui.mealTagInput = false; save(); render(); mealEditPage();
   } else if (f.id === 'mOvTagForm') {
     e.preventDefault();
@@ -2542,3 +2554,45 @@ function haptic() {
   try { l.click(); } catch (_) { /* egal */ }
 }
 
+
+// ---------- Gruppen in der Oberfläche ----------
+// Gruppen sind „Teilen-Kreise“: man sieht immer alles, jede Liste/jedes Geschäft/Essen gehört einer Gruppe.
+// Hinweise und Auswahlfelder erscheinen nur, wenn man angemeldet ist und mehr als eine Gruppe hat.
+const groupsOn = () => typeof sync !== 'undefined' && !!sync.sess && sync.groups.length > 1;
+const gName = (g) => (typeof groupName === 'function' ? groupName(g) : '');
+// Wohin Neues kommt: zuletzt benutzte Gruppe, sonst die der Stichwörter, sonst „Persönlich“
+const defaultGroup = () => {
+  if (typeof sync === 'undefined' || !sync.groups.length) return undefined;
+  return sync.groups.some((x) => x.id === S.lastGroup) ? S.lastGroup : (S.catGroup || personalGroup());
+};
+function groupSelect(id, cur, label = 'Gruppe', attrs = '') {
+  if (!groupsOn()) return '';
+  return `<label class="srow"><span class="pl">${label}</span><select id="${id}" aria-label="${label}"${attrs}>${sync.groups.map((x) => `<option value="${x.id}"${x.id === cur ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>`;
+}
+const groupTag = (g) => (groupsOn() && g ? `<span class="gtag">${esc(gName(g))}</span>` : '');
+// Gruppe wechseln (Liste, Geschäft, Essen, Stichwörter)
+document.addEventListener('change', (e) => {
+  const t = e.target, v = t.value;
+  if (!v) return;
+  if (t.id === 'leGroup') {
+    const l = S.lists.find((x) => x.id === t.dataset.id);
+    if (l && l.g !== v) { l.g = v; S.lastGroup = v; commit(); toast(`„${l.name}“ ist jetzt in „${gName(v)}“`); }
+  } else if (t.id === 'stGroup') {
+    const st = S.stores.find((x) => x.id === t.dataset.id);
+    if (st && st.g !== v) { st.g = v; commit(); closeSheet(); toast(`„${st.name}“ ist jetzt in „${gName(v)}“`); }
+  } else if (t.id === 'meGroup') {
+    const m = mealById(t.dataset.id);
+    if (m && m.g !== v) { m.g = v; S.lastGroup = v; save(); render(); toast(`„${m.name}“ ist jetzt in „${gName(v)}“`); }
+  } else if (t.id === 'catGroupSel') {
+    if (typeof setCatGroup === 'function') { setCatGroup(v); commit(); catListPage(); toast(`Kategorien und Stichwörter von „${gName(v)}“`); }
+  }
+});
+// Geschäft für eine Liste gewählt, das in einer anderen Gruppe liegt: einmal fragen, ob es mitkommt
+function offerStoreMove() {
+  const l = curList(), st = curStore();
+  if (!groupsOn() || !l || !st || !l.g || !st.g || l.g === st.g) return false;
+  openSheet(`<div class="sheettitle">Geschäft verschieben?</div>
+    <p class="sheetnote" style="margin:0 4px 10px">„${esc(st.name)}“ liegt in „${esc(gName(st.g))}“. Damit alle in „${esc(gName(l.g))}“ die Liste danach sortieren können, kann das Geschäft in diese Gruppe umziehen. Du siehst es danach weiterhin.</p>
+    <div class="actions"><button type="button" class="btn ghost" data-act="closedlg">Nicht jetzt</button><button type="button" class="btn" style="flex:1" data-act="movestore" data-id="${st.id}" data-g="${l.g}">In „${esc(gName(l.g))}“ verschieben</button></div>`);
+  return true;
+}
