@@ -9,6 +9,8 @@
 - [x] **Tastatur prüfen:** darf keine Eingabefelder verdecken. Teilweise muss man das Feld verlassen und neu antippen, bis sich alles richtig verschiebt.
 - [x] **PWA-Icon** gestalten (Regale + Laufweg + Haken)
 - [x] **Ziehen zum Aktualisieren:** (Liste = Abgleich, Einstellungen = nach Update suchen) In der Mitte der Liste nach unten wischen; ist man schon ganz oben und zieht weiter, startet ein Abgleich (wie „Pull to Refresh“ in iOS-Apps). Mit kleinem Kreis/Pfeil oben, der zeigt, dass gleich aktualisiert wird. Darf nicht mit dem Wischen auf Einträgen (links/rechts) oder dem Scrollen kollidieren.
+- [ ] **Drehen sperren (Darstellung):** Option „Nur Hochformat“. Achtung: Web-Apps auf dem iPhone können die Drehung nicht wirklich sperren (Safari unterstützt das nicht, auch nicht über das Manifest). Möglich: im Querformat einen Hinweis „Bitte Handy drehen“ zeigen oder den Inhalt per CSS zurückdrehen. Erst klären, ob das reicht; sonst bleibt die Sperre im Kontrollzentrum des iPhones.
+- [ ] **Vibrieren beim Würfeln:** kurzes Haptik-Feedback bei „Zufälliges Essen“ / „Nochmal würfeln“. `navigator.vibrate` gibt es auf dem iPhone nicht. Seit iOS 18 löst Safari aber beim Umschalten eines Schalters (`<input type="checkbox" switch>`) ein Haptik-Klicken aus; das lässt sich als Trick nutzen (unsichtbarer Schalter, beim Tippen mit umschalten). Nur ein kurzes „Klick“, kein langes Vibrieren. Später evtl. auch fürs Abhaken.
 - [ ] **Standardreihenfolge „Kein Laden“** ansehen und ändern können (Reihenfolge der Kategorien, z. B. per Hoch/Runter in „Kategorien und Stichwörter“; die Reihenfolge wird schon mit dem Haushalt synchronisiert)
 
 ## Idee: Hilfe-Bereich in den Einstellungen
