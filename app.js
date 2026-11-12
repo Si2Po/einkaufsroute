@@ -679,13 +679,36 @@ function refreshTopPage() {
   if (!p || !p.refresh || (a && p.el.contains(a) && a.matches('input, textarea, select'))) return;
   p.refresh();
 }
-// Läden und ihr Editor liegen in der Hauptansicht, verhalten sich aber wie Seiten (gleiten herein, Zurück, Wisch-zurück)
-function wrapAnim(kind) {
+// Geschäfte und ihr Editor liegen in der Hauptansicht, verhalten sich aber wie Seiten (gleiten herein, Zurück, Wisch-zurück).
+// Damit man dabei wie bei echten Seiten die vorige Ansicht sieht, gibt es ein „Abbild“ (Ghost): eine stille Kopie der Ansicht.
+function wrapGhost(html) {
+  const gh = document.createElement('div');
+  gh.className = 'wrapghost'; gh.setAttribute('aria-hidden', 'true'); gh.inert = true;
+  const inner = html == null ? $('.wrap').cloneNode(true) : Object.assign(document.createElement('div'), { className: 'wrap', innerHTML: `<main>${html}</main>` });
+  inner.querySelectorAll('[id]').forEach((x) => x.removeAttribute('id')); // keine doppelten IDs
+  inner.style.transform = ''; inner.classList.remove('slide');
+  if (html == null) inner.style.marginTop = `${-window.scrollY}px`; // gleiche Scroll-Lage wie vorher
+  gh.append(inner);
+  document.body.append(gh);
+  return gh;
+}
+// kind: 'push' (neue Ansicht gleitet von rechts über die alte), 'pop' (alte gleitet nach rechts weg), 'fade' (Tabwechsel)
+function wrapAnim(kind, ghost, fromX = 0) {
   const w = $('.wrap');
-  if (reduceMotion() || !w.animate) return;
-  if (kind === 'push') w.animate([{ transform: 'translateX(100%)' }, { transform: 'none' }], { duration: 320, easing: PAGE_EASE });
-  else if (kind === 'pop') w.animate([{ transform: 'translateX(-25%)', opacity: 0.6 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: PAGE_EASE });
-  else w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' });
+  if (reduceMotion() || !w.animate) { ghost?.remove(); return; }
+  const o = { duration: kind === 'pop' ? 280 : 320, easing: PAGE_EASE };
+  if (kind === 'push') {
+    w.classList.add('slide');
+    if (ghost) ghost.animate([{ transform: 'none' }, { transform: 'translateX(-25%)' }], { ...o, fill: 'forwards' });
+    w.animate([{ transform: 'translateX(100%)' }, { transform: 'none' }], o).finished
+      .finally(() => { w.classList.remove('slide'); ghost?.remove(); });
+  } else if (kind === 'pop') {
+    if (ghost) {
+      ghost.classList.add('top');
+      ghost.animate([{ transform: `translateX(${fromX}px)` }, { transform: 'translateX(100%)' }], { ...o, fill: 'forwards' }).finished.finally(() => ghost.remove());
+    }
+    w.animate([{ transform: `translateX(${-0.25 * (innerWidth - fromX)}px)` }, { transform: 'none' }], o);
+  } else w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' });
 }
 function storesBack() {
   if (ui.editStoreId) { ui.editStoreId = null; ui.selZone = null; ui.drawing = false; }
@@ -697,7 +720,7 @@ function storesBack() {
   let g = null;
   const target = () => {
     if (pages.length) return { el: pages[pages.length - 1].el, under: pages.length > 1 ? pages[pages.length - 2].el : $('.wrap') };
-    return ui.tab === 'stores' ? { el: $('.wrap'), under: null } : null;
+    return ui.tab === 'stores' ? { el: $('.wrap'), under: null, stores: true } : null;
   };
   document.addEventListener('pointerdown', (e) => {
     g = null;
@@ -715,6 +738,10 @@ function storesBack() {
       g.active = true;
       try { e.target.setPointerCapture(e.pointerId); } catch (_) { /* nicht kritisch */ }
       if (document.activeElement?.matches?.('input, textarea, select')) document.activeElement.blur();
+      if (g.stores) { // vorige Ansicht als Abbild darunter legen (Geschäfte → Einstellungen, Editor → Geschäfte)
+        g.under = wrapGhost(ui.editStoreId ? viewStores() : viewSettings());
+        g.el.classList.add('slide');
+      }
     }
     if (e.timeStamp > g.lt) { g.vx = (e.clientX - g.lx) / (e.timeStamp - g.lt); g.lt = e.timeStamp; g.lx = e.clientX; }
     g.dx = Math.max(0, dx);
@@ -729,15 +756,17 @@ function storesBack() {
     const w = innerWidth, go = !cancel && (d.dx > w * 0.35 || (d.vx > 0.4 && d.dx > 30));
     const o = { duration: 220, easing: PAGE_EASE };
     if (go && pages.length) { popPages(1, d.dx); return; }
-    if (go) { // Läden-Ansicht
-      const a = d.el.animate([{ transform: `translateX(${d.dx}px)` }, { transform: 'translateX(100%)' }], { ...o, fill: 'forwards' });
-      d.el.style.transform = '';
-      a.finished.then(() => { storesBack(); a.cancel(); wrapAnim('pop'); }, () => {});
+    if (go) { // Geschäfte-Ansicht: aktuelle Ansicht als Abbild nach rechts wegschieben, darunter liegt schon die vorige
+      const top = wrapGhost();
+      d.el.style.transform = ''; d.el.classList.remove('slide');
+      d.under.remove();
+      storesBack();
+      wrapAnim('pop', top, d.dx);
       return;
     }
     d.el.style.transform = '';
-    d.el.animate([{ transform: `translateX(${d.dx}px)` }, { transform: 'none' }], o);
-    if (d.under) { d.under.style.transform = ''; d.under.animate([{ transform: `translateX(${-0.25 * (w - d.dx)}px)` }, { transform: 'translateX(-25%)' }], o); }
+    d.el.animate([{ transform: `translateX(${d.dx}px)` }, { transform: 'none' }], o).finished.finally(() => { if (d.stores) { d.el.classList.remove('slide'); d.under?.remove(); } });
+    if (d.under) { d.under.style.transform = ''; d.under.animate([{ transform: `translateX(${-0.25 * (w - d.dx)}px)` }, { transform: 'translateX(-25%)' }], d.stores ? { ...o, fill: 'forwards' } : o); }
   };
   document.addEventListener('pointerup', (e) => end(e, false), true);
   document.addEventListener('pointercancel', (e) => end(e, true), true);
@@ -1682,8 +1711,9 @@ document.addEventListener('click', (e) => {
       if (fromBar && pages.length) { closeAllPages(); if (to === cur) { render(); break; } } // Tipp auf die Leiste: Unterseiten schließen
       else if (to === 'list' && ui.tab === 'list') { ui.confirmList = false; listSheet(); keep = true; break; } // zweiter Tipp auf "Liste": Listen zur Auswahl
       const anim = to === 'stores' ? 'push' : ui.tab === 'stores' && to === 'settings' && !fromBar ? 'pop' : to !== cur ? 'fade' : '';
+      const gh = anim === 'push' || anim === 'pop' ? wrapGhost() : null; // Abbild der bisherigen Ansicht
       ui.tab = to; ui.drawing = false; ui.confirmDel = false; if (ui.tab !== 'stores') ui.editStoreId = null; render(); window.scrollTo(0, 0);
-      if (anim) wrapAnim(anim);
+      if (anim) wrapAnim(anim, gh);
       break;
     }
     case 'toggle': toggleItem(id); break;
@@ -1719,7 +1749,7 @@ document.addEventListener('click', (e) => {
       s2.zones.push({ id: uid(), name: CAT_BY_ID[c]?.name || 'Bereich', cats: [c], prods: {}, rect: null }); commit(); break;
     }
     case 'pickstore': S.storeId = id || null; commit(); break;
-    case 'gostores': ui.tab = 'stores'; ui.editStoreId = null; render(); window.scrollTo(0, 0); wrapAnim('push'); break;
+    case 'gostores': { const gh = wrapGhost(); ui.tab = 'stores'; ui.editStoreId = null; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
     case 'delitem': clearTimeout(ui.pending.get(id)); ui.pending.delete(id); S.items = S.items.filter((i) => i.id !== id); commit(); break;
     case 'closedlg': break;
     case 'showdone': ui.showDone = !ui.showDone; render(); break;
@@ -1774,8 +1804,8 @@ document.addEventListener('click', (e) => {
       input.focus();
       keep = true; break;
     }
-    case 'openstore': ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('push'); break;
-    case 'back': ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('pop'); break;
+    case 'openstore': { const gh = wrapGhost(); ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
+    case 'back': { const gh = wrapGhost(); ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('pop', gh); break; }
     case 'usestore': S.storeId = id; commit(); break;
     case 'delstore':
       if (!ui.confirmDel) { ui.confirmDel = true; editorSheet(); keep = true; break; }
