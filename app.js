@@ -1506,6 +1506,7 @@ document.addEventListener('pointerdown', (e) => {
   lpFired = false; lpStar = false;
   lp = { x: e.clientX, y: e.clientY, t: setTimeout(() => {
     lpFired = true; lp = null;
+    holdAfterLongPress();
     try { navigator.vibrate?.(15); } catch (_) { /* kein Haptik-Support */ }
     if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else if (el.classList.contains('mcard')) openMealEdit(id); else startRedraw(id);
   }, 450) };
@@ -2392,3 +2393,17 @@ function updateFade(sb) {
 document.addEventListener('scroll', (e) => { if (e.target.classList?.contains('scrollbox')) updateFade(e.target); }, true);
 new MutationObserver(() => requestAnimationFrame(() => dlg().querySelectorAll('.scrollbox').forEach(updateFade)))
   .observe(dlg(), { childList: true, subtree: true });
+
+// ---------- Nach langem Drücken: nichts versehentlich markieren ----------
+// Langes Drücken öffnet ein Sheet oder eine Seite, während der Finger noch liegt. Bis zum Loslassen ist
+// Markieren deshalb überall gesperrt (auch in Eingabefeldern), danach ist alles wieder normal.
+function holdAfterLongPress() {
+  const root = document.documentElement, ends = ['pointerup', 'pointercancel', 'touchend', 'touchcancel'];
+  root.classList.add('lphold');
+  const off = () => {
+    ends.forEach((t) => document.removeEventListener(t, off, true));
+    setTimeout(() => { root.classList.remove('lphold'); try { window.getSelection()?.removeAllRanges(); } catch (_) { /* egal */ } }, 60);
+  };
+  ends.forEach((t) => document.addEventListener(t, off, true));
+}
+document.addEventListener('selectstart', (e) => { if (document.documentElement.classList.contains('lphold')) e.preventDefault(); }, true);
