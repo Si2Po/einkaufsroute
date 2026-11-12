@@ -598,3 +598,6 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
 /* Kategorien: immer einzelne Karten (wie die Bereiche), damit der Wackelmodus gleich aussieht */
 #catRows { display: grid; gap: 6px; background: none; border: 0; overflow: visible; }
 #catRows > .catrow { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+/* Einheitlicher Abstand zwischen Karten in allen Listen (Einstellungen, Geschäfte, Essen, Kategorien, Bereiche) */
+:root { --list-gap: 4px; }
+.cards, .zlist, #catRows { gap: var(--list-gap); }
