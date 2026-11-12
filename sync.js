@@ -385,6 +385,7 @@ async function syncRun() {
     sync.status = 'ok'; sync.err = ''; sync.last = Date.now();
     if (changed) renderSoon();
   } catch (e) {
+    groupsRun = 0; // nach einem Fehler beim nächsten Mal die Gruppenliste neu holen (z. B. Gruppe auf anderem Gerät verlassen)
     sync.status = isOffline(e) ? 'offline' : (sync.sess ? 'err' : 'out');
     sync.err = niceError(e);
     if (!isOffline(e)) console.warn('sync', e);
