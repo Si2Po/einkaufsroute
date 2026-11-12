@@ -16,7 +16,7 @@
 ## Idee: Hilfe-Bereich in den Einstellungen
 - [ ] Kurze Erklärung, wie man die Seite als App aufs iPhone holt (Safari → Teilen → „Zum Home-Bildschirm“, danach einmal neu anmelden, weil die App einen eigenen Speicher hat)
 - [ ] Wie man Einträge bedient: Tippen, lang drücken, wischen; Liste wechseln (zweiter Tipp auf „Liste“); Läden und Zonen
-- [ ] Konto und Haushalt: einladen, beitreten, abgleichen, Sicherung
+- [ ] Konto und Gruppen: anmelden, einladen, beitreten, abgleichen, Sicherung
 - [ ] Gruppen erklären: Man sieht immer alles aus allen eigenen Gruppen; die Gruppe regelt nur, **wer etwas mitsieht**. „Persönlich“ sieht nur man selbst (nicht teilbar). Das **Personen-Symbol** (zwei Köpfe, z. B. „👥 Einkauf“ bei Listen und Geschäften) zeigt, zu welcher Gruppe etwas gehört. Gruppe ändern: Liste/Geschäft bearbeiten → „Gruppe“; beim Essen ganz unten beim Personen-Symbol. Kategorien und Stichwörter: unter Kategorien „Stichwörter von“ wählen, wer dieselbe Gruppe wählt, lernt gemeinsam. Geschäft aus anderer Gruppe für eine Liste gewählt → App fragt, ob es mit umziehen soll.
 - [ ] Wichtiges: Offline-Betrieb, was bei „Abmelden“ passiert, neue Version laden (App einmal schließen und neu öffnen). Versionsnummer anzeigen (steht bisher unten in den Einstellungen)
 - [ ] Als eigene Unterseite mit der gemeinsamen Seiten-Komponente umsetzen; ggf. beim ersten Start kurze Einführung
@@ -28,21 +28,13 @@
 - [ ] Wenn ein Produkt „fällig" ist, als Vorschlag anzeigen („Klopapier? zuletzt vor 3 Wochen") mit Tipp = auf die Liste, Wisch = „nicht jetzt"
 - [ ] Nur Produkte vorschlagen, die mindestens 2–3 Mal gekauft wurden; Rhythmus manuell überschreibbar; Vorschläge abschaltbar
 
-## Großer Umbau: Gruppen – umgesetzt (lokal, 0.7.0), siehe PLAN-GRUPPEN.md. Die Punkte unten sind der ursprüngliche Entwurf, teils anders gelöst.
-Entscheidung: Mehrere Gruppen pro Konto. Eine Gruppe ist ein eigener Bereich mit eigenen Listen, Kategorien, Stichwörtern, Läden, Essen und Mitgliedern. Technisch ist eine Gruppe ein „household“ in der Datenbank.
-- [ ] **„Persönlich“** entsteht automatisch mit dem Konto. Feste Gruppe: nicht verlassen, löschen, teilen, und niemand kann beitreten. Dort liegen auch Listen ohne Gruppe (z. B. Baumarkt). Der heutige Haushalt wird zu „Persönlich“.
-- [ ] Weitere Gruppen anlegen (Name + Typ), z. B. „Einkaufen“ (mit Läden, Route, Essen) oder „Filme“ (nur Kategorien/Listen)
-- [ ] Typ der Gruppe bestimmt, welche Bereiche es gibt (Läden/Route/Essen nur bei „Einkaufen“)
-- [ ] Einladen, beitreten, verlassen pro Gruppe (nicht bei „Persönlich“)
-- [ ] App hält mehrere Gruppen gleichzeitig und gleicht jede einzeln ab. Gruppenauswahl in der Oberfläche
-- [ ] Datenbank: Funktion „Gruppe anlegen“, Einladung gilt für eine bestimmte Gruppe, „Persönlich“ ist geschützt (kein Einladen/Beitreten)
-- [ ] Beim Beitritt gehen eigene Daten nicht verloren (andere Gruppen bleiben unberührt)
-- [ ] Später: Liste in andere Gruppe verschieben, neue Gruppe aus Vorlage (Kategorien kopieren)
-- Private Listen = Listen in „Persönlich“. Das Teilen einzelner Listen per Link für Außenstehende bleibt eine eigene Funktion.
-
-## Aus dem Plan zum Teilen
-- [ ] Private Listen im Haushalt („nur für mich")
-- [ ] Einzelne Liste per Link an Außenstehende teilen (Gäste)
+## Gruppen (0.7.0, Details in PLAN-GRUPPEN.md)
+Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, anlegen/umbenennen/einladen/beitreten/verlassen, Abgleich pro Gruppe, alles sichtbar mit Gruppen-Hinweis (Personen-Symbol), Listen/Geschäfte/Essen in andere Gruppe verschieben, Rückfrage beim Geschäft, Stichwörter pro Gruppe wählbar, Beitreten ersetzt nichts mehr. Private Listen = Listen in „Persönlich“.
+- [ ] **Test mit echtem Konto** (lokal über `lokal-starten.cmd` anmelden), dann hochladen; zuerst eigenes iPhone, danach das Gerät der Partnerin
+- [ ] Hilfe-Text zu Gruppen (siehe Hilfe-Bereich oben)
+- [ ] Später: Gruppentyp „Einfache Listen“ (z. B. „Filme“: nur Listen, ohne Geschäfte/Route/Essen)
+- [ ] Später: neue Gruppe mit Kategorien/Stichwörtern einer bestehenden Gruppe starten (heute bekommt eine neue Gruppe die Standard-Kategorien, sobald jemand sie unter „Stichwörter von“ wählt)
+- [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
 
 ## Später / optional
 - [ ] Aufräumen: Löschmarkierungen (deleted=true) in der Tabelle docs nach ca. 90 Tagen endgültig entfernen (z. B. geplante Datenbank-Funktion), und die lokale Liste „known“ in sync.js entsprechend kürzen. Frist wegen lange offline gewesener Geräte nicht zu kurz wählen. Fotos auf kleine Größe verkleinern, bevor sie hochgeladen werden.
