@@ -879,7 +879,7 @@ const closeSheet = () => {
 function storeSheet() {
   openSheet(`<div class="sheettitle">Einkauf bei</div>
     <button type="button" class="sheetbtn${S.storeId ? '' : ' on'}" data-act="pickstore" data-id="">Kein Geschäft <small>Standardreihenfolge</small></button>
-    ${S.stores.map((s) => `<button type="button" class="sheetbtn${s.id === S.storeId ? ' on' : ''}" data-act="pickstore" data-id="${s.id}"><span>${esc(s.name)}</span><small>${groupTag(s.g)}</small></button>`).join('')}
+    ${S.stores.map((s) => `<button type="button" class="sheetbtn${s.id === S.storeId ? ' on' : ''}" data-act="pickstore" data-id="${s.id}"><span>${esc(s.name)}</span><small>${groupTag(s.g, '')}</small></button>`).join('')}
     <button type="button" class="sheetbtn accent" data-act="newstoresheet">+ Neues Geschäft</button>
     <button type="button" class="sheetbtn accent" data-act="gostores">Geschäfte bearbeiten …</button>`);
 }
@@ -2060,7 +2060,7 @@ function scaleQty(qty, f) {
 }
 function mealCard(m) {
   const sub = [m.tags.join(' · '), `${m.ing.length} ${m.ing.length === 1 ? 'Zutat' : 'Zutaten'}`].filter(Boolean).join(' · ');
-  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${esc(m.name)}</strong><small>${groupTag(m.g)}${esc(sub)}</small></span></button></li>`;
+  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${esc(m.name)}</strong><small>${esc(sub)}</small></span></button></li>`;
 }
 function mealListHtml() {
   if (!meals().length) return '<p class="empty">Noch kein Essen. Lege eins an, dann kommen seine Zutaten mit einem Tipp auf die Liste.</p>';
@@ -2125,7 +2125,6 @@ function mealEditPage() {
   const mid = m.id;
   openPage('meal:' + mid, 'Essen bearbeiten', `
     <input id="mName" class="notein" value="${esc(m.name)}" aria-label="Name">
-    ${groupSelect('meGroup', m.g, 'Gruppe', ` data-id="${m.id}"`)}
     <div class="label" style="margin:12px 0 4px">Tags</div>
     <div class="chips">${tags.map((t) => `<button type="button" class="chip${m.tags.includes(t) ? ' on' : ''}" data-act="m_edtag" data-tag="${esc(t)}" aria-pressed="${m.tags.includes(t)}">${esc(t)}</button>`).join('')}${ui.mealTagInput
       ? '<form id="mTagForm" class="tagadd" autocomplete="off"><input id="mTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
@@ -2140,6 +2139,7 @@ function mealEditPage() {
       <div class="bgrow"><label for="mPhoto" class="bgadd">${ICON_CAM}<span>${m.photo ? 'Foto ersetzen' : 'Foto hinzufügen'}</span></label><input type="file" id="mPhoto" accept="image/*" hidden>${m.photo ? '<button type="button" class="chipbtn" data-act="m_delphoto" aria-label="Foto entfernen">×</button>' : ''}</div>
       <textarea id="mSteps" class="notein" rows="5" placeholder="Kochanleitung" aria-label="Kochanleitung">${esc(m.steps || '')}</textarea>
     </details>
+    ${groupLine('meGroup', m.g, ` data-id="${m.id}"`)}
     <div class="actions" style="margin-top:16px">
       <button type="button" class="btn danger" data-act="m_del">${ui.confirmMeal ? 'Wirklich löschen?' : 'Essen löschen'}</button>
     </div>`, () => { if (mealById(mid)) { ui.mealId = mid; mealEditPage(); } });
@@ -2216,7 +2216,7 @@ function newMealSheet() {
   openSheet(`<div class="sheettitle">Neues Essen</div>
     <form id="newMealForm" autocomplete="off">
       <input id="newMealName" autofocus class="notein" placeholder="Name, z. B. Spaghetti Bolognese" aria-label="Name des Essens" required>
-      ${groupSelect('nmGroup', defaultGroup())}
+      ${groupLine('nmGroup', defaultGroup())}
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
 }
@@ -2569,7 +2569,15 @@ function groupSelect(id, cur, label = 'Gruppe', attrs = '') {
   if (!groupsOn()) return '';
   return `<label class="srow"><span class="pl">${label}</span><select id="${id}" aria-label="${label}"${attrs}>${sync.groups.map((x) => `<option value="${x.id}"${x.id === cur ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>`;
 }
-const groupTag = (g) => (groupsOn() && g ? `<span class="gtag">${esc(gName(g))}</span>` : '');
+// Zwei Personen, Linien wie die anderen Symbole
+const ICON_GROUP = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M3 19.5c.6-3.3 3-5.2 6-5.2s5.4 1.9 6 5.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M15.6 5.6a3 3 0 0 1 0 5.8M17.4 14.6c1.9.6 3.2 2.3 3.6 4.9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+// Kleiner Hinweis in der Unterzeile: „👥 Einkauf · …“ (schlichter Text, bündig mit dem Rest)
+const groupTag = (g, sep = ' · ') => (groupsOn() && g ? `<span class="gtag">${ICON_GROUP}${esc(gName(g))}</span>${sep}` : '');
+// Unauffällige Gruppen-Auswahl (Essen): nur Symbol + Auswahl, ohne Kasten
+function groupLine(id, cur, attrs = '') {
+  if (!groupsOn()) return '';
+  return `<label class="gline">${ICON_GROUP}<select id="${id}" aria-label="Gruppe"${attrs}>${sync.groups.map((x) => `<option value="${x.id}"${x.id === cur ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>`;
+}
 // Gruppe wechseln (Liste, Geschäft, Essen, Stichwörter)
 document.addEventListener('change', (e) => {
   const t = e.target, v = t.value;

@@ -167,6 +167,7 @@ dialog::before { content: ""; display: block; width: 36px; height: 4px; border-r
   border-top: 1px solid var(--line); text-align: left; font-size: 1rem; color: var(--ink);
 }
 .sheetbtn.on::after { content: "✓"; color: var(--accent); font-weight: 700; }
+.sheetbtn.on > small { margin: 0 10px 0 auto; } /* mit Häkchen: Hinweis trotzdem rechts, nicht in der Mitte */
 .sheetbtn.accent { color: var(--accent); font-weight: 600; }
 .sheetbtn.danger { color: var(--warn); }
 .sheetbtn small { color: var(--muted); }
@@ -621,7 +622,13 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
   /* Grundriss nicht höher als der Bildschirm */
   .plan svg { width: auto; max-width: 100%; max-height: calc(100dvh - 130px); margin: 0 auto; }
 }
-/* Kleiner Gruppen-Hinweis (z. B. „Einkauf“) bei Listen, Geschäften, Essen */
-.gtag { display: inline-block; margin-right: 6px; padding: 0 7px; border-radius: 999px; background: var(--soft); color: var(--muted); font-size: .72rem; font-weight: 600; line-height: 1.6; vertical-align: middle; }
+/* Kleiner Gruppen-Hinweis (z. B. „👥 Einkauf · …“) bei Listen und Geschäften: schlichter Text, bündig */
+.gtag { white-space: nowrap; }
+.gtag svg { width: 1.15em; height: 1.15em; margin-right: 3px; vertical-align: -.2em; }
+/* Unauffällige Gruppen-Auswahl (Essen): Symbol + Auswahl ohne Kasten */
+.gline { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; color: var(--muted); }
+.gline svg { flex: none; }
+.gline select { flex: 0 1 auto; min-width: 0; border: 0; background: transparent; font-size: 16px; padding: 6px 4px 6px 0; color: var(--muted); text-overflow: ellipsis; }
+form .gline { margin: 0 2px 10px; }
 .srow:has(#catGroupSel) .pl { width: auto; white-space: nowrap; } /* „Stichwörter von“ nicht umbrechen */
 .acct > .sheetnote { padding: 0; } /* Kontokarte: Status nicht extra einrücken */
