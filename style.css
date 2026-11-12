@@ -560,3 +560,5 @@ dialog[open]:has(> .mings) { max-height: min(60dvh, calc(var(--vvh, 100dvh) - en
 dialog > .mings { padding-bottom: 0; }
 dialog > .mings.more-b { --fb: 96px; }
 dialog:not(.viewer) .mealacts .btn.ghost { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+/* Essen-Sheet hochgezogen: groß (90 %), oben bleibt ein Streifen frei */
+dialog.tall[open]:has(> .mings) { max-height: min(90dvh, calc(var(--vvh, 100dvh) - env(safe-area-inset-top, 0px) - 20px)); }

@@ -590,6 +590,7 @@ function openSheet(html) {
   head.innerHTML = `<button type="button" class="sheetdone" data-act="closedlg" aria-label="${isNew ? 'Abbrechen' : 'Schließen'}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if (title) head.prepend(title); else head.prepend(Object.assign(document.createElement('div'), { className: 'sheettitle' }));
   d.prepend(head);
+  if (!d.open) d.classList.remove('tall'); // neues Sheet startet in normaler Höhe
   if (!d.open) {
     d.showModal(); ui.sheetT = Date.now();
     // showModal() fokussiert das erste Feld; auf dem iPhone würde dann die Tastatur aufgehen. Nur Felder mit autofocus behalten den Fokus.
@@ -1164,7 +1165,7 @@ function bindSheetGestures() {
     if (m && timer) { clearTimeout(timer); timer = 0; if (d._fin) d._fin(); }
     const open = !!m && m.f.classList.contains('expanded');
     const mt = m ? metrics(m) : null, H = mt ? mt.Hm + mt.delta : 0;
-    g = { id: e.pointerId, x: e.clientX, y: e.clientY, active: false, dy: 0, m, mt, open, H, p: open ? 1 : 0, ty: 0, t0: e.timeStamp, y0: e.clientY, vy: 0, lastT: e.timeStamp, lastY: e.clientY };
+    g = { id: e.pointerId, x: e.clientX, y: e.clientY, active: false, dy: 0, m, mt, open, H, p: open ? 1 : 0, ty: 0, t0: e.timeStamp, y0: e.clientY, vy: 0, lastT: e.timeStamp, lastY: e.clientY, grow: growInfo() };
   });
   d.addEventListener('pointermove', (e) => {
     if (!g || e.pointerId !== g.id) return;
@@ -1187,6 +1188,11 @@ function bindSheetGestures() {
       if (g.open) ty = Math.max(0, dy - g.H);                // Rest nach dem Einklappen schiebt das Sheet nach unten
       else ty = dy > 0 ? dy : -Math.min(Math.max(-dy - g.H, 0), 30) / 3; // ganz oben: leichtes Gummiband
       setP(g.m, g.mt, p, false);
+    } else if (g.grow) {
+      // Essen-Sheet: hoch = größer (bis „groß“), runter = erst kleiner, dann nach unten weg
+      const { h0, hS, hT } = g.grow, want = h0 - dy;
+      if (want >= hS) d.style.maxHeight = `${want > hT ? hT + Math.min(30, (want - hT) / 3) : want}px`;
+      else { d.style.maxHeight = `${hS}px`; ty = hS - want; }
     } else {
       ty = dy > 0 ? dy : Math.max(dy, -30) / 3;
     }
@@ -1197,8 +1203,13 @@ function bindSheetGestures() {
     if (!g || e.pointerId !== g.id) return;
     const done = g; g = null;
     if (!done.active) {
-      // Tipp auf den Griff oben: Details ein-/ausblenden
+      // Tipp auf den Griff oben: Details ein-/ausblenden (Eintrag) bzw. groß/normal (Essen)
       const m = parts(), r = d.getBoundingClientRect();
+      if (!cancel && done.grow && Math.abs(e.clientY - done.y) < 6 && e.clientY - r.top < 26 && !e.target.closest?.('button')) {
+        ui.sheetDragT = Date.now();
+        setTall(!d.classList.contains('tall'), done.grow);
+        return;
+      }
       if (!cancel && m && Math.abs(e.clientY - done.y) < 6 && Math.abs(e.clientX - done.x) < 6 && e.clientY >= r.top && e.clientY - r.top < 26 && !e.target.closest?.('button')) {
         ui.sheetDragT = Date.now();
         const to = !m.f.classList.contains('expanded'), mt = metrics(m);
@@ -1214,6 +1225,14 @@ function bindSheetGestures() {
       closeAnimated();
       return;
     }
+    if (done.grow) {
+      // loslassen: auf „groß“ oder „normal“ einrasten (Schwung zählt mit)
+      const h = parseFloat(d.style.maxHeight) || done.grow.h0, { hS, hT } = done.grow;
+      const tall = cancel ? d.classList.contains('tall') : flickUp ? true : flickDown ? false : h > (hS + hT) / 2;
+      d.style.transition = 'transform .2s ease'; d.style.transform = '';
+      setTall(tall, done.grow);
+      return;
+    }
     d.style.transition = 'transform .2s ease'; d.style.transform = '';
     if (done.m) {
       const up = done.dy < 0;
@@ -1226,6 +1245,29 @@ function bindSheetGestures() {
   };
   d.addEventListener('pointerup', (e) => end(e, false));
   d.addEventListener('pointercancel', (e) => end(e, true));
+  // Essen-Sheet: zwei Höhen – normal (60 %) und groß (90 %). Nur wenn die Zutatenliste nicht ganz hineinpasst.
+  function growInfo() {
+    const list = d.querySelector(':scope > .mings');
+    if (!list || (!d.classList.contains('tall') && list.scrollHeight <= list.clientHeight + 2)) return null;
+    const vvh = window.visualViewport?.height || innerHeight;
+    const sat = Math.max(0, (document.getElementById('topcover')?.offsetHeight || 14) - 14); // Höhe der Statusleiste
+    const room = vvh - sat - 20;
+    const h0 = d.getBoundingClientRect().height;
+    const hS = Math.min(innerHeight * 0.6, room), hT = Math.max(hS, Math.min(innerHeight * 0.9, room));
+    return { h0, hS, hT: Math.min(hT, h0 + list.scrollHeight - list.clientHeight) }; // nicht größer als nötig
+  }
+  function setTall(on, gi) {
+    const target = on ? gi.hT : gi.hS;
+    d.style.transition = reduceMotion() ? 'none' : 'max-height .26s cubic-bezier(.25, .8, .25, 1), transform .2s ease';
+    if (!d.style.maxHeight) d.style.maxHeight = `${gi.h0}px`;
+    void d.offsetHeight;
+    d.style.maxHeight = `${target}px`;
+    setTimeout(() => {
+      d.classList.toggle('tall', on);
+      d.style.maxHeight = ''; d.style.transition = '';
+      d.querySelectorAll('.scrollbox').forEach(updateFade);
+    }, reduceMotion() ? 0 : 270);
+  }
 }
 
 // ---------- Bereiche per Drag & Drop sortieren (Griff rechts in der Liste) ----------
