@@ -574,3 +574,11 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
 .wrapghost .wrap { padding-bottom: 0; }
 /* Echte Ansicht, solange sie über einem Abbild gleitet: deckend und über die ganze Breite */
 .wrap.slide { position: relative; z-index: 1; background: var(--bg); min-height: 100vh; margin: 0 -16px; padding-left: 16px; padding-right: 16px; max-width: none; box-shadow: -10px 0 30px rgba(0, 0, 0, .16); }
+/* Kategorien sortieren: Zeile mit Griff rechts (Einstellungen → Kategorien) */
+.catrow { display: flex; align-items: stretch; border-top: 1px solid var(--line); background: var(--surface); }
+.catrow:first-child { border-top: 0; }
+.catrow .sheetbtn { flex: 1; min-width: 0; border-top: 0; }
+.catrow .grab { width: 46px; border-radius: 0; }
+.catrow .nograb { cursor: default; }
+.catrow.dragging { position: relative; z-index: 5; box-shadow: 0 8px 24px rgba(0, 0, 0, .22); border-radius: 12px; }
+.group:has(.dragging) { overflow: visible; }

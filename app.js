@@ -14,7 +14,9 @@
 // ---------- Kategorien und Stichwörter ----------
 // Die Reihenfolge hier ist die Standardreihenfolge, wenn kein Laden gewählt ist.
 const DEFAULT_CATS = [
-  { id: 'obst', name: 'Obst & Gemüse', kw: ['apfel', 'äpfel', 'banane', 'birne', 'tomate', 'gurke', 'paprika', 'zwiebel', 'knoblauch', 'salat', 'eisberg', 'karotte', 'möhre', 'kartoffel', 'zitrone', 'orange', 'mandarine', 'beere', 'erdbeer', 'himbeer', 'trauben', 'brokkoli', 'blumenkohl', 'zucchini', 'spinat', 'pilz', 'champignon', 'avocado', 'lauch', 'kohl', 'ingwer', 'petersilie', 'schnittlauch', 'gemüse', 'obst', 'mango', 'ananas', 'melone', 'pfirsich', 'radieschen', 'sellerie', 'aubergine', 'rucola', 'kürbis', 'süßkartoffel', 'frühlingszwiebel', 'limette'] },
+  // Obst & Gemüse in der Form, in der man es meist kauft (Mehrzahl), damit die Vorschläge beim Tippen passen.
+  // Die Einzahl wird trotzdem erkannt (siehe kwStem). „äpfel“ steht vor „apfel“, damit „Äpfel“ vorgeschlagen wird.
+  { id: 'obst', name: 'Obst & Gemüse', kw: ['äpfel', 'apfel', 'bananen', 'birnen', 'tomaten', 'gurke', 'paprika', 'zwiebeln', 'knoblauch', 'salat', 'eisberg', 'karotten', 'möhren', 'kartoffeln', 'zitronen', 'orangen', 'mandarinen', 'beere', 'erdbeer', 'himbeer', 'erdbeeren', 'himbeeren', 'heidelbeeren', 'trauben', 'brokkoli', 'blumenkohl', 'zucchini', 'spinat', 'pilze', 'champignons', 'avocados', 'lauch', 'kohl', 'ingwer', 'petersilie', 'schnittlauch', 'gemüse', 'obst', 'mango', 'ananas', 'melone', 'pfirsiche', 'radieschen', 'sellerie', 'aubergine', 'rucola', 'kürbis', 'süßkartoffeln', 'frühlingszwiebeln', 'limetten'] },
   { id: 'brot', name: 'Brot & Backwaren', kw: ['brot', 'brötchen', 'semmel', 'toast', 'baguette', 'croissant', 'kuchen', 'laugen', 'brezel', 'tortilla', 'wrap', 'knäckebrot', 'fladenbrot'] },
   { id: 'milch', name: 'Milch & Käse', kw: ['milch', 'hafermilch', 'sojamilch', 'mandelmilch', 'käse', 'joghurt', 'quark', 'butter', 'sahne', 'eier', 'mozzarella', 'parmesan', 'skyr', 'frischkäse', 'margarine', 'schmand', 'crème', 'creme fraiche', 'gouda', 'feta', 'halloumi', 'tofu', 'pudding', 'kefir'] },
   { id: 'fleisch', name: 'Fleisch & Fisch', kw: ['fleisch', 'hähnchen', 'huhn', 'hack', 'wurst', 'schinken', 'salami', 'speck', 'lachs', 'fisch', 'garnelen', 'steak', 'schnitzel', 'bratwurst', 'würstchen', 'gyros', 'pute', 'rind', 'schwein', 'aufschnitt'] },
@@ -50,14 +52,18 @@ const pinIdx = (st, name) => { const d = dupKey(name); return st.zones.findIndex
 // Die Kategorie eines neuen Eintrags kommt nur aus den Stichwörtern der Kategorien.
 function guessCat(name) { return keywordGuess(name); }
 
+// Wortstamm eines Stichworts für die Erkennung: Mehrzahl-Endungen fallen weg, damit „tomaten“ auch „Tomate“ erkennt,
+// „zwiebeln“ auch „Zwiebel“, „pilze“ auch „Pilz“. Kurze Wörter (bis 4 Buchstaben) bleiben, wie sie sind.
+const kwStem = (k) => (k.length >= 5 ? k.replace(/(en|n|e|s)$/, '') : k);
 // Der längste passende Treffer am Wortanfang gewinnt ("paprikapulver" schlägt "paprika").
 function keywordGuess(name) {
   const n = ' ' + name.toLowerCase();
   let best = null, bestLen = 0;
   for (const c of CATS) {
     for (const k of c.kw) {
-      if (k.length > bestLen && new RegExp('[\\s\\-/,]' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(n)) {
-        best = c.id; bestLen = k.length;
+      const s = kwStem(k);
+      if (s.length > bestLen && new RegExp('[\\s\\-/,]' + s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(n)) {
+        best = c.id; bestLen = s.length;
       }
     }
   }
@@ -459,7 +465,7 @@ function viewEditor() {
     const shared = st.zones.some((o) => o !== z && o.cats.includes(c));
     return (shared && st.zones[defaultZoneIdx(st, c)] === z ? '★ ' : '') + CAT_BY_ID[c].name;
   }).join(', ') || 'keine Kategorie';
-  const zlist = st.zones.map((z, i) => `<li class="zli" data-zid="${z.id}"><button type="button" class="zitem" data-act="selzone" data-id="${z.id}" aria-pressed="${z.id === ui.selZone}">
+  const zlist = st.zones.map((z, i) => `<li class="zli" data-zid="${z.id}" data-key="${z.id}"><button type="button" class="zitem" data-act="selzone" data-id="${z.id}" aria-pressed="${z.id === ui.selZone}">
       <span class="badge">${i + 1}</span><span class="zn"><strong>${esc(z.name)}</strong><small>${esc(catNames(z))}${z.rect || !S.showPlan ? '' : ' · nicht eingezeichnet'}</small></span></button>
       <span class="grab" role="img" aria-label="Zum Sortieren ziehen">${ICON_GRAB}</span></li>${z.id === ui.selZone ? '<!--PANEL-->' : ''}`).join('');
   let panel = '';
@@ -932,11 +938,13 @@ function updatePinSugg() {
 const insertBeforeFallback = (cat) => { const i = CATS.findIndex((c) => c.id === 'sonst'); CATS.splice(i < 0 ? CATS.length : i, 0, cat); indexCats(); };
 function catListPage() {
   const missing = DEFAULT_CATS.filter((d) => !CAT_BY_ID[d.id]);
-  const rows = CATS.map((c) => `<button type="button" class="sheetbtn" data-act="catdetail" data-id="${c.id}"><span>${esc(c.name)}</span><small>${c.id === 'sonst' && !c.kw.length ? 'Auffangbecken' : `${c.kw.length} Stichwörter`} ›</small></button>`).join('');
+  // Jede Zeile: antippen = bearbeiten, Griff rechts = Reihenfolge ändern (gilt ohne Geschäft). „Sonstiges“ bleibt unten.
+  const rows = CATS.map((c) => `<div class="catrow" data-key="${c.id}"><button type="button" class="sheetbtn" data-act="catdetail" data-id="${c.id}"><span>${esc(c.name)}</span><small>${c.id === 'sonst' && !c.kw.length ? 'Auffangbecken' : `${c.kw.length} Stichwörter`} ›</small></button>${c.id === 'sonst' ? '<span class="grab nograb" aria-hidden="true"></span>' : `<span class="grab" role="img" aria-label="Zum Sortieren ziehen">${ICON_GRAB}</span>`}</div>`).join('');
   const q = $('#catSearch')?.value || '';
   openPage('cats', 'Kategorien', `
     <input id="catSearch" type="search" class="notein catsearch" value="${esc(q)}" placeholder="Produkt suchen: in welcher Kategorie?" aria-label="Stichwort suchen" autocomplete="off" autocapitalize="off" enterkeyhint="search">
     <div id="catRes" class="group" hidden></div>
+    <p class="sheetnote" style="margin:4px 4px 0">In dieser Reihenfolge sortiert sich die Liste, wenn kein Geschäft gewählt ist. Am Griff ziehen zum Ändern.</p>
     <div class="group" id="catRows">${rows}</div>
     ${missing.length ? `<div class="group"><button type="button" class="sheetbtn" data-act="restoredefaults">Fehlende Standard-Kategorien zurückholen <small>${missing.length}</small></button></div>` : ''}
     <button type="button" class="btn ghost" data-act="newcatsheet">+ Neue Kategorie</button>`, catListPage);
@@ -1299,48 +1307,69 @@ function bindSheetGestures() {
   }
 }
 
-// ---------- Bereiche per Drag & Drop sortieren (Griff rechts in der Liste) ----------
+// ---------- Sortieren per Ziehen am Griff (≡) – gemeinsam für Bereiche und Kategorien ----------
+// li folgt dem Finger, die anderen Zeilen (passend zu sel) rücken nach. done(neue Reihenfolge der data-key) oder done(null) bei Abbruch.
+// scroller: was beim Ziehen an den Rand mitscrollt (window oder eine Seite).
+function sortDrag(e, handle, li, list, sel, scroller, done) {
+  e.preventDefault();
+  const grabOffset = e.clientY - li.getBoundingClientRect().top;
+  try { handle.setPointerCapture(e.pointerId); } catch (_) { /* nicht kritisch */ }
+  li.classList.add('dragging');
+  const place = (y) => {
+    li.style.transform = 'none';
+    const others = [...list.children].filter((c) => c !== li && c.matches(sel));
+    const next = others.find((c) => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
+    if (next) { if (li.nextElementSibling !== next) list.insertBefore(li, next); } else if (others.length && others[others.length - 1].nextElementSibling !== li) others[others.length - 1].after(li);
+    li.style.transform = `translateY(${y - grabOffset - li.getBoundingClientRect().top}px)`;
+  };
+  const move = (ev) => {
+    place(ev.clientY);
+    const top = scroller === window ? 0 : scroller.getBoundingClientRect().top, bottom = scroller === window ? innerHeight : scroller.getBoundingClientRect().bottom;
+    if (ev.clientY < top + 90) scroller.scrollBy(0, -14); else if (ev.clientY > bottom - 90) scroller.scrollBy(0, 14);
+  };
+  const stop = (cancel) => {
+    handle.removeEventListener('pointermove', move);
+    handle.removeEventListener('pointerup', up);
+    handle.removeEventListener('pointercancel', cancelFn);
+    li.classList.remove('dragging'); li.style.transform = '';
+    done(cancel ? null : [...list.children].filter((c) => c.matches(sel)).map((c) => c.dataset.key));
+  };
+  const up = () => stop(false), cancelFn = () => stop(true);
+  handle.addEventListener('pointermove', move);
+  handle.addEventListener('pointerup', up);
+  handle.addEventListener('pointercancel', cancelFn);
+  place(e.clientY);
+}
+// Bereiche eines Geschäfts (Liste im Editor) = Laufweg
 function bindZoneDrag() {
   const list = $('.zlist');
   if (!list) return;
   list.addEventListener('pointerdown', (e) => {
     const handle = e.target.closest('.grab');
     if (!handle) return;
-    e.preventDefault();
-    const li = handle.closest('li');
-    const grabOffset = e.clientY - li.getBoundingClientRect().top;
-    try { handle.setPointerCapture(e.pointerId); } catch (_) { /* nicht kritisch */ }
-    li.classList.add('dragging');
-    const place = (y) => {
-      li.style.transform = 'none';
-      const others = [...list.children].filter((c) => c !== li && c.classList.contains('zli'));
-      const next = others.find((c) => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
-      if (next) { if (li.nextElementSibling !== next) list.insertBefore(li, next); } else if (list.lastElementChild !== li) list.appendChild(li);
-      li.style.transform = `translateY(${y - grabOffset - li.getBoundingClientRect().top}px)`;
-    };
-    const move = (ev) => {
-      place(ev.clientY);
-      if (ev.clientY < 90) window.scrollBy(0, -14); else if (ev.clientY > window.innerHeight - 90) window.scrollBy(0, 14);
-    };
-    const stop = (ev, cancel) => {
-      handle.removeEventListener('pointermove', move);
-      handle.removeEventListener('pointerup', up);
-      handle.removeEventListener('pointercancel', cancelFn);
+    sortDrag(e, handle, handle.closest('li'), list, '.zli', window, (order) => {
       const st = editStore();
-      if (!cancel && st) {
-        const order = [...list.children].filter((c) => c.classList.contains('zli')).map((c) => c.dataset.zid);
-        st.zones.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-        ui.justDrew = Date.now();
-        commit();
-      } else render();
-    };
-    const up = (ev) => stop(ev, false), cancelFn = (ev) => stop(ev, true);
-    handle.addEventListener('pointermove', move);
-    handle.addEventListener('pointerup', up);
-    handle.addEventListener('pointercancel', cancelFn);
-    place(e.clientY);
+      if (!order || !st) { render(); return; }
+      st.zones.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      ui.justDrew = Date.now();
+      commit();
+    });
   });
 }
+// Kategorien (Einstellungen → Kategorien) = Reihenfolge der Liste ohne Geschäft. „Sonstiges“ bleibt immer am Ende.
+document.addEventListener('pointerdown', (e) => {
+  const handle = e.target.closest?.('.catrow .grab');
+  if (!handle) return;
+  const list = handle.closest('#catRows');
+  sortDrag(e, handle, handle.closest('.catrow'), list, '.catrow', handle.closest('.page') || window, (order) => {
+    if (order) {
+      CATS.sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || order.indexOf(a.id) - order.indexOf(b.id));
+      indexCats();
+      commit();
+    }
+    catListPage();
+  });
+});
 
 // ---------- Plan bedienen: zeichnen, Kanten ziehen, schieben, zoomen ----------
 let planAbort = null;
@@ -2236,6 +2265,7 @@ document.addEventListener('change', async (e) => {
     Object.keys(S.learn).forEach((k) => { if (CAT_BY_ID[S.learn[k]]) learnKeyword(names[k] || k, S.learn[k]); });
     delete S.learn; delete S.learnNames;
   }
+  migrateKeywords();
   S.stores.forEach((st) => st.zones.forEach((z) => { z.prods = z.prods || {}; }));
   if (!S.stores.find((s) => s.id === S.storeId)) S.storeId = S.stores[0]?.id || null;
   save();
@@ -2437,3 +2467,22 @@ function holdAfterLongPress() {
   ends.forEach((t) => document.addEventListener(t, off, true));
 }
 document.addEventListener('selectstart', (e) => { if (document.documentElement.classList.contains('lphold')) e.preventDefault(); }, true);
+
+// ---------- Stichwörter in der Mehrzahl (Umstellung gespeicherter Kategorien) ----------
+// Alte Standard-Stichwörter in Einzahl werden zur Mehrzahl (so, wie man es kauft). Eigene Stichwörter bleiben unberührt.
+// Läuft bei jedem Start, ändert aber nur, was noch in der alten Form da ist.
+const KW_PLURAL = { 'tomate': 'tomaten', 'zwiebel': 'zwiebeln', 'karotte': 'karotten', 'möhre': 'möhren', 'kartoffel': 'kartoffeln', 'zitrone': 'zitronen', 'orange': 'orangen', 'mandarine': 'mandarinen', 'banane': 'bananen', 'birne': 'birnen', 'champignon': 'champignons', 'pilz': 'pilze', 'avocado': 'avocados', 'limette': 'limetten', 'pfirsich': 'pfirsiche', 'süßkartoffel': 'süßkartoffeln', 'frühlingszwiebel': 'frühlingszwiebeln' };
+function migrateKeywords() {
+  let changed = false;
+  const all = () => new Set(S.cats.flatMap((c) => c.kw));
+  S.cats.forEach((c) => {
+    const kw = c.kw.map((k) => { const p = KW_PLURAL[k]; if (p) { changed = true; return p; } return k; });
+    c.kw = [...new Set(kw)];
+    const a = c.kw.indexOf('apfel'), b = c.kw.indexOf('äpfel'); // „Äpfel“ soll als Vorschlag kommen, nicht „Apfel“
+    if (a > -1 && b > a) { c.kw.splice(b, 1); c.kw.splice(a, 0, 'äpfel'); changed = true; }
+  });
+  const obst = S.cats.find((c) => c.id === 'obst'), have = all();
+  if (obst) ['erdbeeren', 'himbeeren', 'heidelbeeren'].forEach((w) => { if (!have.has(w)) { obst.kw.push(w); changed = true; } });
+  if (changed) indexCats();
+  return changed;
+}
