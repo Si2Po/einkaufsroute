@@ -37,3 +37,12 @@ Beides darfst du mir schicken, beide Werte sind dafür gedacht, in der App zu st
 
 ## 5. Später (Hosting)
 Ein kostenloses GitHub-Konto anlegen. Die Schritte für das Hosting bekommst du von mir, sobald die App fertig ist.
+
+## 6. Gruppen nachrüsten (einmalig)
+1. Vorher in der App sichern: Einstellungen → Konto und Haushalt → Daten sichern → „Als Datei speichern“.
+2. Supabase → **SQL Editor** → „New query“.
+3. Den kompletten Inhalt von `gruppen.sql` einfügen und **Run** drücken.
+4. Erwartet: „Success. No rows returned“. Bei einer Fehlermeldung: Text kopieren und mir schicken.
+5. Prüfen (optional): Links **Table Editor → households**. Euer gemeinsamer Haushalt heißt jetzt „Einkauf“,
+   dazu gibt es für jede Person einen Eintrag „Persönlich“.
+Die App funktioniert danach unverändert weiter; die Gruppen-Funktionen kommen mit dem nächsten App-Update.

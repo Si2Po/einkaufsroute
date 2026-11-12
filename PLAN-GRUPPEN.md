@@ -1,59 +1,45 @@
 # Plan: Gruppen
 
-Stand: 12.11.2026 · Status: **Entwurf, noch nicht umgesetzt**
+Stand: 12.11.2026 · Status: **abgestimmt, Umsetzung läuft** (Schritt 1: SQL liegt in `supabase/gruppen.sql`)
 
-## Ziel
-Ein Konto kann in mehreren **Gruppen** sein. Jede Gruppe hat eigene Listen, Kategorien, Geschäfte, Essen und Mitglieder.
+## Grundidee
+Gruppen sind **Teilen-Kreise**, keine Bereiche, zwischen denen man wechselt. Man sieht immer **alles**
+aus allen eigenen Gruppen. Die Gruppe regelt nur, **wer etwas mitsieht**.
 - **Persönlich**: gehört nur dir, entsteht automatisch, kann nicht geteilt oder verlassen werden.
-- **Weitere Gruppen**: z. B. „Einkaufen“ (mit Partnerin/Partner geteilt) oder „Baumarkt-Projekt“, „Filme“.
+- **Weitere Gruppen**: z. B. „Einkauf“ (mit Partnerin/Partner geteilt). Name jederzeit änderbar.
+- Gruppen verwaltet man in den **Einstellungen**: anlegen, umbenennen, Mitglieder sehen, einladen, beitreten, austreten.
 
-## Was sich für dich ändert (Bedienung)
-- **Liste wählen = Gruppe wählen.** Der zweite Tipp auf „Liste“ zeigt alle Listen, nach Gruppen sortiert
-  (Überschrift je Gruppe). Wählst du eine Liste, wird ihre Gruppe aktiv.
-- **Alles andere folgt der aktiven Gruppe**: Essen, Geschäfte, Kategorien, Stichwörter.
-- **Einstellungen → Gruppen** (ersetzt „Konto und Haushalt“): Gruppen anlegen, umbenennen, Mitglieder sehen,
-  einladen, beitreten, verlassen. Darunter das Konto (Anmelden/Abmelden) und „Daten sichern“.
-- **Typ einer Gruppe**: „Einkaufen“ (mit Geschäften, Laufweg und Essen) oder „Einfache Listen“ (nur Listen und
-  Kategorien). Bei „Einfache Listen“ werden Essen und Geschäfte ausgeblendet.
-- **Beitreten ersetzt nichts mehr.** Heute werden beim Beitreten die eigenen Daten durch die des Haushalts ersetzt.
-  Künftig kommt die neue Gruppe einfach dazu, deine anderen Gruppen bleiben unberührt.
-- Ohne Konto gibt es nur „Persönlich“ (auf dem Gerät). Gruppen zum Teilen brauchen ein Konto.
+## Was gehört wozu?
+- **Listen**: jede Liste gehört zu genau **einer** Gruppe. Alle Listen erscheinen zusammen (kleiner Hinweis „Einkauf“).
+  In der Listenauswahl lässt sich eine Liste in eine andere Gruppe verschieben.
+- **Geschäfte**: jedes gehört einer Gruppe; man sieht alle und kann jedes für jede Liste wählen.
+  Liegt das gewählte Geschäft nicht in der Gruppe der Liste, fragt die App einmal:
+  „Geschäft in die Gruppe der Liste verschieben, damit alle danach sortieren können?“ (optional, verschieben statt kopieren).
+- **Essen**: wie Geschäfte – jedes gehört einer Gruppe, man sieht alle, Gruppe beim Bearbeiten änderbar.
+- **Kategorien und Stichwörter**: gibt es pro Gruppe. In den Einstellungen wählt jede Person:
+  „Kategorien und Stichwörter von: [Gruppe]“. Diese eine Stichwortliste nutzt die App für Einordnen, Sortieren
+  und Lernen. Wählen mehrere Personen dieselbe Gruppe, lernen sie gemeinsam.
+  Die Standard-Kategorien haben überall dieselbe Kennung, deshalb passt die Sortierung auch über Gruppen hinweg.
+  Eigene Kategorien gibt es nur in der Gruppe, in der sie angelegt wurden.
+- **Neues anlegen** (Liste, Geschäft, Essen): Feld „Gruppe“, vorausgewählt die zuletzt benutzte.
+- **Beitreten ersetzt nichts mehr**: die neue Gruppe kommt einfach dazu.
+- Ohne Konto gibt es nur „Persönlich“ auf dem Gerät.
 
-## Was mit deinen heutigen Daten passiert (Umstellung)
-- **Heutiger Haushalt, den du mit jemandem teilst** → wird die Gruppe **„Einkaufen“** (Typ Einkaufen).
-  Alles bleibt drin, ihr seid weiter beide Mitglied.
-- **Jede Person bekommt zusätzlich „Persönlich“** (anfangs leer, mit Standard-Kategorien).
-- **Haushalt, in dem nur du bist** → wird direkt zu „Persönlich“.
-- Vor der Umstellung legt die App automatisch eine Sicherung an (wie heute bei „Sicherung laden“).
+## Umstellung bestehender Daten (macht `gruppen.sql`)
+- Geteilter Haushalt (mehrere Mitglieder) → Gruppe **„Einkauf“** (alles bleibt drin, beide bleiben Mitglied).
+- Haushalt, in dem jemand allein ist → wird **„Persönlich“**.
+- Wer danach noch kein „Persönlich“ hat, bekommt ein neues (leer).
+- Die bisherige App-Version läuft nach dem SQL unverändert weiter.
 
-## Datenbank (Supabase) – was ich vorbereite, du führst es einmal aus
-Eine neue Datei `supabase/gruppen.sql` (nur Ergänzungen, nichts wird gelöscht):
-1. Tabelle `households` bekommt zwei Spalten: `kind` (`personal` / `shopping` / `simple`) und den Namen nutzen wir schon.
-2. Umstellung bestehender Haushalte (siehe oben) per SQL, inkl. „Persönlich“ für alle, die keins haben.
-3. Neue Funktionen:
-   - `create_group(name, kind)` – Gruppe anlegen (du bist Mitglied)
-   - `create_invite(group)` – Einladung **für eine bestimmte Gruppe** (bei „Persönlich“ verboten)
-   - `accept_invite(code)` – tritt der Gruppe bei, **ohne** etwas zu ersetzen
-   - `leave_group(group)` – verlassen (bei „Persönlich“ verboten; letzte Person → Gruppe wird gelöscht)
-   - `rename_group(group, name)`
-4. Bei neuen Konten entsteht automatisch „Persönlich“ (statt „Mein Haushalt“).
-Die Zugriffsregeln (wer was sehen darf) bleiben wie sie sind: Man sieht die Daten jeder Gruppe, in der man Mitglied ist.
+## Technik (App)
+- Die App hält die Daten **aller** Gruppen gleichzeitig (jedes Ding merkt sich seine Gruppe) und gleicht jede Gruppe
+  einzeln mit dem Server ab. Verschieben in eine andere Gruppe = dort neu anlegen, in der alten weich löschen.
+- Die Dokument-Kennung bleibt „Gruppe + Art + lokale ID“, lokale IDs ändern sich nie.
 
-## App (technisch, Kurzfassung)
-- Pro Gruppe ein eigener Datenstand auf dem Gerät (IndexedDB `state:<gruppe>`), ein eigener Abgleich-Stand.
-- Im Speicher ist immer nur die aktive Gruppe geladen (wie heute). Wechseln = speichern, andere Gruppe laden, neu zeichnen.
-- Abgleich: aktive Gruppe wie heute alle 10 s; die anderen Gruppen seltener (beim Öffnen der Listenauswahl und jede Minute),
-  damit offene Einträge und Listennamen dort aktuell sind.
-- Eine kleine Übersicht (Gruppen, ihre Listen, Anzahl offen) wird für die Listenauswahl mitgeführt.
-
-## Reihenfolge der Umsetzung
-1. SQL-Datei schreiben und erklären → du führst sie in Supabase aus (vorher zeige ich dir, wie man eine Sicherung macht).
-2. App: Datenstand pro Gruppe, Wechsel über die Listenauswahl (zuerst nur mit vorhandenen Gruppen).
-3. App: Einstellungen → Gruppen (anlegen, einladen, beitreten, verlassen, umbenennen).
-4. App: Gruppentyp „Einfache Listen“ (Essen/Geschäfte ausblenden).
-5. Umstellung testen: zuerst lokal mit einem Test-Konto, dann bei euch.
-
-## Offene Fragen an dich
-- Passt „Liste wählen = Gruppe wählen“, oder lieber einen eigenen Gruppen-Schalter (z. B. oben in der Liste)?
-- Name für die geteilte Gruppe nach der Umstellung: „Einkaufen“ oder „Haushalt“?
-- Brauchen wir den Typ „Einfache Listen“ gleich, oder reicht erst einmal „Einkaufen“ für alle Gruppen?
+## Reihenfolge
+1. ✅ SQL (`supabase/gruppen.sql`) – vom Besitzer in Supabase auszuführen.
+2. App: Abgleich für mehrere Gruppen, alles bekommt eine Gruppe, Anzeige über alle Gruppen.
+3. App: Einstellungen → Gruppen (anlegen, umbenennen, einladen, beitreten, austreten) + Auswahl der Stichwortliste.
+4. App: Gruppe bei Listen/Geschäften/Essen wählen und verschieben, Nachfrage beim Geschäft.
+5. Test mit Test-Konto, dann bei euch.
+6. Später: Gruppentyp „Einfache Listen“.
