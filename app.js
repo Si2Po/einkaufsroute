@@ -1876,6 +1876,7 @@ document.addEventListener('click', (e) => {
     case 'selzone':
       if (lpFired) { lpFired = false; break; }
       if (Date.now() - ui.justDrew < 400) break;
+      if (ui.selZone === id) { ui.selZone = null; ui.drawing = false; render(); break; } // schon offen: Tippen schließt die Details
       ui.selZone = id; commit(); $('.zpanelli')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); break;
     case 'togcat': {
       const z = st.zones[zi], c = el.dataset.cat;
