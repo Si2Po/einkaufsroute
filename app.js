@@ -247,7 +247,7 @@ function seedMeals() {
 
 // ---------- Zustand ----------
 let S;
-const ui = { tab: 'list', editStoreId: null, selZone: null, drawing: false, showDone: false, confirmDel: false, justDrew: 0, sheetT: 0, pending: new Map(), confirmCat: false, confirmList: false };
+const ui = { tab: 'list', wiggle: null, editStoreId: null, selZone: null, drawing: false, showDone: false, confirmDel: false, justDrew: 0, sheetT: 0, pending: new Map(), confirmCat: false, confirmList: false };
 const curList = () => (S.lists || []).find((l) => l.id === S.listId) || null;
 const curStore = () => S.stores.find((s) => s.id === S.storeId) || null;
 const editStore = () => S.stores.find((s) => s.id === ui.editStoreId) || null;
@@ -467,7 +467,7 @@ function viewEditor() {
   }).join(', ') || 'keine Kategorie';
   const zlist = st.zones.map((z, i) => `<li class="zli" data-zid="${z.id}" data-key="${z.id}"><button type="button" class="zitem" data-act="selzone" data-id="${z.id}" aria-pressed="${z.id === ui.selZone}">
       <span class="badge">${i + 1}</span><span class="zn"><strong>${esc(z.name)}</strong><small>${esc(catNames(z))}${z.rect || !S.showPlan ? '' : ' · nicht eingezeichnet'}</small></span></button>
-      <span class="grab" role="img" aria-label="Zum Sortieren ziehen">${ICON_GRAB}</span></li>${z.id === ui.selZone ? '<!--PANEL-->' : ''}`).join('');
+      </li>${z.id === ui.selZone ? '<!--PANEL-->' : ''}`).join('');
   let panel = '';
   if (sel) {
     const sum = (arr) => (arr.length ? esc(arr.slice(0, 2).join(', ')) + (arr.length > 2 ? ` +${arr.length - 2}` : '') : '–');
@@ -486,7 +486,7 @@ function viewEditor() {
   if (!S.showPlan) ui.drawing = false;
   const bar = ui.drawing && sel
     ? `<p class="hint live">Ziehen = neu · Kante/Ecke = anpassen · Mitte = schieben · Daneben tippen = fertig</p>`
-    : `<p class="hint">${S.showPlan ? (st.zones.length ? 'Antippen: bearbeiten · Gedrückt halten: Form ändern' : 'Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.') : (st.zones.length ? 'Reihenfolge = Laufweg. Am Griff ziehen zum Sortieren.' : 'Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.')}</p><button type="button" class="btn small" data-act="addzone">+ Bereich</button>`;
+    : `<p class="hint">${S.showPlan ? (st.zones.length ? 'Antippen: bearbeiten · Gedrückt halten: im Plan Form ändern, in der Liste sortieren' : 'Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.') : (st.zones.length ? 'Reihenfolge = Laufweg. Lange drücken zum Sortieren.' : 'Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.')}</p><button type="button" class="btn small" data-act="addzone">+ Bereich</button>`;
   return `
     <div class="edhead">
       <button type="button" class="pageback" data-act="back" aria-label="Zurück zu Geschäfte">${ICON_BACK}<span>Geschäfte</span></button>
@@ -500,7 +500,8 @@ function viewEditor() {
       ${st.bg ? '<button type="button" class="chipbtn" data-act="clearbg" aria-label="Skizze entfernen">×</button>' : ''}
     </div>` : ''}
     <div class="planbar">${bar}</div>
-    <ul class="zlist">${zlist.replace('<!--PANEL-->', panel ? `<li class="zpanelli">${panel}</li>` : '')}</ul>`;
+    ${ui.wiggle === 'zones' ? wiggleBar() : ''}
+    <ul class="zlist${ui.wiggle === 'zones' ? ' wiggle' : ''}">${zlist.replace('<!--PANEL-->', panel && ui.wiggle !== 'zones' ? `<li class="zpanelli">${panel}</li>` : '')}</ul>`;
 }
 
 function render() {
@@ -514,7 +515,7 @@ function render() {
     v.innerHTML = viewSettings();
   } else {
     v.innerHTML = ui.editStoreId ? viewEditor() : viewStores();
-    if (ui.editStoreId) { if (S.showPlan) bindPlan(); else planAbort?.abort(); bindZoneDrag(); }
+    if (ui.editStoreId) { if (S.showPlan) bindPlan(); else planAbort?.abort(); }
   }
   renderTabs();
   refreshTopPage();
@@ -656,6 +657,7 @@ function openPage(key, title, html, refresh) {
 function popPages(n = 1, fromX = 0) {
   n = Math.min(n, pages.length);
   if (!n) return;
+  ui.wiggle = null;
   flushSheetInputs(); // halb Getipptes (Stichwort, Listenname) nicht verlieren
   ui.confirmCat = false; ui.confirmList = false;
   const removed = pages.splice(pages.length - n, n), leaving = removed[removed.length - 1].el;
@@ -717,6 +719,7 @@ function wrapAnim(kind, ghost, fromX = 0) {
   } else w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' });
 }
 function storesBack() {
+  ui.wiggle = null;
   if (ui.editStoreId) { ui.editStoreId = null; ui.selZone = null; ui.drawing = false; }
   else ui.tab = 'settings';
   render(); window.scrollTo(0, 0);
@@ -938,14 +941,15 @@ function updatePinSugg() {
 const insertBeforeFallback = (cat) => { const i = CATS.findIndex((c) => c.id === 'sonst'); CATS.splice(i < 0 ? CATS.length : i, 0, cat); indexCats(); };
 function catListPage() {
   const missing = DEFAULT_CATS.filter((d) => !CAT_BY_ID[d.id]);
-  // Jede Zeile: antippen = bearbeiten, Griff rechts = Reihenfolge ändern (gilt ohne Geschäft). „Sonstiges“ bleibt unten.
-  const rows = CATS.map((c) => `<div class="catrow" data-key="${c.id}"><button type="button" class="sheetbtn" data-act="catdetail" data-id="${c.id}"><span>${esc(c.name)}</span><small>${c.id === 'sonst' && !c.kw.length ? 'Auffangbecken' : `${c.kw.length} Stichwörter`} ›</small></button>${c.id === 'sonst' ? '<span class="grab nograb" aria-hidden="true"></span>' : `<span class="grab" role="img" aria-label="Zum Sortieren ziehen">${ICON_GRAB}</span>`}</div>`).join('');
+  // Jede Zeile: antippen = bearbeiten, lange drücken = Wackelmodus zum Sortieren (gilt ohne Geschäft). „Sonstiges“ bleibt unten.
+  const rows = CATS.map((c) => `<div class="catrow" data-key="${c.id}"><button type="button" class="sheetbtn" data-act="catdetail" data-id="${c.id}"><span>${esc(c.name)}</span><small>${c.id === 'sonst' && !c.kw.length ? 'Auffangbecken' : `${c.kw.length} Stichwörter`} ›</small></button></div>`).join('');
   const q = $('#catSearch')?.value || '';
   openPage('cats', 'Kategorien', `
     <input id="catSearch" type="search" class="notein catsearch" value="${esc(q)}" placeholder="Produkt suchen: in welcher Kategorie?" aria-label="Stichwort suchen" autocomplete="off" autocapitalize="off" enterkeyhint="search">
     <div id="catRes" class="group" hidden></div>
-    <p class="sheetnote" style="margin:4px 4px 0">In dieser Reihenfolge sortiert sich die Liste, wenn kein Geschäft gewählt ist. Am Griff ziehen zum Ändern.</p>
-    <div class="group" id="catRows">${rows}</div>
+    <p class="sheetnote" style="margin:4px 4px 0">In dieser Reihenfolge sortiert sich die Liste, wenn kein Geschäft gewählt ist. Lange drücken zum Sortieren.</p>
+    ${ui.wiggle === 'cats' ? wiggleBar() : ''}
+    <div class="group${ui.wiggle === 'cats' ? ' wiggle' : ''}" id="catRows">${rows}</div>
     ${missing.length ? `<div class="group"><button type="button" class="sheetbtn" data-act="restoredefaults">Fehlende Standard-Kategorien zurückholen <small>${missing.length}</small></button></div>` : ''}
     <button type="button" class="btn ghost" data-act="newcatsheet">+ Neue Kategorie</button>`, catListPage);
   if (q) updateCatSearch();
@@ -1307,11 +1311,15 @@ function bindSheetGestures() {
   }
 }
 
-// ---------- Sortieren per Ziehen am Griff (≡) – gemeinsam für Bereiche und Kategorien ----------
+// ---------- Sortieren per Ziehen – gemeinsam für Bereiche und Kategorien ----------
 // li folgt dem Finger, die anderen Zeilen (passend zu sel) rücken nach. done(neue Reihenfolge der data-key) oder done(null) bei Abbruch.
 // scroller: was beim Ziehen an den Rand mitscrollt (window oder eine Seite).
+let sortingNow = false;
+// Während des Ziehens darf die Seite nicht scrollen (sonst bricht Safari das Ziehen ab)
+document.addEventListener('touchmove', (e) => { if (sortingNow && e.cancelable) e.preventDefault(); }, { passive: false });
 function sortDrag(e, handle, li, list, sel, scroller, done) {
   e.preventDefault();
+  sortingNow = true;
   const grabOffset = e.clientY - li.getBoundingClientRect().top;
   try { handle.setPointerCapture(e.pointerId); } catch (_) { /* nicht kritisch */ }
   li.classList.add('dragging');
@@ -1331,6 +1339,7 @@ function sortDrag(e, handle, li, list, sel, scroller, done) {
     handle.removeEventListener('pointermove', move);
     handle.removeEventListener('pointerup', up);
     handle.removeEventListener('pointercancel', cancelFn);
+    sortingNow = false;
     li.classList.remove('dragging'); li.style.transform = '';
     done(cancel ? null : [...list.children].filter((c) => c.matches(sel)).map((c) => c.dataset.key));
   };
@@ -1340,36 +1349,49 @@ function sortDrag(e, handle, li, list, sel, scroller, done) {
   handle.addEventListener('pointercancel', cancelFn);
   place(e.clientY);
 }
-// Bereiche eines Geschäfts (Liste im Editor) = Laufweg
-function bindZoneDrag() {
-  const list = $('.zlist');
-  if (!list) return;
-  list.addEventListener('pointerdown', (e) => {
-    const handle = e.target.closest('.grab');
-    if (!handle) return;
-    sortDrag(e, handle, handle.closest('li'), list, '.zli', window, (order) => {
-      const st = editStore();
-      if (!order || !st) { render(); return; }
-      st.zones.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      ui.justDrew = Date.now();
-      commit();
-    });
-  });
+// ---------- Wackelmodus (wie auf dem iPhone-Home-Bildschirm) ----------
+// Lange drücken auf eine Zeile startet ihn, die gedrückte Zeile lässt sich sofort verschieben. Danach verschiebt jedes Ziehen
+// eine Zeile, Antippen öffnet nichts. „Fertig“ oder Verlassen der Seite beendet ihn.
+//   cats  = Kategorien (Reihenfolge der Liste ohne Geschäft; „Sonstiges“ bleibt immer unten)
+//   zones = Bereiche eines Geschäfts (Laufweg)
+const WIGGLE = {
+  cats: {
+    list: '#catRows', row: '.catrow:not([data-key="sonst"])', scroller: (l) => l.closest('.page') || window,
+    done(order) { CATS.sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || order.indexOf(a.id) - order.indexOf(b.id)); indexCats(); commit(); catListPage(); },
+  },
+  zones: {
+    list: '.zlist', row: '.zli', scroller: () => window,
+    done(order) { const st = editStore(); if (!st) return; st.zones.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); ui.justDrew = Date.now(); commit(); },
+  },
+};
+function wiggleBar() { return '<div class="wigglebar"><span>Ziehen zum Sortieren</span><button type="button" class="btn small" data-act="wiggleoff">Fertig</button></div>'; }
+function dragRow(e, kind, row) {
+  const w = WIGGLE[kind], list = row.closest(w.list);
+  const before = [...list.children].filter((c) => c.matches(w.row)).map((c) => c.dataset.key).join();
+  sortDrag(e, row, row, list, w.row, w.scroller(list), (order) => { if (order && order.join() !== before) w.done(order); });
 }
-// Kategorien (Einstellungen → Kategorien) = Reihenfolge der Liste ohne Geschäft. „Sonstiges“ bleibt immer am Ende.
+function startWiggle(e, el) {
+  const kind = el.closest('#catRows') ? 'cats' : 'zones', w = WIGGLE[kind], row = el.closest(w.row);
+  if (!row) return; // „Sonstiges“ lässt sich nicht verschieben
+  ui.wiggle = kind;
+  const list = row.closest(w.list);
+  list.classList.add('wiggle');
+  list.parentElement.querySelector('.zpanelli')?.remove(); // offenes Bereichs-Panel stört beim Sortieren
+  if (!list.previousElementSibling?.classList.contains('wigglebar')) list.insertAdjacentHTML('beforebegin', wiggleBar());
+  dragRow(e, kind, row); // Finger liegt noch: gleich verschieben
+}
+function endWiggle() {
+  if (!ui.wiggle) return;
+  ui.wiggle = null;
+  if (pageTop() === 'cats') catListPage(); else render();
+}
 document.addEventListener('pointerdown', (e) => {
-  const handle = e.target.closest?.('.catrow .grab');
-  if (!handle) return;
-  const list = handle.closest('#catRows');
-  sortDrag(e, handle, handle.closest('.catrow'), list, '.catrow', handle.closest('.page') || window, (order) => {
-    if (order) {
-      CATS.sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || order.indexOf(a.id) - order.indexOf(b.id));
-      indexCats();
-      commit();
-    }
-    catListPage();
-  });
-});
+  if (!ui.wiggle || !e.isPrimary) return;
+  const row = e.target.closest?.(`.wiggle ${WIGGLE[ui.wiggle].row}`);
+  if (row) dragRow(e, ui.wiggle, row);
+}, true);
+// Im Wackelmodus öffnet Antippen einer Zeile nichts
+document.addEventListener('click', (e) => { if (ui.wiggle && e.target.closest?.('.wiggle')) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 
 // ---------- Plan bedienen: zeichnen, Kanten ziehen, schieben, zoomen ----------
 let planAbort = null;
@@ -1557,8 +1579,8 @@ function startRedraw(id) {
 }
 document.addEventListener('pointerdown', (e) => {
   if (ui.drawing && e.target.closest?.('#planSvg')) return; // beim Zeichnen nicht als langes Drücken werten
-  if (e.target.closest?.('.grab')) return;
-  const el = e.target.closest?.('.row, .zone, .zitem, .star, .mcard');
+  if (e.target.closest?.('.wiggle')) return; // im Wackelmodus verschiebt Ziehen, langes Drücken zählt nicht
+  const el = e.target.closest?.('.row, .zone, .zitem, .star, .mcard, .catrow');
   if (!el) return;
   const id = el.dataset.id;
   lpFired = false; lpStar = false;
@@ -1566,7 +1588,9 @@ document.addEventListener('pointerdown', (e) => {
     lpFired = true; lp = null;
     holdAfterLongPress();
     try { navigator.vibrate?.(15); } catch (_) { /* kein Haptik-Support */ }
-    if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else if (el.classList.contains('mcard')) openMealEdit(id); else startRedraw(id);
+    if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else if (el.classList.contains('mcard')) openMealEdit(id);
+    else if (el.matches('.zitem, .catrow')) startWiggle(e, el); // Liste der Bereiche / Kategorien: sortieren
+    else startRedraw(id); // Bereich im Grundriss: neu einzeichnen
   }, 450) };
 });
 document.addEventListener('pointermove', (e) => {
@@ -1741,6 +1765,7 @@ document.addEventListener('click', (e) => {
       else if (to === 'list' && ui.tab === 'list') { ui.confirmList = false; listSheet(); keep = true; break; } // zweiter Tipp auf "Liste": Listen zur Auswahl
       const anim = to === 'stores' ? 'push' : ui.tab === 'stores' && to === 'settings' && !fromBar ? 'pop' : to !== cur ? 'fade' : '';
       const gh = anim === 'push' || anim === 'pop' ? wrapGhost() : null; // Abbild der bisherigen Ansicht
+      ui.wiggle = null;
       ui.tab = to; ui.drawing = false; ui.confirmDel = false; if (ui.tab !== 'stores') ui.editStoreId = null; render(); window.scrollTo(0, 0);
       if (anim) wrapAnim(anim, gh);
       break;
@@ -1748,6 +1773,7 @@ document.addEventListener('click', (e) => {
     case 'toggle': toggleItem(id); break;
     case 'storesheet': storeSheet(); keep = true; break;
     case 'swipesheet': swipePage(); keep = true; break;
+    case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
@@ -1833,8 +1859,8 @@ document.addEventListener('click', (e) => {
       input.focus();
       keep = true; break;
     }
-    case 'openstore': { const gh = wrapGhost(); ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
-    case 'back': { const gh = wrapGhost(); ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('pop', gh); break; }
+    case 'openstore': { const gh = wrapGhost(); ui.wiggle = null; ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
+    case 'back': { const gh = wrapGhost(); ui.wiggle = null; ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('pop', gh); break; }
     case 'usestore': S.storeId = id; commit(); break;
     case 'delstore':
       if (!ui.confirmDel) { ui.confirmDel = true; editorSheet(); keep = true; break; }

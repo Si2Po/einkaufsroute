@@ -582,3 +582,16 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
 .catrow .nograb { cursor: default; }
 .catrow.dragging { position: relative; z-index: 5; box-shadow: 0 8px 24px rgba(0, 0, 0, .22); border-radius: 12px; }
 .group:has(.dragging) { overflow: visible; }
+
+/* Wackelmodus (Sortieren nach langem Drücken): Zeilen wackeln leicht, Ziehen verschiebt sie */
+@keyframes wiggle { from { transform: rotate(-.45deg) translateX(-.5px); } to { transform: rotate(.45deg) translateX(.5px); } }
+.wiggle > .catrow:not(.dragging):not([data-key="sonst"]), .wiggle > .zli:not(.dragging) { animation: wiggle .2s ease-in-out infinite alternate; }
+.wiggle > :nth-child(2n):not(.dragging) { animation-delay: -.1s; }
+.wiggle > .catrow:not([data-key="sonst"]), .wiggle > .zli { touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; }
+.wiggle > .catrow[data-key="sonst"] { opacity: .55; }
+.wiggle .sheetbtn small { visibility: hidden; } /* „›“ und Zahl ausblenden: Antippen öffnet gerade nichts */
+@media (prefers-reduced-motion: reduce) {
+  .wiggle > .catrow:not([data-key="sonst"]), .wiggle > .zli { animation: none; outline: 1.5px dashed var(--accent); outline-offset: -3px; }
+}
+.wigglebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 4px; color: var(--accent); font-weight: 600; font-size: .9rem; }
+.zli.dragging { filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .25)); }
