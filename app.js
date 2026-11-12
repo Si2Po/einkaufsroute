@@ -1386,11 +1386,20 @@ function endWiggle() {
   ui.wiggle = null;
   if (pageTop() === 'cats') catListPage(); else render();
 }
+// Im Wackelmodus: kurz halten (0,18 s, Finger ruhig) = Zeile greifen, sofort wischen = normal scrollen
+let wHold = null;
 document.addEventListener('pointerdown', (e) => {
   if (!ui.wiggle || !e.isPrimary) return;
   const row = e.target.closest?.(`.wiggle ${WIGGLE[ui.wiggle].row}`);
-  if (row) dragRow(e, ui.wiggle, row);
+  if (!row) return;
+  const kind = ui.wiggle;
+  clearTimeout(wHold?.t);
+  wHold = { id: e.pointerId, x: e.clientX, y: e.clientY, t: setTimeout(() => { wHold = null; if (ui.wiggle === kind) dragRow(e, kind, row); }, 180) };
 }, true);
+document.addEventListener('pointermove', (e) => {
+  if (wHold && e.pointerId === wHold.id && Math.hypot(e.clientX - wHold.x, e.clientY - wHold.y) > 8) { clearTimeout(wHold.t); wHold = null; } // bewegt: scrollen
+}, true);
+['pointerup', 'pointercancel'].forEach((t) => document.addEventListener(t, (e) => { if (wHold && e.pointerId === wHold.id) { clearTimeout(wHold.t); wHold = null; } }, true));
 // Im Wackelmodus öffnet Antippen einer Zeile nichts
 document.addEventListener('click', (e) => { if (ui.wiggle && e.target.closest?.('.wiggle')) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 

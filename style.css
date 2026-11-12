@@ -587,7 +587,7 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
 @keyframes wiggle { from { transform: rotate(-.45deg) translateX(-.5px); } to { transform: rotate(.45deg) translateX(.5px); } }
 .wiggle > .catrow:not(.dragging):not([data-key="sonst"]), .wiggle > .zli:not(.dragging) { animation: wiggle .2s ease-in-out infinite alternate; }
 .wiggle > :nth-child(2n):not(.dragging) { animation-delay: -.1s; }
-.wiggle > .catrow:not([data-key="sonst"]), .wiggle > .zli { touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; }
+.wiggle > .catrow:not([data-key="sonst"]), .wiggle > .zli { touch-action: pan-y; cursor: grab; -webkit-user-select: none; user-select: none; }
 .wiggle > .catrow[data-key="sonst"] { opacity: .55; }
 .wiggle .sheetbtn small { visibility: hidden; } /* „›“ und Zahl ausblenden: Antippen öffnet gerade nichts */
 @media (prefers-reduced-motion: reduce) {
