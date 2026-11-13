@@ -1,3 +1,38 @@
+# Was hier steht, landet NICHT auf GitHub (und damit nicht auf der Webseite).
+
 # Nur für den lokalen Test, gehört nicht zur veröffentlichten App
 lokal-starten.cmd
 tools/
+
+# Eigene Einstellungen von Claude Code auf diesem PC (Skills unter .claude/skills/ gehören dagegen zum Projekt)
+.claude/settings.local.json
+.claude/*.local.*
+
+# Editor-Einstellungen (VS Code u. a.)
+.vscode/
+.idea/
+*.code-workspace
+
+# Dateien, die Windows und macOS von selbst anlegen
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# Datensicherungen aus der App (enthalten deine Listen, nicht hochladen)
+einkaufsroute-sicherung*.json
+
+# Zwischen- und Sicherungsdateien
+*.tmp
+*.temp
+*.bak
+*.orig
+*.log
+*~
+
+# Geheime Zugangsdaten, falls je eine solche Datei angelegt wird (niemals hochladen)
+.env
+.env.*
+*.key
+*.pem
