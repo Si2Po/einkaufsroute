@@ -58,16 +58,35 @@ function guessCat(name) { return keywordGuess(name); }
 // Wortstamm eines Stichworts für die Erkennung: Mehrzahl-Endungen fallen weg, damit „tomaten“ auch „Tomate“ erkennt,
 // „zwiebeln“ auch „Zwiebel“, „pilze“ auch „Pilz“. Kurze Wörter (bis 4 Buchstaben) bleiben, wie sie sind.
 const kwStem = (k) => (k.length >= 5 ? k.replace(/(en|n|e|s)$/, '') : k);
-// Der längste passende Treffer am Wortanfang gewinnt ("paprikapulver" schlägt "paprika").
+// Stichwörter mit Stern sind Muster: „tk*“ = Wort beginnt mit tk (ohne Mehrzahl-Kürzung), „*saft“ = Wort endet auf saft,
+// „*bio*“ = enthält bio. Ohne Stern: Wortanfang, Mehrzahl-Endung egal (siehe kwStem).
+const KW_SEP = '[\\s\\-/,]', reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const KW_RE = new Map(); // Stichwort → { re, len } (einmal bauen, dann wiederverwenden)
+function kwPattern(k) {
+  if (KW_RE.has(k)) return KW_RE.get(k);
+  const starts = k.startsWith('*'), ends = k.length > 1 && k.endsWith('*'), core = k.replace(/^\*|\*$/g, '');
+  let p = null;
+  if (core && starts && ends) p = { re: new RegExp(reEsc(core)), len: core.length };
+  else if (core && starts) p = { re: new RegExp(reEsc(core) + `(?=${KW_SEP}|$)`), len: core.length };
+  else if (core && ends) p = { re: new RegExp(KW_SEP + reEsc(core)), len: core.length };
+  else if (core) { const s = kwStem(k); p = { re: new RegExp(KW_SEP + reEsc(s)), len: s.length }; }
+  KW_RE.set(k, p);
+  return p;
+}
+const isPattern = (k) => k.includes('*');
+// Welches Stichwort gewinnt? 1. genau der ganze Name (z. B. von Hand gelernt), 2. Muster mit Stern („tk*“ = immer Tiefkühl),
+// 3. sonst der längste Treffer am Wortanfang ("paprikapulver" schlägt "paprika").
 function keywordGuess(name) {
-  const n = ' ' + name.toLowerCase();
-  let best = null, bestLen = 0;
+  const n = ' ' + name.toLowerCase(), whole = normKey(name);
+  let best = null, bestScore = 0;
   for (const c of CATS) {
     for (const k of c.kw) {
-      const s = kwStem(k);
-      if (s.length > bestLen && new RegExp('[\\s\\-/,]' + s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(n)) {
-        best = c.id; bestLen = s.length;
-      }
+      const p = kwPattern(k);
+      if (!p || !p.re.test(n)) continue;
+      let score = p.len;
+      if (k === whole) score += 1000;
+      else if (isPattern(k)) score += 100;
+      if (score > bestScore) { best = c.id; bestScore = score; }
     }
   }
   return best || 'sonst';
@@ -106,7 +125,7 @@ function poolEntries() {
   const kws = new Map();
   CATS.forEach((c) => c.kw.forEach((k) => {
     const f = fold(k);
-    if (STEMS.has(k) || k.endsWith('-') || kws.has(f)) return;
+    if (STEMS.has(k) || k.endsWith('-') || isPattern(k) || kws.has(f)) return; // Wortteile und Muster sind keine Vorschläge
     kws.set(f, { name: k.charAt(0).toUpperCase() + k.slice(1), key: f, src: 1 });
   }));
   const keys = [...kws.keys()], own = new Map();

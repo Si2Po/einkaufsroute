@@ -43,7 +43,7 @@ Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, a
 - [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
 
 ## Später / optional
-- [ ] **Wortanfänge und -endungen je Kategorie** (Idee Besitzer): z. B. alles, was mit „TK“ / „TK-“ beginnt, ist Tiefkühl; alles, was auf „-saft“ endet, ist Getränke. Heute erkennen Stichwörter nur den Anfang eines Wortes („tk-“ passt auf „TK-Erbsen“, aber nicht auf „TK Erbsen“; Endungen wie „Orangensaft“ gar nicht).
+- [x] **Wortanfänge und -endungen je Kategorie** (umgesetzt als Stichwort mit Stern: „tk*“, „*saft“, „*bio*“; Muster gewinnen vor normalen Stichwörtern, ein genau gelernter Name vor allem) (Idee Besitzer): z. B. alles, was mit „TK“ / „TK-“ beginnt, ist Tiefkühl; alles, was auf „-saft“ endet, ist Getränke. Heute erkennen Stichwörter nur den Anfang eines Wortes („tk-“ passt auf „TK-Erbsen“, aber nicht auf „TK Erbsen“; Endungen wie „Orangensaft“ gar nicht).
 - [ ] Aufräumen: Löschmarkierungen (deleted=true) in der Tabelle docs nach ca. 90 Tagen endgültig entfernen (z. B. geplante Datenbank-Funktion), und die lokale Liste „known“ in sync.js entsprechend kürzen. Frist wegen lange offline gewesener Geräte nicht zu kurz wählen. Fotos auf kleine Größe verkleinern, bevor sie hochgeladen werden.
 - [ ] Impressum und Datenschutzerklärung, falls die App an Fremde weitergegeben wird
 - [ ] Sprach-Eingabe mit KI-Kategorisierung

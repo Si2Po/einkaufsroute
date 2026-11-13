@@ -72,7 +72,7 @@ function catDetailPage(id) {
     <div class="label" style="margin:12px 0 4px">Stichwörter</div>
     <p class="sheetnote" style="margin:0 0 6px">${id === 'sonst'
       ? 'Hier landet alles ohne Treffer. Ein Stichwort hier hält ein Wort in Sonstiges, auch wenn es sonst woanders passen würde.'
-      : 'Die App erkennt sie am Wortanfang. Änderst du bei einem Eintrag die Kategorie, landet sein Name automatisch hier.'}</p>
+      : 'Die App erkennt sie am Wortanfang. Änderst du bei einem Eintrag die Kategorie, landet sein Name automatisch hier. Mit Stern: „tk*“ = beginnt mit TK, „*saft“ = endet auf saft.'}</p>
     ${c.kw.length ? `<div class="kwbox"><div class="chips">${c.kw.map((k) => `<button type="button" class="chip" data-act="delkw" data-id="${id}" data-kw="${esc(k)}" aria-label="${esc(k)} entfernen">${esc(k)} ×</button>`).join('')}</div></div>` : '<p class="sheetnote">Noch keine Stichwörter.</p>'}
     <form id="kwForm" class="add" data-id="${id}" autocomplete="off" style="margin:8px 0 0">
       <input id="kwInput" placeholder="Stichwort hinzufügen" aria-label="Stichwort hinzufügen">

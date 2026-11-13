@@ -62,6 +62,7 @@ function helpPage() {
       <ul>
         <li>Die App ordnet neue Einträge anhand von <b>Stichwörtern</b> einer Kategorie zu („Tomaten“ → Obst & Gemüse).</li>
         <li>Ordnest du einen Eintrag selbst um, <b>lernt</b> sie das für das nächste Mal.</li>
+        <li><b>Stichwörter mit Stern</b> gelten für ganze Wortgruppen: „tk*“ erkennt alles, was mit TK beginnt (TK Erbsen, TK-Spinat), „*saft“ alles, was auf saft endet (Orangensaft, Apfelsaft).</li>
         <li>Unter Einstellungen → Kategorien siehst du alle Stichwörter, legst eigene Kategorien an und bestimmst die Reihenfolge, wenn kein Geschäft gewählt ist (gedrückt halten zum Sortieren).</li>
       </ul>`),
     helpTopic('Essen', `
