@@ -81,7 +81,7 @@ function dueBar() {
   const due = dueItems();
   if (!due.length) return '';
   return `<div class="duebar"><span class="duelabel">Vielleicht fällig</span><div class="duechips">${due.map(({ e, since }) =>
-    `<span class="duechip"><button type="button" class="dueadd" data-act="dueadd" data-key="${esc(e.id)}"><span>${esc(e.name)}</span><small>${agoText(since)}</small></button><button type="button" class="duex" data-act="duesnooze" data-key="${esc(e.id)}" aria-label="${esc(e.name)}: nicht jetzt">×</button></span>`).join('')}</div></div>`;
+    `<span class="duechip"><button type="button" class="dueadd" data-act="dueadd" data-key="${esc(e.id)}"><span>${esc(e.name)}</span><small>${agoText(since)}</small></button><button type="button" class="duex" data-act="duesnooze" data-key="${esc(e.id)}" aria-label="${esc(e.name)}: nicht jetzt"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button></span>`).join('')}</div></div>`;
 }
 document.addEventListener('click', (e) => {
   const el = e.target.closest?.('[data-act="dueadd"], [data-act="duesnooze"]');
