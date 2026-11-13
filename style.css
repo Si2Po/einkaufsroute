@@ -688,6 +688,8 @@ body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-b
 .helpbody ul, .helpbody ol { margin: 0 0 8px; padding-left: 20px; }
 .helpbody li { margin: 0 0 6px; }
 .helpbody svg { width: 1.1em; height: 1.1em; vertical-align: -.2em; color: var(--muted); }
+.helpbody code { font-size: .88em; background: var(--line); border-radius: 6px; padding: 1px 5px; overflow-wrap: anywhere; }
+.helpbody code.sel { display: inline-block; margin: 4px 0; padding: 4px 8px; -webkit-user-select: all; user-select: all; }
 .swrow { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .swrow > span { flex: 1; min-width: 0; display: grid; }
 .swrow small { color: var(--muted); font-size: .8rem; }

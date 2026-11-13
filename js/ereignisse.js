@@ -180,8 +180,19 @@ document.addEventListener('keydown', (e) => {
 // Eingabefeld oben: mehrere Einträge mit Komma trennen ("Milch, Brot, 2 Äpfel"). Das Feld bleibt bestehen, die Tastatur bleibt offen.
 function addFromInput() {
   const input = $('#addName');
-  const parts = splitSpoken(input.value); // auch Gesprochenes: „Milch, Brot und zwei Butter“
-  if (!parts.length) return;
+  const r = addText(input.value);
+  if (!r) return;
+  input.value = '';
+  commit();
+  updateSugg();
+  if (r.dups.length) { flashItem(r.dups[0].id); toast(`${r.dups.map((d) => '„' + d.name + '“').join(', ')} steht schon auf der Liste`); }
+  else funItemAdded(r.added);
+}
+// Text (getippt, gesprochen oder per Kurzbefehl) in die aktuelle Liste übernehmen. Speichert noch nicht.
+// Gibt null zurück, wenn nichts drinstand, sonst { added: [Namen], dups: [schon vorhandene Einträge] }.
+function addText(text) {
+  const parts = splitSpoken(text); // auch Gesprochenes: „Milch, Brot und zwei Butter“
+  if (!parts.length) return null;
   const dups = [], added = [];
   parts.forEach((p, n) => {
     const { qty, name } = parseEntry(p);
@@ -193,11 +204,27 @@ function addFromInput() {
     S.items.push(it);
     added.push(name);
   });
-  input.value = '';
+  return { added, dups };
+}
+// Kurzbefehl / Siri: Die App wird mit ?neu=Milch und zwei Butter (optional &liste=Name) geöffnet.
+// Einträge kommen in diese Liste (sonst die zuletzt geöffnete). Danach wird die Adresse bereinigt,
+// damit Neuladen nichts doppelt hinzufügt.
+function addFromLink() {
+  let p;
+  try { p = new URLSearchParams(location.search); } catch (_) { return; }
+  const text = p.get('neu');
+  if (text === null) return;
+  try { history.replaceState(null, '', location.pathname + location.hash); } catch (_) { /* egal */ }
+  const want = (p.get('liste') || '').trim().toLowerCase();
+  const l = want && S.lists.find((x) => x.name.trim().toLowerCase() === want);
+  if (l) switchList(l.id);
+  const r = addText(text);
+  if (!r) return;
   commit();
-  updateSugg();
-  if (dups.length) { flashItem(dups[0].id); toast(`${dups.map((d) => '„' + d.name + '“').join(', ')} steht schon auf der Liste`); }
-  else funItemAdded(added);
+  const where = S.lists.length > 1 ? ` (${curList().name})` : '';
+  const had = r.dups.map((d) => '„' + d.name + '“').join(', ');
+  if (!r.added.length) toast(`${had} steht schon auf der Liste${where}`);
+  else toast(`Hinzugefügt${where}: ${r.added.join(', ')}${had ? ` (${had} stand schon drauf)` : ''}`);
 }
 function flashItem(id) {
   const row = $(`.row[data-id="${id}"]`);

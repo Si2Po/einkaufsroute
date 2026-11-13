@@ -24,6 +24,7 @@
   if (!S.stores.find((s) => s.id === S.storeId)) S.storeId = S.stores[0]?.id || null;
   save();
   render();
+  addFromLink(); // Kurzbefehl / Siri: ?neu=…
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. in der Vorschau nicht möglich */ });
     // Neue Version übernommen: einmal neu laden, damit auch der neue Programmcode läuft.
