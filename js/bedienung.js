@@ -31,8 +31,16 @@ async function checkUpdate() {
   const reg = await navigator.serviceWorker?.getRegistration?.();
   if (!reg) { toast('Hier gibt es keine Updates (lokale Version)'); return; }
   try { await reg.update(); } catch (_) { toast('Keine Verbindung – später nochmal versuchen'); return; }
-  if (reg.installing || reg.waiting) toast('Neue Version gefunden – wird geladen …'); // lädt danach von selbst neu (controllerchange)
-  else toast(`Du hast die neueste Version (${appVersion})`);
+  const nw = reg.installing || reg.waiting;
+  if (!nw) { toast(`Du hast die neueste Version (${appVersion})`); return; }
+  toast('Neue Version gefunden – wird geladen …');
+  // Selbst neu laden, sobald die neue Version bereit ist. Auf dem iPhone (Home-Bildschirm) kommt die Meldung
+  // „controllerchange“ nicht zuverlässig an; ohne das müsste man die App schließen und neu öffnen.
+  let reloaded = false;
+  const reload = () => { if (!reloaded) { reloaded = true; location.reload(); } };
+  if (nw.state === 'activated') reload();
+  else nw.addEventListener('statechange', () => { if (nw.state === 'activated') reload(); });
+  setTimeout(reload, 10000); // Sicherheitsnetz, falls auch diese Meldung ausbleibt
 }
 async function syncNow() {
   if (typeof syncRun !== 'function' || !sync.sess) { toast('Nicht angemeldet – nichts abzugleichen'); return; }
