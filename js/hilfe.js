@@ -84,7 +84,7 @@ function helpPage() {
         <li>Wählst du für eine Liste ein Geschäft aus einer anderen Gruppe, fragt die App, ob es mit umziehen soll, damit alle danach sortieren können.</li>
         <li><b>Kategorien und Stichwörter</b> gehören zu einer Gruppe und werden mit ihr geteilt. Was die App dazulernt, lernt sie für alle in der Gruppe.<br>
           Unter Kategorien wählst du bei „Stichwörter von“, welche Gruppe deine Listen zum Einordnen verwenden.</li>
-        <li>Anlegen, einladen, beitreten, verlassen: Einstellungen → Konto und Gruppen.</li>
+        <li>Unter Einstellungen → Konto und Gruppen kannst du neue Gruppen anlegen, andere Personen einladen, einer Gruppe beitreten oder sie wieder verlassen.</li>
       </ul>`, ICON_GROUP),
     helpTopic('Konto, Abgleich und Sicherung', `
       <ul>
