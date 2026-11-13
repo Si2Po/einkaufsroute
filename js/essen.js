@@ -81,8 +81,7 @@ function mealSheet() {
       <button type="button" class="btn ghost" data-act="m_edit">Bearbeiten</button>
       ${ui.mealRandom ? `<button type="button" class="btn ghost diceBtn${ui.diceRoll ? ' roll' : ''}" data-act="m_random" aria-label="Nochmal würfeln">${ICON_DICE}</button>` : ''}
       <button type="button" class="btn" id="mAddBtn" data-act="m_tolist"${ui.mealPick.size ? '' : ' disabled'}>${mealBtnText()}</button>
-    </div>
-    ${m.steps ? `<details class="mmore"><summary>Kochanleitung</summary><div class="msteps">${esc(m.steps)}</div></details>` : ''}`);
+    </div>`); // Kochanleitung steht nur unter „Bearbeiten“, das Sheet bleibt fürs Einkaufen schlank
   ui.diceRoll = false;
 }
 const mealBtnText = () => `Zu „${curList()?.name || 'Liste'}“ (${ui.mealPick.size})`;
