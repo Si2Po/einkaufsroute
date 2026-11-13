@@ -38,7 +38,8 @@ function helpPage() {
     helpTopic('Die Liste bedienen', `
       <ul>
         <li><b>Liste wählen oder anlegen:</b> unten ein zweites Mal auf ${TAB_ICONS.list} „Liste“ tippen.</li>
-        <li><b>Hinzufügen:</b> oben eintippen und mit + bestätigen. Mehrere Dinge auf einmal gehen auch: einfach durch Komma trennen, z. B. „Milch, Brot, 2 Butter“. Eine Zahl am Anfang wird zur Menge.</li>
+        <li><b>Hinzufügen:</b> oben eintippen und mit + bestätigen. Mehrere Dinge auf einmal gehen auch: einfach durch Komma trennen, z. B. „Milch, Brot, 2 Butter“. Eine Zahl am Anfang wird zur Menge.<br>
+          Du kannst auch <b>sprechen</b>: ins Feld tippen und auf der Tastatur das Mikrofon drücken, z. B. „Ich brauche noch Milch, Brot und zwei Butter“.</li>
         <li><b>Gedrückt halten:</b> Eintrag bearbeiten (Name, Menge, Notiz, Foto). Im Sheet <b>nach oben wischen</b> zeigt Kategorie und Bereich.</li>
         <li><b>Halten und ziehen:</b> umsortieren, zum Beispiel nach Wichtigkeit. Ziehst du einen Eintrag zu einer anderen Kategorie oder einem anderen Bereich, merkt sich die App das. Mit „Rückgängig“ lässt es sich zurücknehmen.</li>
         <li><b>Wischen</b> nach links oder rechts: was dann passiert, stellst du unter Einstellungen → Wischen ein.</li>

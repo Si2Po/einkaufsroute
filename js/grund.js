@@ -175,11 +175,52 @@ function rememberName(name) {
   S.recent = [name, ...S.recent].slice(0, 100);
 }
 
-// "2 Milch", "500g Mehl", "3x Joghurt" -> Menge und Name trennen
+// "2 Milch", "500g Mehl", "3x Joghurt", "2 Flaschen Wasser" -> Menge und Name trennen
+// Kurze Einheiten werden angehängt ("500g"), Wort-Einheiten behalten ihr Leerzeichen ("2 Flaschen").
+const WORD_UNITS = 'flaschen?|dosen?|becher|bund|kisten?|gläser|glas|tüten?|rollen?|pakete?|beutel|päckchen|tafeln?|stange|stangen|netz|schalen?';
 function parseEntry(text) {
   const t = text.trim();
+  const w = t.match(new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(${WORD_UNITS})\\s+(.+)$`, 'i'));
+  if (w) return { qty: `${w[1]} ${w[2]}`, name: w[3].trim() };
   const m = t.match(/^(\d+(?:[.,]\d+)?\s?(?:x|×|g|kg|l|ml|stk|stück|pck|pack|packung|packungen)?)\s+(.+)$/i);
   return m ? { qty: m[1].replace(/\s+/g, ''), name: m[2].trim() } : { qty: '', name: t };
+}
+
+// ---------- Gesprochene Eingabe (Diktieren über die iPhone-Tastatur) ----------
+// „Ich brauche noch Milch, Brot und zwei Butter“ -> ["Milch", "Brot", "2 Butter"]
+// „und“/„sowie“ trennen wie ein Komma, Füllwörter fallen weg, Zahlwörter und Mengenwörter werden zu Mengen.
+const NUM_WORDS = { zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, elf: 11, zwölf: 12, fünfzehn: 15, zwanzig: 20, dreißig: 30, vierzig: 40, fünfzig: 50, hundert: 100, zweihundert: 200, dreihundert: 300, fünfhundert: 500 };
+const HALF = /^(?:ein(?:e|en)?\s+halbe[snr]?|halbe[snr]?)\s+/i;
+const LEAD_FILLER = /^(?:und|also|ähm|äh|dann|außerdem|ich\s+brauche|wir\s+brauchen|brauche|brauchen|bitte|noch|auch|mal|kauf(?:e|t|en)?|hol(?:e|t|en)?|wir\s+haben\s+(?:keine?n?|kein|nichts)|es\s+fehl(?:t|en))\b[,\s]*/i;
+const TAIL_FILLER = /[,\s]*\b(?:bitte|noch|mehr|auch|mitbringen|kaufen|holen)$/i;
+function spokenPart(p) {
+  let s = p.trim().replace(/[.!?]+$/, '').trim();
+  for (let i = 0; i < 4; i++) { const t = s.replace(LEAD_FILLER, ''); if (t === s) break; s = t; }
+  for (let i = 0; i < 3; i++) { const t = s.replace(TAIL_FILLER, ''); if (t === s) break; s = t; }
+  // halbe Mengen: „ein halbes Kilo Mehl“ -> „500g Mehl“, „ein halber Liter Sahne“ -> „0,5l Sahne“
+  const half = s.match(HALF);
+  if (half) s = '0,5 ' + s.slice(half[0].length);
+  s = s.replace(/^(?:anderthalb|eineinhalb)\s+/i, '1,5 ');
+  s = s.replace(/^eins+paars+/i, ''); // „ein paar Äpfel“ -> „Äpfel“
+  s = s.replace(/^ein\s+paar\s+/i, ''); // „ein paar Äpfel“ -> „Äpfel“
+  // Zahlwörter -> Ziffern; „ein/eine“ nur vor einer Einheit („ein Kilo Mehl“), sonst ist es nur der Artikel („eine Gurke“)
+  const first = s.split(/\s+/)[0].toLowerCase();
+  if (NUM_WORDS[first]) s = NUM_WORDS[first] + s.slice(first.length);
+  else if (/^(?:ein|eine|einen|einem)$/.test(first)) {
+    const rest = s.slice(first.length).trim();
+    s = /^(?:kilo|kilogramm|gramm|liter|milliliter|packung|stück|flasche|dose|becher|bund|kiste|glas|tüte|rolle|paket|beutel|päckchen|tafel|netz|schale)\b/i.test(rest) ? '1 ' + rest : rest;
+  }
+  s = s.replace(/^ein\s+paar\s+/i, '');
+  // Mengenwörter vereinheitlichen: „2 Kilo“ -> „2kg“, „0,5 kg“ -> „500g“
+  s = s.replace(/^(\d+(?:[.,]\d+)?)\s*(?:kilogramm|kilo)\b/i, '$1kg').replace(/^(\d+(?:[.,]\d+)?)\s*gramm\b/i, '$1g')
+    .replace(/^(\d+(?:[.,]\d+)?)\s*milliliter\b/i, '$1ml').replace(/^(\d+(?:[.,]\d+)?)\s*liter\b/i, '$1l')
+    .replace(/^(\d+(?:[.,]\d+)?)\s*(?:packungen|packung)\b/i, '$1 Pck').replace(/^(\d+(?:[.,]\d+)?)\s*stück\b/i, '$1 Stk');
+  s = s.replace(/^0[.,]5kg\b/i, '500g').replace(/^0[.,]25kg\b/i, '250g');
+  s = s.replace(/^(\d+)\s+x\s+/i, '$1x ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function splitSpoken(text) {
+  return text.split(/[,;\n]|\s+(?:und|sowie|plus)\s+/i).map(spokenPart).filter((x) => x && !/^(?:und|noch|bitte)$/i.test(x));
 }
 
 // ---------- Hilfsfunktionen ----------

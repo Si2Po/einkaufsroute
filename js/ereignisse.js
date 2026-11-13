@@ -180,7 +180,7 @@ document.addEventListener('keydown', (e) => {
 // Eingabefeld oben: mehrere Einträge mit Komma trennen ("Milch, Brot, 2 Äpfel"). Das Feld bleibt bestehen, die Tastatur bleibt offen.
 function addFromInput() {
   const input = $('#addName');
-  const parts = input.value.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
+  const parts = splitSpoken(input.value); // auch Gesprochenes: „Milch, Brot und zwei Butter“
   if (!parts.length) return;
   const dups = [], added = [];
   parts.forEach((p, n) => {
