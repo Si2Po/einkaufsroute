@@ -16,6 +16,10 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 - Neues landet in `S.lastGroup` (zuletzt benutzt), sonst `S.catGroup`, sonst „Persönlich“ (`defaultGroup()` in `app.js`). Gruppen-Auswahlfelder und -Hinweise erscheinen nur bei Anmeldung und mehr als einer Gruppe (`groupsOn()`).
 - Datenbank-Funktionen: `my_groups`, `create_group`, `rename_group`, `create_invite(g)`, `accept_invite`, `leave_group` (alle in `supabase/gruppen.sql`).
 
+## Listen-Typen (seit 0.7.1)
+- Pro Liste: `l.type = 'simple'` = einfache Liste (fehlt = Einkaufsliste). Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, Abschnitte `l.secs = [{id, name}]` (Eintrag: `it.sec`), eigene Reihenfolge `it.ord` (sonst `ts`), `l.keepDone` = Abgehakte bleiben stehen.
+- Code im Abschnitt „Listen-Typen“ in `app.js` (`isSimple()`, `simpleBody()`, Wackelmodus `WIGGLE.items`). Abgleich braucht nichts Extra: neue Felder reisen im Listen-/Eintrag-Dokument mit.
+
 ## Abgleich (Kurzfassung)
 - Jeder Laden, jede Kategorie, Liste, jeder Eintrag und jedes Essen ist ein Dokument in der Tabelle `docs` (Art `kind`), abgelegt in der Gruppe (`household_id`), zu der es gehört.
 - Dokument-ID = SHA-256 aus Gruppe + Art + lokaler ID, als UUID formatiert. So müssen lokale IDs nie umgeschrieben werden. Verschieben in eine andere Gruppe = dort neues Dokument, im alten „weich“ gelöscht.

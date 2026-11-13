@@ -32,11 +32,10 @@
 Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, anlegen/umbenennen/einladen/beitreten/verlassen, Abgleich pro Gruppe, alles sichtbar mit Gruppen-Hinweis (Personen-Symbol), Listen/Geschäfte/Essen in andere Gruppe verschieben, Rückfrage beim Geschäft, Stichwörter pro Gruppe wählbar, Beitreten ersetzt nichts mehr. Private Listen = Listen in „Persönlich“.
 - [ ] **Test mit echtem Konto** (lokal über `lokal-starten.cmd` anmelden), dann hochladen; zuerst eigenes iPhone, danach das Gerät der Partnerin
 - [ ] Hilfe-Text zu Gruppen (siehe Hilfe-Bereich oben)
-- [ ] **Nächster Schritt (0.7.1): Listen-Typen** statt Gruppentyp. Vorschlag: Typ **pro Liste** (passt besser, weil man immer alles sieht; auch eine Liste in „Persönlich“ kann einfach sein).
-  - „Einkaufsliste“ wie heute (Geschäft, Laufweg, Kategorien, Essen).
-  - „Einfache Liste“ (Filme, Packliste, Baumarkt-Ideen): nur Einträge zum Abhaken, keine Geschäfts-Auswahl, keine Kategorien/kein Einordnen, Reihenfolge selbst bestimmen.
-  - Typ beim Anlegen wählen, im Bearbeiten änderbar.
-  - Offene Fragen an den Besitzer: (1) Typ pro Liste oder doch ganze Gruppen nur mit einfachen Listen? (2) Eigene Abschnitte in einfachen Listen (z. B. „Kino“/„Streaming“) oder flach? (3) Abgehakte Einträge unten verschwinden lassen oder durchgestrichen stehen lassen (Packliste)?
+- [x] **Listen-Typen (lokal, für 0.7.1):** Typ **pro Liste** („Art“: Einkaufsliste / Einfache Liste), beim Anlegen wählbar, im Bearbeiten änderbar.
+  Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, **Abschnitte** (unten „+ Abschnitt“, Abschnitt antippen = Neues kommt dorthin, gedrückt halten = umbenennen/verschieben/löschen),
+  eigene Reihenfolge (Eintrag gedrückt halten → „Sortieren“, Einträge auch in andere Abschnitte ziehen), **pro Liste wählbar**, ob Abgehakte nach unten rutschen oder stehen bleiben („Alle Haken entfernen“).
+- [ ] Hilfe-Text zu Listen-Typen
 - [ ] Später: neue Gruppe mit Kategorien/Stichwörtern einer bestehenden Gruppe starten (heute bekommt eine neue Gruppe die Standard-Kategorien, sobald jemand sie unter „Stichwörter von“ wählt)
 - [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
 
