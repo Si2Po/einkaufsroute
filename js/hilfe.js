@@ -88,7 +88,7 @@ function helpPage() {
       </ul>`, ICON_GROUP),
     helpTopic('Konto, Abgleich und Sicherung', `
       <ul>
-        <li>Mit Konto gleicht die App alle paar Sekunden ab, solange sie offen ist, und beim Öffnen.</li>
+        <li>Wenn du angemeldet bist, gleicht die App deine Daten automatisch ab: jedes Mal, wenn du sie öffnest, und danach alle paar Sekunden, solange sie geöffnet ist. Änderungen der anderen in deinen Gruppen siehst du so nach kurzer Zeit auch bei dir.</li>
         <li><b>Ohne Netz</b> funktioniert alles weiter. Änderungen werden nachgeholt, sobald wieder Netz da ist.</li>
         <li>Ändern zwei Personen gleichzeitig dasselbe, gilt die letzte Änderung.</li>
         <li><b>Abmelden:</b> deine Daten bleiben auf diesem Gerät.</li>
