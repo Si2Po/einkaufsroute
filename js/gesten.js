@@ -178,6 +178,8 @@ function bindSheetGestures() {
 let sortingNow = false;
 // Während des Ziehens darf die Seite nicht scrollen (sonst bricht Safari das Ziehen ab)
 document.addEventListener('touchmove', (e) => { if ((sortingNow || dragArmed) && e.cancelable) e.preventDefault(); }, { passive: false });
+// Reihenfolge der sortierbaren Zeilen (ihre data-key), wie sie gerade im Bild stehen
+const slotKeys = (list, sel) => [...list.children].filter((c) => c.matches(sel)).map((c) => c.dataset.key);
 function sortDrag(e, handle, li, list, sel, scroller, done) {
   e.preventDefault();
   sortingNow = true;
@@ -202,7 +204,7 @@ function sortDrag(e, handle, li, list, sel, scroller, done) {
     handle.removeEventListener('pointercancel', cancelFn);
     sortingNow = false;
     li.classList.remove('dragging'); li.style.transform = '';
-    done(cancel ? null : [...list.children].filter((c) => c.matches(sel)).map((c) => c.dataset.key));
+    done(cancel ? null : slotKeys(list, sel));
   };
   const up = () => stop(false), cancelFn = () => stop(true);
   handle.addEventListener('pointermove', move);
@@ -245,7 +247,7 @@ const WIGGLE = {
 function wiggleBar(float) { return '<div class="wigglebar' + (float ? ' floatbar' : '') + '"><span>Ziehen zum Sortieren</span><button type="button" class="btn small" data-act="wiggleoff">Fertig</button></div>'; }
 function dragRow(e, kind, row) {
   const w = WIGGLE[kind], list = row.closest(w.list), sel = w.slots || w.row;
-  const before = [...list.children].filter((c) => c.matches(sel)).map((c) => c.dataset.key).join();
+  const before = slotKeys(list, sel).join();
   sortDrag(e, row, row, list, sel, w.scroller(list), (order) => { if (order && order.join() !== before) w.done(order); });
 }
 function startWiggle(e, el) {

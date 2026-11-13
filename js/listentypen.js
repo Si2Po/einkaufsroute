@@ -7,7 +7,11 @@
 const isSimple = (l = curList()) => l?.type === 'simple';
 const validSec = (id) => !!id && (curList()?.secs || []).some((s) => s.id === id);
 const secName = (id) => (curList()?.secs || []).find((s) => s.id === id)?.name || '';
-const addPlaceholder = () => (!isSimple() ? 'Was brauchst du?' : validSec(ui.addSec) ? `Zu „${secName(ui.addSec)}“ hinzufügen` : 'Neuer Eintrag');
+function addPlaceholder() {
+  if (!isSimple()) return 'Was brauchst du?';
+  if (validSec(ui.addSec)) return `Zu „${secName(ui.addSec)}“ hinzufügen`;
+  return 'Neuer Eintrag';
+}
 function typeSelect(id, cur, attrs = '') {
   return `<label class="srow"><span class="pl">Art</span><select id="${id}" aria-label="Art der Liste"${attrs}><option value="">Einkaufsliste</option><option value="simple"${cur === 'simple' ? ' selected' : ''}>Einfache Liste</option></select></label>`;
 }
@@ -18,7 +22,7 @@ function secField(it) {
 function simpleBody() {
   const l = curList(), secs = l.secs || [], keep = !!l.keepDone;
   const known = new Set(secs.map((s) => s.id));
-  const shown = S.items.filter((i) => keep || !i.done).sort((a, b) => (a.ord ?? a.ts) - (b.ord ?? b.ts));
+  const shown = S.items.filter((i) => keep || !i.done).sort(byOrder);
   const of = (sid) => shown.filter((i) => (known.has(i.sec) ? i.sec : '') === sid);
   const done = S.items.filter((i) => i.done);
   const wig = ui.wiggle === 'items';
@@ -31,12 +35,13 @@ function simpleBody() {
   const rows = of('').map(rowHtml).join('') + secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? its.map(rowHtml).join('') : '<li class="secempty">Noch leer</li>'); }).join('');
   const body = rows ? `<ul class="srows${wig ? ' wiggle' : ''}" id="listRows">${rows}</ul>` : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
   if (wig) return body + wiggleBar(true); // „Fertig“ schwebt über der Tab-Leiste: oben verrutscht nichts, immer mit dem Daumen erreichbar
-  let doneHtml = '';
-  if (done.length && keep) doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">Alle Haken entfernen</button><button type="button" class="link clearbtn" data-act="cleardone">Abgehakte löschen</button></div>`;
-  else if (done.length) doneHtml = `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
-       ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
-  const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: sortieren</p>' : '';
-  return body + doneHtml + `<button type="button" class="link addsec" data-act="newsec">+ Abschnitt</button>` + tip;
+  let doneHtml;
+  if (keep && done.length) { // Abgehakte stehen an ihrem Platz: nur zurücksetzen oder löschen
+    doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">Alle Haken entfernen</button><button type="button" class="link clearbtn" data-act="cleardone">Abgehakte löschen</button></div>`;
+  } else {
+    doneHtml = doneBlock(done);
+  }
+  return body + doneHtml + `<button type="button" class="link addsec" data-act="newsec">+ Abschnitt</button>` + listTip('sortieren');
 }
 // Einfache Liste, Eintrag gedrückt halten: der Eintrag hebt sich leicht an.
 //   loslassen ohne Bewegung = bearbeiten, Finger bewegen = Eintrag ziehen (danach bleibt der Wackelmodus an).
@@ -52,7 +57,7 @@ function holdDrag(e, row) {
   // Schon beim Anheben zeigen, dass Ziehen sortiert (schwebende Leiste über der Tab-Leiste)
   if (!list.nextElementSibling?.classList.contains('floatbar')) list.insertAdjacentHTML('afterend', wiggleBar(true));
   const hint = list.nextElementSibling, dropHint = () => { if (!ui.wiggle) hint?.remove(); };
-  const before = [...list.children].filter((c) => c.matches(w.slots)).map((c) => c.dataset.key).join();
+  const before = slotKeys(list, w.slots).join();
   const off = () => { dragArmed = false; document.removeEventListener('pointermove', mv, true); document.removeEventListener('pointerup', up, true); document.removeEventListener('pointercancel', cancel, true); };
   const mv = (ev) => {
     if (ev.pointerId !== pid || Math.hypot(ev.clientX - x0, ev.clientY - y0) < 8) return;

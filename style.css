@@ -314,7 +314,7 @@ dialog.viewer::backdrop { background: #000; }
 /* Essen */
 .mact{margin:8px 0 10px}
 .mtags{margin:0 0 4px}
-.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .mcard{gap:10px}.mcard .mt{flex:1;min-width:0;display:grid;text-align:left}
 .mcard small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mthumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none}
@@ -330,15 +330,12 @@ dialog.viewer::backdrop { background: #000; }
 .mrow .mn{flex:1;min-width:0}.mq{color:var(--muted);font-variant-numeric:tabular-nums}
 .basic{color:var(--muted);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:4px}
 .ming{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}.ming .mn{flex:1;min-width:0}
-.basicbtn{font-size:13px;padding:2px 9px;border-radius:999px;width:auto;height:auto}
-.basicbtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.basicbtn{font-size:13px;padding:2px 9px;border-radius:999px;width:auto;height:auto;font-style:normal;font-family:inherit;font-weight:600;display:inline-block}
+.basicbtn.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .mphoto{display:block;width:100%;max-height:30vh;object-fit:cover;border-radius:12px;margin:0 0 8px}
 .mmore{margin-top:10px}.mmore summary{color:var(--muted);padding:6px 0}
 .msteps{white-space:pre-wrap;padding:6px 0}
 #dlg textarea.notein{width:100%;resize:vertical;font:inherit}
-.chip.on{color:var(--on-accent)}
-.basicbtn{font-style:normal;font-family:inherit;font-weight:600;display:inline-block}
-.basicbtn.on{color:var(--on-accent)}
 .ming .chipbtn:not(.basicbtn){width:32px;height:32px}
 
 /* Untere Leiste */
@@ -595,7 +592,6 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
   .wiggle > .catrow:not([data-key="sonst"]), .wiggle > .zli { animation: none; outline: 1.5px dashed var(--accent); outline-offset: -3px; }
 }
 .wigglebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 4px; color: var(--accent); font-weight: 600; font-size: .9rem; }
-.zli.dragging { filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .25)); }
 /* Kategorien: immer einzelne Karten (wie die Bereiche), damit der Wackelmodus gleich aussieht */
 #catRows { display: grid; gap: 6px; background: none; border: 0; overflow: visible; }
 #catRows > .catrow { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
@@ -640,7 +636,7 @@ form .gline { margin: 0 2px 10px; }
 /* Einfache Liste: eine einzige Reihe (Einträge + Abschnitts-Köpfe), sieht aber aus wie eine Karte je Abschnitt */
 .bar[hidden] { display: none; }
 .srows { list-style: none; margin: 0; padding: 0; }
-.srows > .row { background: var(--surface); border: 1px solid var(--line); border-bottom: 0; }
+.srows > .row { background: var(--surface); border: 1px solid var(--line); border-bottom: 0; transition: transform .15s ease, box-shadow .15s ease; }
 .srows > .row:first-child, .srows > .secli + .row { border-radius: 12px 12px 0 0; }
 .srows > .row:last-child, .srows > .row:has(+ .secli) { border-bottom: 1px solid var(--line); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
 .srows > .secli { cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -648,7 +644,6 @@ form .gline { margin: 0 2px 10px; }
 .secempty { margin: 0 2px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: .85rem; list-style: none; }
 .addsec { display: block; margin-top: 10px; }
 /* Gedrückt halten: Eintrag hebt sich leicht an */
-.srows > .row { transition: transform .15s ease, box-shadow .15s ease; }
 .srows > .row.lifted { transform: scale(1.02); box-shadow: 0 8px 22px rgba(0, 0, 0, .28); position: relative; z-index: 2; border-radius: 12px; border-bottom: 1px solid var(--line); }
 /* Wackelmodus */
 .wiggle > .row:not(.dragging) { animation: wiggle .2s ease-in-out infinite alternate; }

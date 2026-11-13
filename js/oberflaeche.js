@@ -441,8 +441,7 @@ function newStoreSheet() {
 function listSheet() {
   openSheet(`<div class="sheettitle">Listen</div>
     <div class="scrollbox">${S.lists.map((l) => {
-      const n = (l.id === S.listId ? S.items : l.items || []).filter((i) => !i.done).length;
-      return `<button type="button" class="sheetbtn${l.id === S.listId ? ' on' : ''}" data-act="picklist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${groupTag(l.g)}${n} offen</small></button>`;
+      return `<button type="button" class="sheetbtn${l.id === S.listId ? ' on' : ''}" data-act="picklist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${groupTag(l.g)}${openCount(l)} offen</small></button>`;
     }).join('')}</div>
     <div class="actions" style="margin-top:10px">
       <button type="button" class="btn ghost" data-act="newlistsheet">+ Neue Liste</button>
@@ -452,8 +451,7 @@ function listSheet() {
 // Einstellungen → Listen: alle Listen, antippen = bearbeiten
 function listsPage() {
   const rows = S.lists.map((l) => {
-    const n = (l.id === S.listId ? S.items : l.items || []).filter((i) => !i.done).length;
-    return `<button type="button" class="sheetbtn" data-act="editlist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${groupTag(l.g)}${l.id === S.listId ? 'aktiv · ' : ''}${n} offen ›</small></button>`;
+    return `<button type="button" class="sheetbtn" data-act="editlist" data-id="${l.id}"><span>${esc(l.name)}</span><small>${groupTag(l.g)}${l.id === S.listId ? 'aktiv · ' : ''}${openCount(l)} offen ›</small></button>`;
   }).join('');
   openPage('lists', 'Listen', `<div class="group">${rows}</div>
     <p class="sheetnote">Welche Liste du gerade siehst, wählst du mit einem zweiten Tipp auf „Liste“ unten.</p>
@@ -471,7 +469,7 @@ function newListSheet() {
 function listEditPage(id) {
   const l = S.lists.find((x) => x.id === id);
   if (!l) { backTo('lists', listsPage); return; }
-  const n = (l.id === S.listId ? S.items : l.items || []).length;
+  const n = listItems(l).length;
   openPage('list:' + id, 'Liste bearbeiten', `
     <label class="field"><span>Name</span><input id="listName" data-id="${l.id}" value="${esc(l.name)}"></label>
     ${typeSelect('leType', l.type || '', ` data-id="${l.id}"`)}
@@ -535,12 +533,6 @@ function updatePhotoUi(it) {
   const box = $('#photoBox'), cam = $('#camBtn');
   if (box) box.innerHTML = photoBoxHtml(it);
   if (cam) cam.hidden = !!it.photo;
-}
-function editSummary(it) {
-  const st = curStore();
-  let t = CAT_BY_ID[it.cat]?.name || 'Sonstiges';
-  if (st) { const zi = pinIdx(st, it.name); if (zi >= 0) t += ` · ${st.zones[zi].name}`; } // Bereich nur, wenn von Hand festgelegt
-  return t;
 }
 function openEdit(id) {
   const it = S.items.find((i) => i.id === id);

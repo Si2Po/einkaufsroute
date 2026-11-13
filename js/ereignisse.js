@@ -24,9 +24,9 @@ function toggleItem(id) {
   armPending();
   render();
 }
-const flushPending = finishAll;
-document.addEventListener('visibilitychange', () => { if (document.hidden) flushPending(); });
-window.addEventListener('pagehide', flushPending);
+// App verlassen: angehakte Einträge sofort abschließen und speichern
+document.addEventListener('visibilitychange', () => { if (document.hidden) finishAll(); });
+window.addEventListener('pagehide', finishAll);
 
 let lp = null, lpFired = false, lpStar = false;
 // Nach dem langen Drücken auf einen Stern erscheint der Erklärtext und verschiebt das Layout; der Klick beim Loslassen würde sonst etwas anderes treffen

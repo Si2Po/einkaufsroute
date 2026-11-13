@@ -37,11 +37,22 @@ function mealListHtml() {
   const list = filteredMeals();
   return list.length ? `<ul class="cards">${list.map(mealCard).join('')}</ul><p class="tip">Tippen: auf die Liste · Gedrückt halten: bearbeiten</p>` : '<p class="empty">Nichts passt zu dieser Auswahl.</p>';
 }
+// Ein Tag zum Filtern. „★“ = nur Favoriten. Ein Tag ohne Essen wird mit „×“ angezeigt: Antippen entfernt ihn.
+function filterChip(t) {
+  const on = ui.mealTags.includes(t);
+  let cls = 'chip' + (on ? ' on' : ''), extra = '', label = esc(t);
+  if (t === FAV) {
+    cls += ' favchip'; extra = ' aria-label="Nur Favoriten"';
+  } else if (!tagUsed(t)) {
+    cls += ' unused'; extra = ' title="Kein Essen mit diesem Tag: Tippen entfernt ihn"'; label += ' ×';
+  }
+  return `<button type="button" class="${cls}" data-act="m_tag" data-tag="${esc(t)}" aria-pressed="${on}"${extra}>${label}</button>`;
+}
 function viewMeals() {
   const tags = allTags();
   return `<div class="edhead"><h2>Essen</h2></div>
     ${meals().length ? `<input id="mealQ" type="search" class="notein catsearch" placeholder="Essen oder Zutat suchen" aria-label="Essen suchen" autocomplete="off" value="${esc(ui.mealQ)}">` : ''}
-    <div class="chips mtags" role="group" aria-label="Tags">${tags.map((t) => `<button type="button" class="chip${t === FAV ? ' favchip' : ''}${ui.mealTags.includes(t) ? ' on' : ''}${t === FAV || tagUsed(t) ? '' : ' unused'}" data-act="m_tag" data-tag="${esc(t)}" aria-pressed="${ui.mealTags.includes(t)}"${t === FAV ? ' aria-label="Nur Favoriten"' : tagUsed(t) ? '' : ' title="Kein Essen mit diesem Tag: Tippen entfernt ihn"'}>${esc(t)}${t === FAV || tagUsed(t) ? '' : ' ×'}</button>`).join('')}${ui.ovTagInput
+    <div class="chips mtags" role="group" aria-label="Tags">${tags.map(filterChip).join('')}${ui.ovTagInput
       ? '<form id="mOvTagForm" class="tagadd" autocomplete="off"><input id="mOvTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
       : '<button type="button" class="chip tagplus" data-act="m_ovtagplus" aria-label="Neuen Tag anlegen">+</button>'}</div>
     <div class="actions mact">${meals().length ? '<button type="button" class="btn" data-act="m_random">Zufälliges Essen</button>' : ''}<button type="button" class="btn ghost" data-act="m_new">+ Neues Essen</button></div>

@@ -255,4 +255,9 @@ const curList = () => (S.lists || []).find((l) => l.id === S.listId) || null;
 const curStore = () => S.stores.find((s) => s.id === S.storeId) || null;
 const editStore = () => S.stores.find((s) => s.id === ui.editStoreId) || null;
 const commit = () => { save(); render(); };
+// Einträge einer Liste (die aktive Liste hält ihre Einträge im Betrieb in S.items, siehe snapshot())
+const listItems = (l) => (l.id === S.listId ? S.items : l.items || []);
+const openCount = (l) => listItems(l).filter((i) => !i.done).length;
+// Reihenfolge innerhalb einer Gruppe/eines Abschnitts: von Hand sortiert (it.ord), sonst wie hinzugefügt (it.ts)
+const byOrder = (a, b) => (a.ord ?? a.ts) - (b.ord ?? b.ts);
 

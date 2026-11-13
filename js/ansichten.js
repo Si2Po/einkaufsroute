@@ -31,7 +31,7 @@ function buildGroups(store) {
     groups.get(g.key).items.push(it);
   }
   const list = [...groups.values()].sort((a, b) => a.order - b.order);
-  list.forEach((g) => g.items.sort((a, b) => (a.ord ?? a.ts) - (b.ord ?? b.ts))); // Reihenfolge des Hinzufügens, von Hand umsortiert: it.ord
+  list.forEach((g) => g.items.sort(byOrder));
   return list;
 }
 
@@ -64,13 +64,16 @@ function listBody() {
         + g.items.map(rowHtml).join('')).join('')}</ul>${ui.wiggle === 'items' ? wiggleBar(true) : ''}`
     : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
   if (ui.wiggle === 'items' && groups.length) return body;
-  const doneHtml = done.length
-    ? `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
-       ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`
-    : '';
-  const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: verschieben</p>' : '';
-  return body + doneHtml + tip;
+  return body + doneBlock(done) + listTip('verschieben');
 }
+// „Erledigt (n)“ zum Aufklappen, darunter die abgehakten Einträge (Einkaufsliste und einfache Liste)
+function doneBlock(done) {
+  if (!done.length) return '';
+  return `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
+       ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
+}
+// Bedienhinweis unter der Liste, bis zum ersten Bearbeiten (S.tipSeen)
+const listTip = (dragWord) => (S.items.length && !S.tipSeen ? `<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: ${dragWord}</p>` : '');
 const pillName = () => curStore()?.name || 'Kein Geschäft';
 
 const barHtml = () => `
