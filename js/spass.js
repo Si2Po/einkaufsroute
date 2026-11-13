@@ -134,7 +134,7 @@ const ITEM_COMMENTS = [
   [['chili'], 'Jetzt wird’s heiß! 🌶️'],
   [['kondom'], 'Safety first! 😉'],
   [['tee$', 'teebeutel'], 'Abwarten und Tee trinken. 🍵'],
-  [['doughnut', 'donut'], 'Hmmmm … Doughnuts 🤤'],
+  [['doughnut', 'donut'], 'Hmmmm … Donuts 🤤'],
   [['senf'], 'Jetzt gebe ich auch noch meinen Senf dazu. 😄'],
   [['hefe'], 'Wird heute gebacken? 🥐'],
   [['waschmittel'], 'Waschtag! 🧺'],
