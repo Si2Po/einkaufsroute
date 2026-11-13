@@ -285,7 +285,7 @@ function buildGroups(store) {
     groups.get(g.key).items.push(it);
   }
   const list = [...groups.values()].sort((a, b) => a.order - b.order);
-  list.forEach((g) => g.items.sort((a, b) => (CAT_INDEX[a.cat] - CAT_INDEX[b.cat]) || (a.ts - b.ts)));
+  list.forEach((g) => g.items.sort((a, b) => (a.ord ?? a.ts) - (b.ord ?? b.ts))); // Reihenfolge des Hinzufügens, von Hand umsortiert: it.ord
   return list;
 }
 
@@ -309,12 +309,15 @@ function listBody() {
   if (isSimple()) return simpleBody();
   const groups = buildGroups(curStore());
   const done = S.items.filter((i) => i.done);
+  // Eine einzige Reihe (Köpfe + Einträge, Optik wie Karten je Gruppe), damit Einträge per Halten und Ziehen
+  // umsortiert und in eine andere Kategorie / einen anderen Bereich gezogen werden können (WIGGLE.items).
   const body = groups.length
-    ? groups.map((g) => (g.free
-        ? `<button type="button" class="grp grpbtn" data-act="assigncat" data-cat="${g.free}"><span class="gname">${esc(g.label)}</span><span class="nozone">Bereich wählen ›</span><span class="cnt">${g.items.length}</span></button>`
-        : `<div class="grp"><span class="gname">${esc(g.label)}</span><span class="cnt">${g.items.length}</span></div>`)
-        + `<ul class="rows">${g.items.map(rowHtml).join('')}</ul>`).join('')
+    ? `<ul class="srows${ui.wiggle === 'items' ? ' wiggle' : ''}" id="listRows">${groups.map((g) => (g.free
+        ? `<li class="grp secli grpbtn" role="button" tabindex="0" data-act="assigncat" data-cat="${g.free}" data-key="§${g.key}"><span class="gname">${esc(g.label)}</span><span class="nozone">Bereich wählen ›</span><span class="cnt">${g.items.length}</span></li>`
+        : `<li class="grp secli" data-key="§${g.key}"><span class="gname">${esc(g.label)}</span><span class="cnt">${g.items.length}</span></li>`)
+        + g.items.map(rowHtml).join('')).join('')}</ul>${ui.wiggle === 'items' ? wiggleBar() : ''}`
     : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
+  if (ui.wiggle === 'items' && groups.length) return body;
   const doneHtml = done.length
     ? `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
        ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`
@@ -1382,8 +1385,9 @@ const WIGGLE = {
   // Einträge einer einfachen Liste: eigene Reihenfolge, auch in einen anderen Abschnitt ziehen.
   // Die Abschnitts-Köpfe (data-key „§id“) stehen mit in der Reihe und zählen als Plätze, werden aber nicht selbst gezogen.
   items: {
-    list: '#simpleRows', row: '.row', slots: '.row, .secli', scroller: () => window,
+    list: '#listRows', row: '.row', slots: '.row, .secli', scroller: () => window,
     done(order) {
+      if (!isSimple()) { shopDrop(order); return; }
       let sec = '', n = 0;
       for (const k of order) {
         if (k.startsWith('§')) { sec = k.slice(1); continue; }
@@ -1631,7 +1635,7 @@ document.addEventListener('pointerdown', (e) => {
     holdAfterLongPress();
     haptic();
     if (el.classList.contains('star')) { lpStar = true; starSheet(); }
-    else if (el.classList.contains('row')) { if (el.closest('#simpleRows')) holdDrag(e, el); else openEdit(id); }
+    else if (el.classList.contains('row')) { if (el.closest('#listRows')) holdDrag(e, el); else openEdit(id); }
     else if (el.classList.contains('mcard')) openMealEdit(id);
     else if (el.classList.contains('secbtn')) sectionSheet(el.dataset.sec); // Abschnitt: umbenennen, verschieben, löschen
     else if (el.matches('.zitem, .catrow')) startWiggle(e, el); // Liste der Bereiche / Kategorien: sortieren
@@ -2092,13 +2096,17 @@ const DEFAULT_TAGS = ['Nudeln', 'Reis', 'schnell', 'viel Gemüse'];
 Object.assign(ui, { mealTags: [], mealQ: '', mealId: null, mealPortions: 2, mealPick: new Set(), mealRandom: false, lastRandom: null, confirmMeal: false });
 const meals = () => (S.meals = S.meals || []);
 const mealById = (id) => meals().find((m) => m.id === id);
-const allTags = () => [...new Set([...meals().flatMap((m) => m.tags), ...(S.customTags || [])])].sort((a, b) => a.localeCompare(b, 'de'));
+// Favoriten sind ein fester Tag „★“: steht immer vorne, Favoriten stehen in der Liste oben
+const FAV = '★';
+const isFav = (m) => m.tags.includes(FAV);
+const plainTags = (m) => m.tags.filter((t) => t !== FAV);
+const allTags = () => [FAV, ...[...new Set([...meals().flatMap((m) => m.tags), ...(S.customTags || [])])].filter((t) => t !== FAV).sort((a, b) => a.localeCompare(b, 'de'))];
 const tagUsed = (t) => meals().some((m) => m.tags.includes(t));
 function filteredMeals() {
   const q = fold(ui.mealQ.trim());
   return meals()
     .filter((m) => ui.mealTags.every((t) => m.tags.includes(t)) && (!q || fold(m.name).includes(q) || m.ing.some((i) => fold(i.name).includes(q))))
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    .sort((a, b) => isFav(b) - isFav(a) || a.name.localeCompare(b.name, 'de')); // Favoriten oben, sonst A–Z
 }
 const fmtNum = (v) => String(v).replace('.', ',');
 const fmtPortions = (p) => `${fmtNum(p)} ${p === 1 ? 'Person' : 'Personen'}`;
@@ -2111,8 +2119,8 @@ function scaleQty(qty, f) {
   return fmtNum(v) + m[2];
 }
 function mealCard(m) {
-  const sub = [m.tags.join(' · '), `${m.ing.length} ${m.ing.length === 1 ? 'Zutat' : 'Zutaten'}`].filter(Boolean).join(' · ');
-  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${esc(m.name)}</strong><small>${esc(sub)}</small></span></button></li>`;
+  const sub = [plainTags(m).join(' · '),`${m.ing.length} ${m.ing.length === 1 ? 'Zutat' : 'Zutaten'}`].filter(Boolean).join(' · ');
+  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${isFav(m) ? '<span class="favmark" aria-label="Favorit">★</span>' : ''}${esc(m.name)}</strong><small>${esc(sub)}</small></span></button></li>`;
 }
 function mealListHtml() {
   if (!meals().length) return '<p class="empty">Noch kein Essen. Lege eins an, dann kommen seine Zutaten mit einem Tipp auf die Liste.</p>';
@@ -2123,7 +2131,7 @@ function viewMeals() {
   const tags = allTags();
   return `<div class="edhead"><h2>Essen</h2></div>
     ${meals().length ? `<input id="mealQ" type="search" class="notein catsearch" placeholder="Essen oder Zutat suchen" aria-label="Essen suchen" autocomplete="off" value="${esc(ui.mealQ)}">` : ''}
-    <div class="chips mtags" role="group" aria-label="Tags">${tags.map((t) => `<button type="button" class="chip${ui.mealTags.includes(t) ? ' on' : ''}${tagUsed(t) ? '' : ' unused'}" data-act="m_tag" data-tag="${esc(t)}" aria-pressed="${ui.mealTags.includes(t)}"${tagUsed(t) ? '' : ' title="Kein Essen mit diesem Tag: Tippen entfernt ihn"'}>${esc(t)}${tagUsed(t) ? '' : ' ×'}</button>`).join('')}${ui.ovTagInput
+    <div class="chips mtags" role="group" aria-label="Tags">${tags.map((t) => `<button type="button" class="chip${t === FAV ? ' favchip' : ''}${ui.mealTags.includes(t) ? ' on' : ''}${t === FAV || tagUsed(t) ? '' : ' unused'}" data-act="m_tag" data-tag="${esc(t)}" aria-pressed="${ui.mealTags.includes(t)}"${t === FAV ? ' aria-label="Nur Favoriten"' : tagUsed(t) ? '' : ' title="Kein Essen mit diesem Tag: Tippen entfernt ihn"'}>${esc(t)}${t === FAV || tagUsed(t) ? '' : ' ×'}</button>`).join('')}${ui.ovTagInput
       ? '<form id="mOvTagForm" class="tagadd" autocomplete="off"><input id="mOvTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
       : '<button type="button" class="chip tagplus" data-act="m_ovtagplus" aria-label="Neuen Tag anlegen">+</button>'}</div>
     <div class="actions mact">${meals().length ? '<button type="button" class="btn" data-act="m_random">Zufälliges Essen</button>' : ''}<button type="button" class="btn ghost" data-act="m_new">+ Neues Essen</button></div>
@@ -2143,8 +2151,8 @@ function mealSheet() {
   if (!m) return;
   const f = ui.mealPortions / (m.base || 2);
   const rows = ingSorted(m).map((i) => `<li><label class="mrow"><input type="checkbox" data-act="m_pick" data-id="${i.id}"${ui.mealPick.has(i.id) ? ' checked' : ''}><span class="mn">${esc(i.name)}${i.basic ? ' <small class="basic">Basis</small>' : ''}</span><span class="mq">${esc(scaleQty(i.qty, f))}</span></label></li>`).join('');
-  openSheet(`<div class="sheettitle">${esc(m.name)}</div>
-    ${m.tags.length ? `<p class="sheetnote" style="margin:-4px 0 8px">${esc(m.tags.join(' · '))}</p>` : ''}
+  openSheet(`<div class="sheettitle">${esc(m.name)}<button type="button" class="favbtn${isFav(m) ? ' on' : ''}" data-act="m_fav" aria-pressed="${isFav(m)}" aria-label="Favorit">${isFav(m) ? '★' : '☆'}</button></div>
+    ${plainTags(m).length ? `<p class="sheetnote" style="margin:-4px 0 8px">${esc(plainTags(m).join(' · '))}</p>` : ''}
     ${m.photo ? `<img class="mphoto" src="${m.photo}" alt="">` : ''}
     <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="Weniger Personen"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="Mehr Personen">${ICON_PLUS_S}</button></div>
     ${m.ing.length ? `<ul class="scrollbox mings">${rows}</ul>` : '<p class="sheetnote">Noch keine Zutaten. Tippe auf „Bearbeiten“.</p>'}
@@ -2282,9 +2290,10 @@ document.addEventListener('click', (e) => {
   switch (act) {
     case 'm_ovtagplus': ui.ovTagInput = true; render(); break;
     case 'm_tag': { const t = el.dataset.tag;
-      if (!tagUsed(t)) { S.customTags = (S.customTags || []).filter((x) => x !== t); ui.mealTags = ui.mealTags.filter((x) => x !== t); save(); render(); break; } // Tag ohne Essen: entfernen
+      if (t !== FAV && !tagUsed(t)) { S.customTags = (S.customTags || []).filter((x) => x !== t); ui.mealTags = ui.mealTags.filter((x) => x !== t); save(); render(); break; } // Tag ohne Essen: entfernen
  ui.mealTags = ui.mealTags.includes(t) ? ui.mealTags.filter((x) => x !== t) : [...ui.mealTags, t]; render(); break; }
     case 'm_new': newMealSheet(); break;
+    case 'm_fav': if (m) { m.tags = isFav(m) ? plainTags(m) : [FAV, ...m.tags]; haptic(); save(); render(); mealSheet(); } break;
     case 'm_open': if (lpFired) { lpFired = false; break; } startMeal(id, false); break; // nicht nach langem Drücken
     case 'm_random': haptic(); ui.diceRoll = !!el.closest('#dlg'); randomMeal(); break; // im Sheet wackelt der Würfel
     case 'm_pick': ui.mealPick.has(id) ? ui.mealPick.delete(id) : ui.mealPick.add(id); { const b = $('#mAddBtn'); if (b) { b.textContent = mealBtnText(); b.disabled = !ui.mealPick.size; } } break;
@@ -2635,7 +2644,7 @@ function simpleBody() {
     return `<li class="grp secli secbtn${on ? ' on' : ''}" role="button" tabindex="0" data-act="secpick" data-sec="${s.id}" data-key="§${s.id}" aria-pressed="${on}"><span class="gname">${esc(s.name)}</span><span class="cnt">${n}</span></li>`;
   };
   const rows = of('').map(rowHtml).join('') + secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? its.map(rowHtml).join('') : '<li class="secempty">Noch leer</li>'); }).join('');
-  const body = rows ? `<ul class="srows${wig ? ' wiggle' : ''}" id="simpleRows">${rows}</ul>` : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
+  const body = rows ? `<ul class="srows${wig ? ' wiggle' : ''}" id="listRows">${rows}</ul>` : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
   if (wig) return body + wiggleBar(); // „Fertig“ unten: oben verrutscht nichts, und es ist mit dem Daumen erreichbar
   let doneHtml = '';
   if (done.length && keep) doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">Alle Haken entfernen</button><button type="button" class="link clearbtn" data-act="cleardone">Abgehakte löschen</button></div>`;
@@ -2649,7 +2658,7 @@ function simpleBody() {
 // Es wird nichts neu aufgebaut, der Eintrag bleibt genau unter dem Finger. Solange er angehoben ist, scrollt die Seite nicht.
 let dragArmed = false;
 function holdDrag(e, row) {
-  const list = row.closest('#simpleRows'), id = row.dataset.id;
+  const list = row.closest('#listRows'), id = row.dataset.id;
   if (!list) { openEdit(id); return; }
   const w = WIGGLE.items, x0 = e.clientX, y0 = e.clientY, pid = e.pointerId;
   sw = null; // kein Wischen auf dieser Zeile
@@ -2671,6 +2680,45 @@ function holdDrag(e, row) {
   document.addEventListener('pointermove', mv, true);
   document.addEventListener('pointerup', up, true);
   document.addEventListener('pointercancel', cancel, true);
+}
+// Einkaufsliste: Eintrag wurde gezogen. Reihenfolge merken (it.ord, bis der Eintrag weg ist). Landet er in einer anderen
+// Gruppe, lernt die App das: mit Geschäft = fester Bereich in diesem Geschäft, sonst / ohne Bereich = andere Kategorie.
+function shopDrop(order) {
+  const st = curStore(), from = {}, to = {};
+  buildGroups(st).forEach((g) => g.items.forEach((i) => { from[i.id] = g.key; }));
+  let gk = '', n = 0;
+  const pos = {};
+  for (const k of order) { if (k.startsWith('§')) gk = k.slice(1); else { to[k] = gk; pos[k] = n++; } }
+  const it = S.items.find((i) => to[i.id] && to[i.id] !== from[i.id]);
+  // Vorher-Stand für „Rückgängig“
+  const snap = { items: S.items.map((i) => ({ id: i.id, cat: i.cat, ord: i.ord })), kw: CATS.map((c) => [c.id, [...c.kw]]), prods: st ? st.zones.map((z) => (z.prods ? { ...z.prods } : null)) : null };
+  S.items.forEach((i) => { if (pos[i.id] !== undefined) i.ord = pos[i.id]; });
+  let msg = '';
+  if (it) {
+    const key = normKey(it.name), target = to[it.id];
+    if (st) st.zones.forEach((z) => { if (z.prods) delete z.prods[key]; }); // alter fester Bereich gilt nicht mehr
+    if (target[0] === 'z') { // Bereich in diesem Geschäft
+      const zi = +target.slice(1), z = st.zones[zi];
+      if (defaultZoneIdx(st, it.cat) !== zi) { z.prods = z.prods || {}; z.prods[key] = it.name; }
+      msg = `„${it.name}“ → ${z.name} (merkt sich ${st.name})`;
+    } else { // Kategorie: „c<Index>“ ohne Geschäft, „n<Kategorie>“ = Kategorie ohne Bereich in diesem Geschäft
+      const cat = target[0] === 'c' ? CATS[+target.slice(1)]?.id : target.slice(1);
+      if (cat && CAT_BY_ID[cat]) {
+        learnKeyword(it.name, cat);
+        S.items.forEach((o) => { if (!o.done && normKey(o.name) === key) o.cat = cat; });
+        msg = `„${it.name}“ → ${CAT_BY_ID[cat].name}`;
+      }
+    }
+  }
+  commit();
+  if (msg) {
+    toast(msg, () => {
+      snap.items.forEach((s) => { const i = S.items.find((x) => x.id === s.id); if (i) { i.cat = s.cat; if (s.ord === undefined) delete i.ord; else i.ord = s.ord; } });
+      snap.kw.forEach(([id, kw]) => { if (CAT_BY_ID[id]) CAT_BY_ID[id].kw = kw; });
+      if (st && snap.prods) st.zones.forEach((z, i) => { if (snap.prods[i]) z.prods = snap.prods[i]; else delete z.prods; });
+      commit();
+    });
+  }
 }
 function newSecSheet() {
   openSheet(`<div class="sheettitle">Neuer Abschnitt</div>

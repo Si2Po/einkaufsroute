@@ -35,7 +35,9 @@ Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, a
 - [x] **Listen-Typen (lokal, für 0.7.1):** Typ **pro Liste** („Art“: Einkaufsliste / Einfache Liste), beim Anlegen wählbar, im Bearbeiten änderbar.
   Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, **Abschnitte** (unten „+ Abschnitt“, Abschnitt antippen = Neues kommt dorthin (Kopf farbig), gedrückt halten = umbenennen/verschieben/löschen),
   eigene Reihenfolge (Eintrag gedrückt halten und ziehen startet den Wackelmodus, auch in andere Abschnitte; nur gedrückt halten = bearbeiten), **pro Liste wählbar**, ob Abgehakte nach unten rutschen oder stehen bleiben („Alle Haken entfernen“).
-- [ ] Hilfe-Text zu Listen-Typen
+- [x] **Einkaufsliste: Halten und ziehen** (lokal): Reihenfolge innerhalb einer Gruppe frei (it.ord, sonst Reihenfolge des Hinzufügens), in andere Kategorie (ohne Geschäft) bzw. anderen Bereich (mit Geschäft, merkt sich das Geschäft) ziehen = lernen, mit „Rückgängig“.
+- [x] **Essen: Favoriten** (lokal) als fester Tag „★“ (immer erster Filter-Tag, Favoriten oben, sonst A–Z, Stern im Essen-Sheet)
+- [ ] Hilfe-Text zu Listen-Typen, Ziehen und Favoriten
 - [ ] Später: neue Gruppe mit Kategorien/Stichwörtern einer bestehenden Gruppe starten (heute bekommt eine neue Gruppe die Standard-Kategorien, sobald jemand sie unter „Stichwörter von“ wählt)
 - [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
 

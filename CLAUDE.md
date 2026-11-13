@@ -18,7 +18,8 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 
 ## Listen-Typen (seit 0.7.1)
 - Pro Liste: `l.type = 'simple'` = einfache Liste (fehlt = Einkaufsliste). Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, Abschnitte `l.secs = [{id, name}]` (Eintrag: `it.sec`), eigene Reihenfolge `it.ord` (sonst `ts`), `l.keepDone` = Abgehakte bleiben stehen.
-- Code im Abschnitt „Listen-Typen“ in `app.js` (`isSimple()`, `simpleBody()`, Wackelmodus `WIGGLE.items`). Abgleich braucht nichts Extra: neue Felder reisen im Listen-/Eintrag-Dokument mit.
+- Beide Listenarten zeigen ihre Einträge als eine Reihe `#listRows` (Köpfe `.secli` mit `data-key="§…"` + Zeilen), damit Halten-und-Ziehen (`holdDrag`, `WIGGLE.items`) ohne Umbau klappt. Einkaufsliste: `shopDrop()` lernt Kategorie bzw. festen Bereich. Essen-Favoriten = Tag `★` (`FAV`).
+- Code im Abschnitt „Listen-Typen“ in `app.js` (`isSimple()`, `simpleBody()`). Abgleich braucht nichts Extra: neue Felder reisen im Listen-/Eintrag-Dokument mit.
 
 ## Abgleich (Kurzfassung)
 - Jeder Laden, jede Kategorie, Liste, jeder Eintrag und jedes Essen ist ein Dokument in der Tabelle `docs` (Art `kind`), abgelegt in der Gruppe (`household_id`), zu der es gehört.
