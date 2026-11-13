@@ -180,6 +180,7 @@ function dropGone() {
   S.lists = S.lists.filter((x) => !gone(x)); S.stores = S.stores.filter((x) => !gone(x)); S.meals = (S.meals || []).filter((x) => !gone(x));
   Object.keys(sync.gs).forEach((g) => { if (!ids.has(g)) delete sync.gs[g]; });
   Object.keys(S.gcats || {}).forEach((g) => { if (!ids.has(g)) delete S.gcats[g]; });
+  Object.keys(S.hist || {}).forEach((g) => { if (g && !ids.has(g)) delete S.hist[g]; }); // Kaufhistorie verlassener Gruppen
   Object.keys(S.gset || {}).forEach((g) => { if (!ids.has(g)) delete S.gset[g]; });
   if (S.catGroup && !ids.has(S.catGroup)) { const c = S.catGroup; S.catGroup = null; setCatGroup(personalGroup()); delete (S.gcats || {})[c]; }
   return before !== S.lists.length + S.stores.length + (S.meals || []).length;
@@ -211,6 +212,8 @@ async function buildDocs() {
     await put(g, 'list', l.id, { ...rest, _o: i }, null, l.private);
     for (const it of items || []) await put(g, 'item', it.id, { ...it, _list: l.id }, l.id, l.private);
   }
+  // Kaufhistorie (ein Dokument je Produkt und Gruppe). Erst, wenn die Datenbank die Art „hist“ kennt (supabase/historie.sql).
+  if (!sync.noHist) for (const [g, h] of Object.entries(snap.hist || {})) for (const e of Object.values(h)) await put(g, 'hist', e.id, e);
   return out;
 }
 const knownEntry = (d) => ({ h: d.h, lid: d.lid, kind: d.row.kind, l: d.row.list_id, v: d.row.visible_to });
@@ -229,12 +232,22 @@ async function pushChanges(g, cur) {
     batch = []; size = 0;
     persistSync();
   };
-  for (const r of rows) {
-    const s = JSON.stringify(r.row).length;
-    if (batch.length && (size + s > 700000 || batch.length >= 100)) await flush();
-    batch.push(r); size += s;
+  const send = async (list) => {
+    for (const r of list) {
+      const s = JSON.stringify(r.row).length;
+      if (batch.length && (size + s > 700000 || batch.length >= 100)) await flush();
+      batch.push(r); size += s;
+    }
+    await flush();
+  };
+  // Kaufhistorie getrennt und zuletzt: Kennt die Datenbank „hist“ noch nicht (historie.sql nicht ausgeführt),
+  // lehnt sie nur diese Zeilen ab, und der übrige Abgleich läuft normal weiter. Bis zum nächsten Start nicht erneut versuchen.
+  await send(rows.filter((r) => r.row.kind !== 'hist'));
+  try { await send(rows.filter((r) => r.row.kind === 'hist')); } catch (e) {
+    batch = []; size = 0;
+    if (isOffline(e) || e.status !== 400) throw e;
+    sync.noHist = true;
   }
-  await flush();
   return rows.length;
 }
 
@@ -249,7 +262,7 @@ async function pullRows(g) {
   }
   return rows;
 }
-const KIND_ORDER = ['settings', 'cat', 'store', 'list', 'meal', 'item'];
+const KIND_ORDER = ['settings', 'cat', 'store', 'list', 'meal', 'item', 'hist'];
 function upsertIn(arr, ent) {
   const i = arr.findIndex((x) => x.id === ent.id);
   if (i >= 0) arr[i] = ent; else arr.push(ent);
@@ -284,6 +297,7 @@ async function applyRows(rows, pending, g) {
       else if (r.kind === 'meal') removeWhere(S.meals, mine);
       else if (r.kind === 'list') removeWhere(S.lists, mine);
       else if (r.kind === 'item') S.lists.forEach((l) => { if (l.g === g) removeWhere(l.items, (x) => x.id === kl); });
+      else if (r.kind === 'hist') { if (S.hist?.[g]) delete S.hist[g][kl]; }
       known[r.id] = { del: 1, kind: r.kind }; touched.push({ id: r.id, gone: true, g });
       continue;
     }
@@ -302,6 +316,10 @@ async function applyRows(rows, pending, g) {
       if (!l) continue;
       S.lists.forEach((o) => { if (o !== l) removeWhere(o.items, (x) => x.id === ent.id); });   // Eintrag in andere Liste verschoben
       upsertIn(l.items, ent);
+    } else if (r.kind === 'hist') {
+      // Zusammenführen statt ersetzen: haben zwei Geräte gleichzeitig gekauft, zählen beide Zeitpunkte
+      S.hist = S.hist || {}; const h = (S.hist[g] = S.hist[g] || {});
+      h[ent.id] = histMerge(h[ent.id], ent);
     }
     touched.push({ id: r.id, lid, g });
   }

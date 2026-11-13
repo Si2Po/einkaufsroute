@@ -15,6 +15,7 @@ function finishAll() {
   ui.pending.clear();
   commit();
   funChecked(checked);
+  histChecked(checked);
 }
 const armPending = () => { clearTimeout(pendT); if (ui.pending.size) pendT = setTimeout(finishAll, CHECK_DELAY); };
 function toggleItem(id) {

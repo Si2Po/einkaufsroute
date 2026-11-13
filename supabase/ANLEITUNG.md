@@ -46,3 +46,10 @@ Ein kostenloses GitHub-Konto anlegen. Die Schritte für das Hosting bekommst du 
 5. Prüfen (optional): Links **Table Editor → households**. Euer gemeinsamer Haushalt heißt jetzt „Einkauf“,
    dazu gibt es für jede Person einen Eintrag „Persönlich“.
 Die App funktioniert danach unverändert weiter; die Gruppen-Funktionen kommen mit dem nächsten App-Update.
+
+## 7. Kaufhistorie nachrüsten (einmalig, ab App-Version 0.7.5)
+1. Supabase → **SQL Editor** → „New query“.
+2. Den kompletten Inhalt von `historie.sql` einfügen und **Run** drücken.
+3. Erwartet: „Success. No rows returned“. Bei einer Fehlermeldung: Text kopieren und mir schicken.
+Ohne diesen Schritt funktioniert die App normal weiter; die Kaufhistorie bleibt dann nur auf dem jeweiligen Gerät
+und wird erst nach dem SQL mit der Gruppe geteilt (nach dem nächsten Start der App).

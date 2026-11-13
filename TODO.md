@@ -23,11 +23,12 @@
 - [ ] Später vielleicht: beim ersten Start eine kurze Einführung
 - [x] Schalter „Hinweise anzeigen“: blendet alle kleinen Bedienhinweise (z. B. „Tippen: … · Gedrückt halten: …“ unter Liste und Essen) überall ein oder aus. Heute verschwindet nur der Hinweis in der Liste nach einer Weile von selbst (S.tipSeen).
 
-## Idee: Einkaufsverhalten lernen
-- [ ] Beim Abhaken merkt sich die App Produkt + Datum (Kaufhistorie, im Haushalt geteilt)
-- [ ] Aus den Abständen den typischen Rhythmus berechnen (z. B. Klopapier alle ~3 Wochen, Spülmaschinenpulver alle ~3 Monate)
-- [ ] Wenn ein Produkt „fällig" ist, als Vorschlag anzeigen („Klopapier? zuletzt vor 3 Wochen") mit Tipp = auf die Liste, Wisch = „nicht jetzt"
-- [ ] Nur Produkte vorschlagen, die mindestens 2–3 Mal gekauft wurden; Rhythmus manuell überschreibbar; Vorschläge abschaltbar
+## Einkaufsverhalten lernen (umgesetzt lokal, 0.7.5: `js/historie.js`, braucht `supabase/historie.sql`)
+- [x] Beim Abhaken merkt sich die App Produkt + Datum (Kaufhistorie, im Haushalt geteilt)
+- [x] Aus den Abständen den typischen Rhythmus berechnen (z. B. Klopapier alle ~3 Wochen, Spülmaschinenpulver alle ~3 Monate)
+- [x] Wenn ein Produkt „fällig" ist, als Vorschlag anzeigen („Klopapier? zuletzt vor 3 Wochen") mit Tipp = auf die Liste, Wisch = „nicht jetzt"
+- [x] Nur Produkte vorschlagen, die mindestens 3 Mal gekauft wurden; Vorschläge abschaltbar (Hilfe → Vorschläge)
+- [ ] Später: Rhythmus von Hand überschreiben (z. B. „Klopapier alle 4 Wochen“)
 
 ## Gruppen (0.7.0, Details in PLAN-GRUPPEN.md)
 Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, anlegen/umbenennen/einladen/beitreten/verlassen, Abgleich pro Gruppe, alles sichtbar mit Gruppen-Hinweis (Personen-Symbol), Listen/Geschäfte/Essen in andere Gruppe verschieben, Rückfrage beim Geschäft, Stichwörter pro Gruppe wählbar, Beitreten ersetzt nichts mehr. Private Listen = Listen in „Persönlich“.

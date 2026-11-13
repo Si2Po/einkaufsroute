@@ -708,3 +708,11 @@ body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-b
 p.tip[data-act="vertap"] { cursor: default; -webkit-user-select: none; user-select: none; }
 .swrow .funicon { font-size: 1.4rem; line-height: 1; }
 .srows > .row:first-child { margin-top: 12px; } /* einfache Liste ohne Abschnitt oben: gleicher Abstand zur Eingabe wie mit Überschrift */
+/* „Vielleicht fällig“ (Kaufhistorie) über der Einkaufsliste */
+.duebar { margin: 12px 0 0; }
+.duelabel { display: block; margin: 0 2px 6px; font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
+.duechips { display: flex; flex-wrap: wrap; gap: 6px; }
+.duechip { display: inline-flex; align-items: stretch; border: 1.5px dashed var(--accent); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.dueadd { display: grid; gap: 0; text-align: left; border: 0; background: none; padding: 6px 4px 6px 12px; color: var(--ink); font-weight: 600; font-size: .95rem; line-height: 1.2; }
+.dueadd small { color: var(--muted); font-weight: 500; font-size: .75rem; }
+.duex { border: 0; background: none; color: var(--muted); font-size: 1.15rem; padding: 0 12px 0 8px; min-width: 36px; }
