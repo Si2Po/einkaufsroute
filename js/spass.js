@@ -133,17 +133,14 @@ const ITEM_COMMENTS = [
   [['kerze'], 'Romantischer Abend geplant? 🕯️'],
   [['chili'], 'Jetzt wird’s heiß! 🌶️'],
   [['kondom'], 'Safety first! 😉'],
-  [['zwiebel'], 'Zwiebeln schneiden? Taschentücher bereithalten. 🧅'],
-  [['gurke'], 'Immer schön cool bleiben, wie eine Gurke. 🥒'],
   [['tee$', 'teebeutel'], 'Abwarten und Tee trinken. 🍵'],
-  [['senf'], 'Jetzt gibst du auch noch deinen Senf dazu. 😄'],
+  [['senf'], 'Jetzt gebe ich auch noch meinen Senf dazu. 😄'],
   [['hefe'], 'Wird heute gebacken? 🥐'],
   [['waschmittel'], 'Waschtag! 🧺'],
   [['blumen'], 'Blumen? Wie aufmerksam! 💐'],
   [['batterie'], 'Energie für alle Fälle. 🔋'],
   [['champagner', 'champus'], 'Gibt’s was zu feiern? 🍾'],
   [['zahnpasta', 'zahncreme'], 'Für ein strahlendes Lächeln. 😁'],
-  [['ingwer'], 'Ingwer: klein, aber oho! 💪'],
 ];
 // Ein Wort passt, wenn es mit dem Schlüssel beginnt. Schlüssel mit „$“ am Ende müssen das ganze Wort sein
 // („eis$“ passt auf „Eis“, aber nicht auf „Eisbergsalat“ oder „Eistee“).
