@@ -152,7 +152,7 @@ function bindSheetGestures() {
     if (matchMedia('(orientation: landscape) and (max-height: 520px)').matches) return null; // quer: Sheet ist schon so hoch wie möglich
     if (!list || (!d.classList.contains('tall') && list.scrollHeight <= list.clientHeight + 2)) return null;
     const vvh = window.visualViewport?.height || innerHeight;
-    const sat = Math.max(0, (document.getElementById('topcover')?.offsetHeight || 28) - 28); // Höhe der Statusleiste (#topcover ist 28px höher, siehe style.css)
+    const sat = Math.max(0, (document.getElementById('topcover')?.offsetHeight || 14) - 14); // Höhe der Statusleiste (#topcover ist 14px höher, siehe style.css)
     const room = vvh - sat - 20;
     const h0 = d.getBoundingClientRect().height;
     const hS = Math.min(innerHeight * 0.6, room), hT = Math.max(hS, Math.min(innerHeight * 0.9, room));
