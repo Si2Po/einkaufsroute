@@ -28,7 +28,7 @@ function trimCounts(map, keep = 150) {
 const topOf = (map, n) => Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, n);
 
 // ---------- Ereignisse aus der App ----------
-// Einträge wurden abgehakt (endgültig). Ist die Liste danach leer: manchmal feiern.
+// Einträge wurden abgehakt (endgültig). Ist die Liste danach leer: feiern.
 function funChecked(items) {
   if (!items.length) return;
   const st = stats();
@@ -37,7 +37,7 @@ function funChecked(items) {
   trimCounts(st.prods);
   save();
   const open = S.items.some((i) => !i.done);
-  if (!open && !document.hidden && funOn() && chance(0.25)) celebrate();
+  if (!open && !document.hidden && funOn()) celebrate(); // letzter Eintrag erledigt: immer Konfetti
 }
 // Neue Einträge: sehr selten ein kleiner Kommentar (höchstens einmal am Tag)
 function funItemAdded(names) {
