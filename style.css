@@ -693,3 +693,7 @@ body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-b
 /* Hinweise aus: Bedienhinweise verschwinden (im Grundriss nur unsichtbar, damit „+ Bereich“ an seinem Platz bleibt) */
 .notips .tip.bedien { display: none; }
 .notips .hint.bedien { visibility: hidden; }
+/* Stern im Essen-Sheet: beim Öffnen landet der Fokus dort, Safari zeigte das als Textauswahl (zwei Striche) an */
+.sheethead .sheettitle, .favbtn { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.favbtn:focus { outline: none; }
+.favbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }

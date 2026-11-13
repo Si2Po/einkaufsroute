@@ -16,9 +16,10 @@ function openSheet(html) {
   if (!d.open) d.classList.remove('tall'); // neues Sheet startet in normaler Höhe
   if (!d.open) {
     d.showModal(); ui.sheetT = Date.now();
-    // showModal() fokussiert das erste Feld; auf dem iPhone würde dann die Tastatur aufgehen. Nur Felder mit autofocus behalten den Fokus.
+    // showModal() fokussiert das erste Feld oder den ersten Knopf. Auf dem iPhone ginge dann die Tastatur auf bzw. Safari zeigt
+    // den Knopf als markiert an (z. B. den Stern im Essen). Nur Felder mit autofocus behalten den Fokus.
     const a = document.activeElement;
-    if (a && d.contains(a) && a.matches('input, textarea, select') && !a.hasAttribute('autofocus')) a.blur();
+    if (a && d.contains(a) && !a.hasAttribute('autofocus')) a.blur();
   }
   d.querySelector('[autofocus]')?.focus();
 }
