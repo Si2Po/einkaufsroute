@@ -74,7 +74,7 @@ const DONE_LINES = [
   'Liste leer! Zeit für einen Kaffee. ☕',
   'Geschafft! Du bist ein Einkaufsprofi. 🛒',
   'Nichts mehr drauf. Ab nach Hause! 🏠',
-  'Erledigt! Das hätte kein Einkaufswagen besser gekonnt.',
+  'Erledigt! Wer braucht schon Lieferdienste? 🚲',
   'Leer gekauft. Respekt! 💪',
 ];
 function celebrate() {
@@ -116,7 +116,7 @@ const ITEM_COMMENTS = [
   [['kaffee'], 'Ohne Kaffee geht nix. ☕'],
   [['brokkoli', 'spinat', 'grünkohl'], 'Sehr gesund. Deine Mama wäre stolz. 🥦'],
   [['knoblauch'], 'Knoblauch: Vampire, ihr seid gewarnt. 🧛'],
-  [['eis', 'eiscreme'], 'Eis geht immer. Wirklich immer. 🍦'],
+  [['eis$', 'eiscreme', 'speiseeis'], 'Eis geht immer. Wirklich immer. 🍦'],
   [['pizza'], 'Pizza: die Lösung für fast alles. 🍕'],
   [['bananen', 'banane'], 'Bananen: die Snack-Profis unter den Früchten. 🍌'],
   [['zitronen', 'limetten'], 'Wenn das Leben dir Zitronen gibt … 🍋'],
@@ -124,17 +124,33 @@ const ITEM_COMMENTS = [
   [['katzenfutter'], 'Die wichtigste Person im Haushalt ist versorgt. 🐱'],
   [['hundefutter'], 'Der beste Freund wird glücklich sein. 🐶'],
   [['windeln'], 'Großeinkauf für kleine Menschen. 👶'],
-  [['gummibär'], 'Gummibärchen: Zählen als Obst, oder? 🐻'],
+  [['gummibär'], 'Gummibärchen zählen als Obst, oder? 🐻'],
   [['käse'], 'Käse macht alles besser. 🧀'],
   [['eier'], 'Was war zuerst da? Egal, Hauptsache auf der Liste. 🥚'],
   [['avocado'], 'Avocado: entweder steinhart oder schon braun. Viel Glück! 🥑'],
   [['popcorn'], 'Popcorn! Kino zu Hause? 🎬'],
   [['grillkohle', 'würstchen', 'bratwurst'], 'Grillwetter? 🔥'],
   [['kerze'], 'Romantischer Abend geplant? 🕯️'],
+  [['chili'], 'Jetzt wird’s heiß! 🌶️'],
+  [['kondom'], 'Safety first! 😉'],
+  [['zwiebel'], 'Zwiebeln schneiden? Taschentücher bereithalten. 🧅'],
+  [['gurke'], 'Immer schön cool bleiben, wie eine Gurke. 🥒'],
+  [['tee$', 'teebeutel'], 'Abwarten und Tee trinken. 🍵'],
+  [['senf'], 'Jetzt gibst du auch noch deinen Senf dazu. 😄'],
+  [['hefe'], 'Wird heute gebacken? 🥐'],
+  [['waschmittel'], 'Waschtag! 🧺'],
+  [['blumen'], 'Blumen? Wie aufmerksam! 💐'],
+  [['batterie'], 'Energie für alle Fälle. 🔋'],
+  [['champagner', 'champus'], 'Gibt’s was zu feiern? 🍾'],
+  [['zahnpasta', 'zahncreme'], 'Für ein strahlendes Lächeln. 😁'],
+  [['ingwer'], 'Ingwer: klein, aber oho! 💪'],
 ];
+// Ein Wort passt, wenn es mit dem Schlüssel beginnt. Schlüssel mit „$“ am Ende müssen das ganze Wort sein
+// („eis$“ passt auf „Eis“, aber nicht auf „Eisbergsalat“ oder „Eistee“).
 function itemComment(name) {
-  const n = ' ' + name.toLowerCase();
-  const hit = ITEM_COMMENTS.find(([keys]) => keys.some((k) => n.includes(' ' + k)));
+  const words = name.toLowerCase().split(/[\s\-\/,]+/);
+  const fits = (k) => (k.endsWith('$') ? words.includes(k.slice(0, -1)) : words.some((w) => w.startsWith(k)));
+  const hit = ITEM_COMMENTS.find(([keys]) => keys.some(fits));
   return hit ? hit[1] : '';
 }
 
