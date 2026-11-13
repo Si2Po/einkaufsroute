@@ -1,6 +1,6 @@
 // Service Worker: legt die App-Dateien beim ersten Besuch im Cache,
 // damit die App danach auch ohne Netz startet.
-const CACHE = 'einkaufsroute-v0.7.3.1';
+const CACHE = 'einkaufsroute-v0.7.3.2';
 const FILES = ['./', 'index.html', 'style.css', 'js/grund.js', 'js/ansichten.js', 'js/oberflaeche.js', 'js/listen.js', 'js/kategorien.js', 'js/geschaefte.js', 'js/gesten.js', 'js/ereignisse.js', 'js/essen.js', 'js/bedienung.js', 'js/listentypen.js', 'js/gruppen.js', 'js/hilfe.js', 'js/start.js', 'sync.js', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {

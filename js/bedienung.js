@@ -128,14 +128,29 @@ function themePage() {
     <div class="group glassrow"><span aria-hidden="true">Deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">Glas</span></div>
     `, themePage);
 }
-// Farbauswahl: beim Drehen sofort anwenden, beim Schließen die Seite neu zeichnen
-function pickAccent(hex, done) {
+// Eigene Farbe: sofort anwenden und nur die Farbfelder auf der Seite anpassen. Die Seite wird dabei NICHT neu aufgebaut,
+// sonst würde das Farbfeld ersetzt und iOS schließt den Farbwähler nach jeder Auswahl (Feinjustieren unmöglich).
+function pickAccent(hex) {
   try { localStorage.setItem('ek_accent', 'custom'); localStorage.setItem('ek_accent_c', JSON.stringify(customAccent(hex))); } catch (_) { /* privat */ }
   applyTheme();
-  if (done) themePage();
+  showCustomPicked(hex);
 }
-document.addEventListener('input', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, false); });
-document.addEventListener('change', (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value, true); });
+function showCustomPicked(hex) {
+  const page = pages.find((p) => p.key === 'theme')?.el;
+  if (!page) return;
+  page.querySelectorAll('.swatch[data-act="setaccent"]').forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.innerHTML = ''; });
+  const lab = page.querySelector('.swatch.custom');
+  if (lab) {
+    lab.classList.add('on');
+    lab.style.setProperty('--c', hex);
+    let dot = lab.querySelector('.dot');
+    if (!dot) { dot = document.createElement('span'); dot.className = 'dot'; dot.innerHTML = ICON_CHECK; lab.prepend(dot); }
+    dot.style.background = hex;
+  }
+  const name = page.querySelector('.sheettitle small');
+  if (name) name.textContent = '· ' + accentName();
+}
+['input', 'change'].forEach((t) => document.addEventListener(t, (e) => { if (e.target.id === 'accentPicker') pickAccent(e.target.value); }));
 applyTheme();
 // Glas-Stärke 0–100 %: 0 = fast deckend, 50 = Standard (frostig), 100 = fast durchsichtig (wenig Fläche, wenig Unschärfe)
 function glassPref() { try { const g = parseInt(localStorage.getItem('ek_glass2'), 10); return g >= 0 && g <= 100 ? g : 50; } catch (_) { return 50; } }
