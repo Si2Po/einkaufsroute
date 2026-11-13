@@ -322,7 +322,7 @@ function listBody() {
     ? `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
        ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`
     : '';
-  const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten</p>' : '';
+  const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: verschieben</p>' : '';
   return body + doneHtml + tip;
 }
 const pillName = () => curStore()?.name || 'Kein Geschäft';

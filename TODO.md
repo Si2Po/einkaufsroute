@@ -32,11 +32,11 @@
 Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, anlegen/umbenennen/einladen/beitreten/verlassen, Abgleich pro Gruppe, alles sichtbar mit Gruppen-Hinweis (Personen-Symbol), Listen/Geschäfte/Essen in andere Gruppe verschieben, Rückfrage beim Geschäft, Stichwörter pro Gruppe wählbar, Beitreten ersetzt nichts mehr. Private Listen = Listen in „Persönlich“.
 - [ ] **Test mit echtem Konto** (lokal über `lokal-starten.cmd` anmelden), dann hochladen; zuerst eigenes iPhone, danach das Gerät der Partnerin
 - [ ] Hilfe-Text zu Gruppen (siehe Hilfe-Bereich oben)
-- [x] **Listen-Typen (lokal, für 0.7.1):** Typ **pro Liste** („Art“: Einkaufsliste / Einfache Liste), beim Anlegen wählbar, im Bearbeiten änderbar.
+- [x] **Listen-Typen (0.7.1):** Typ **pro Liste** („Art“: Einkaufsliste / Einfache Liste), beim Anlegen wählbar, im Bearbeiten änderbar.
   Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, **Abschnitte** (unten „+ Abschnitt“, Abschnitt antippen = Neues kommt dorthin (Kopf farbig), gedrückt halten = umbenennen/verschieben/löschen),
   eigene Reihenfolge (Eintrag gedrückt halten und ziehen startet den Wackelmodus, auch in andere Abschnitte; nur gedrückt halten = bearbeiten), **pro Liste wählbar**, ob Abgehakte nach unten rutschen oder stehen bleiben („Alle Haken entfernen“).
-- [x] **Einkaufsliste: Halten und ziehen** (lokal): Reihenfolge innerhalb einer Gruppe frei (it.ord, sonst Reihenfolge des Hinzufügens), in andere Kategorie (ohne Geschäft) bzw. anderen Bereich (mit Geschäft, merkt sich das Geschäft) ziehen = lernen, mit „Rückgängig“.
-- [x] **Essen: Favoriten** (lokal) als fester Tag „★“ (immer erster Filter-Tag, Favoriten oben, sonst A–Z, Stern im Essen-Sheet)
+- [x] **Einkaufsliste: Halten und ziehen** (0.7.1): Reihenfolge innerhalb einer Gruppe frei (it.ord, sonst Reihenfolge des Hinzufügens), in andere Kategorie (ohne Geschäft) bzw. anderen Bereich (mit Geschäft, merkt sich das Geschäft) ziehen = lernen, mit „Rückgängig“.
+- [x] **Essen: Favoriten** (0.7.1) als fester Tag „★“ (immer erster Filter-Tag, Favoriten oben, sonst A–Z, Stern im Essen-Sheet)
 - [ ] Hilfe-Text zu Listen-Typen, Ziehen und Favoriten
 - [ ] Später: neue Gruppe mit Kategorien/Stichwörtern einer bestehenden Gruppe starten (heute bekommt eine neue Gruppe die Standard-Kategorien, sobald jemand sie unter „Stichwörter von“ wählt)
 - [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
