@@ -2452,6 +2452,7 @@ async function syncNow() {
   }, { passive: true });
   document.addEventListener('touchmove', (e) => {
     if (y0 === null) return;
+    if (sortingNow || dragArmed || ui.wiggle) { y0 = null; d = 0; hide(); return; } // Halten/Ziehen zum Sortieren ist kein Aktualisieren
     d = e.touches[0].clientY - y0;
     if (d <= 0 || window.scrollY > 0) { d = 0; hide(); return; }
     ind.className = d > PULL ? 'ready' : 'pulling';
@@ -2461,6 +2462,7 @@ async function syncNow() {
   const end = () => {
     if (y0 === null) return;
     y0 = null;
+    if (sortingNow || dragArmed || ui.wiggle) { hide(); return; }
     const fn = action();
     if (d <= PULL || !fn) { hide(); return; }
     busy = true; ind.className = 'spin'; ind.style.opacity = '1'; ind.style.transform = `translate(-50%, ${PULL * 0.6}px)`;
