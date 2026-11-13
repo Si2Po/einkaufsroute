@@ -68,8 +68,10 @@ function helpPage() {
       <ul>
         <li><b>Antippen:</b> Zutaten auswählen, Personen anpassen und mit einem Tipp auf die Liste setzen. Die Mengen rechnen sich mit.</li>
         <li><b>Basis</b>-Zutaten (z. B. Salz, Öl) hast du meist da: sie sind nicht vorausgewählt.</li>
-        <li><b>Tags</b> sind kurze Merkmale wie „schnell“ oder „Nudeln“. Du vergibst sie beim Bearbeiten eines Essens. Tippst du oben auf einen Tag, siehst du nur Essen mit diesem Tag (bei mehreren nur die, die alle haben). Mit + legst du neue Tags an.</li>
-        <li><b>★</b> ist der Tag für deine <b>Favoriten</b>: im Essen auf ☆ tippen. Favoriten stehen in der Übersicht immer oben.</li>
+        <li><b>Tags</b> sind kurze Merkmale wie „schnell“ oder „Nudeln“.<br>
+          Du vergibst sie beim Bearbeiten eines Essens.<br>
+          Tippst du oben auf einen Tag, siehst du nur Essen mit diesem Tag (bei mehreren nur die, die alle haben). Mit + legst du neue Tags an.</li>
+        <li><b>★</b> ist der Tag für deine <b>Favoriten</b>. Favoriten stehen in der Übersicht immer oben.</li>
         <li><b>Zufälliges Essen</b> wählt eins aus, passend zu den gewählten Tags. Der Würfel würfelt neu.</li>
         <li><b>Gedrückt halten:</b> Essen bearbeiten (Zutaten, Tags, Foto, Kochanleitung).</li>
       </ul>`),
