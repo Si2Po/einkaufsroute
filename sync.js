@@ -503,6 +503,9 @@ function newGroupSheet(msg) {
     </form>`);
 }
 function joinPage(code, msg) {
+  // Einladung aus einem Link nur einmal anzeigen, auch wenn sie nicht angenommen wird (z. B. schon in der Gruppe).
+  // Sonst erschiene sie bei jedem Start wieder. Der Code steht ja im Feld und lässt sich jederzeit von Hand eingeben.
+  if (sync.sess && sync.joinCode) { sync.joinCode = null; try { localStorage.removeItem('ek_join'); } catch (_) { /* egal */ } }
   openPage('join', 'Einladung annehmen', `
     <form id="joinForm" autocomplete="off" style="display:grid;gap:10px">
       <label class="field"><span>Einladungscode</span><input id="joinCode" value="${esc(code || '')}" autocapitalize="characters" autocomplete="off" ${code ? '' : 'autofocus'} required></label>
