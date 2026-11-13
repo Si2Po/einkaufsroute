@@ -42,15 +42,14 @@ body {
   padding-block: calc(env(safe-area-inset-top, 0px) + 26px) calc(28px + env(safe-area-inset-bottom, 0px));
   -webkit-tap-highlight-color: transparent;
 }
-/* Oberer Rand (Uhrzeit, Akku): eine feste Fläche in Hintergrundfarbe, damit die Liste beim Scrollen
-   nicht unter der Statusleiste durchläuft (nur knapp, damit beim Scrollen kein breiter Balken entsteht). Der Inhalt
-   beginnt beim Start aber 26px unter der Statusleiste: iOS 26 färbt die
-   Statusleiste leicht nach dem, was direkt darunter liegt (das blaue + schimmerte sonst oben rechts durch).
-   Unten blendet sie weich aus. */
+/* Oberer Rand (Uhrzeit, Akku): früher eine Fläche in Hintergrundfarbe gegen das Durchscheinen beim Scrollen.
+   Heute unsichtbar, weil iOS 26 dort selbst einen weichen Glas-Effekt zeichnet (die Fläche wirkte wie ein Balken).
+   Der Inhalt beginnt beim Start 26px unter der Statusleiste: iOS färbt die Statusleiste nach dem, was direkt
+   darunter liegt (das blaue + schimmerte sonst oben rechts durch). */
 #topcover {
   position: fixed; top: 0; left: 0; right: 0; z-index: 30; pointer-events: none;
   height: calc(env(safe-area-inset-top, 0px) + 14px); /* 14px: siehe gesten.js (Höhe der Statusleiste) */
-  background: linear-gradient(var(--bg) calc(100% - 6px), transparent);
+  background: none; /* unsichtbar: iOS 26 zeichnet unter der Statusleiste selbst einen weichen Glas-Effekt. Das Element bleibt, weil gesten.js daraus die Höhe der Statusleiste abliest. */
 }
 .wrap { max-width: 560px; margin: 0 auto; }
 h2 { font: 700 1.25rem var(--font-display); margin: 0; }
