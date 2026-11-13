@@ -8,7 +8,9 @@
    Zone  = { id, name, cats: [Kategorie-IDs], prods: { produktname: Anzeigename }, rect: {x,y,w,h} oder null }
    Regel: ein festgelegtes Produkt (prods) gewinnt vor der Kategorie. Eine Kategorie darf in mehreren Zonen stehen;
    dann zählt die erste Zone in der Laufreihenfolge, solange kein Produkt festgelegt ist.   <- Reihenfolge im Array = Laufweg
-   Item  = { id, name, qty, note, photo (Data-URL oder fehlt), cat, done, ts }
+   Item  = { id, name, qty, note, photo (Data-URL oder fehlt), cat, done, ts, sec?, ord? }
+   List  = { id, name, items, storeId, g (Gruppe), type? ('simple' = einfache Liste), secs? [{ id, name }], keepDone? }
+           Einfache Liste: ohne Geschäft/Kategorien, Reihenfolge nach it.ord (sonst ts), Abschnitt it.sec (siehe „Listen-Typen“ unten)
 */
 
 // ---------- Kategorien und Stichwörter ----------
@@ -295,7 +297,7 @@ const ICON_PLUS = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="
 const MEAL_ICON = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M7 3v8M4.5 3v5.2a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.4 1.2-3.5 4-3.5 7.5 0 1.7.9 2.5 2 2.5h1.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
 function rowHtml(i) {
   const pend = ui.pending.has(i.id), on = i.done || pend;
-  return `<li class="row${on ? ' done' : ''}${pend ? ' pending' : ''}" role="checkbox" aria-checked="${on}" tabindex="0" data-act="toggle" data-id="${i.id}">
+  return `<li class="row${on ? ' done' : ''}${pend ? ' pending' : ''}" role="checkbox" aria-checked="${on}" tabindex="0" data-act="toggle" data-id="${i.id}" data-key="${i.id}">
     <span class="chk" aria-hidden="true"></span>
     <span class="txt"><span class="nm">${esc(i.name)}</span>${i.note ? `<span class="nt">${esc(i.note)}</span>` : ''}${i.meals?.length ? `<span class="nt ml">${MEAL_ICON}${esc(i.meals.join(', '))}</span>` : ''}</span>
     ${i.photo ? `<img class="thumb" src="${i.photo}" alt="">` : ''}
@@ -304,6 +306,7 @@ function rowHtml(i) {
 }
 
 function listBody() {
+  if (isSimple()) return simpleBody();
   const groups = buildGroups(curStore());
   const done = S.items.filter((i) => i.done);
   const body = groups.length
@@ -324,10 +327,10 @@ const pillName = () => curStore()?.name || 'Kein Geschäft';
 const barHtml = () => `
       <button type="button" class="pill" data-act="storesheet" aria-haspopup="dialog" aria-label="Geschäft wählen"><span id="pillName">${esc(pillName())}</span></button>`;
 function viewList() {
-  return `<div class="bar">${barHtml()}    </div>
+  return `<div class="bar"${isSimple() ? ' hidden' : ''}>${barHtml()}    </div>
     <div class="addwrap">
       <form id="addForm" class="add" autocomplete="off">
-        <input id="addName" placeholder="Was brauchst du?" aria-label="Neuer Eintrag" enterkeyhint="done">
+        <input id="addName" placeholder="${esc(addPlaceholder())}" aria-label="Neuer Eintrag" enterkeyhint="done">
         <button type="submit" class="plus" aria-label="Hinzufügen">${ICON_PLUS}</button>
       </form>
       <div id="sugg" class="sugg" role="listbox" aria-label="Vorschläge" hidden></div>
@@ -507,7 +510,7 @@ function viewEditor() {
 function render() {
   const v = $('#view');
   if (ui.tab === 'list') {
-    if ($('#addForm')) { $('#listBody').innerHTML = listBody(); $('.bar').innerHTML = barHtml(); }
+    if ($('#addForm')) { $('#listBody').innerHTML = listBody(); const b = $('.bar'); b.innerHTML = barHtml(); b.hidden = isSimple(); $('#addName').placeholder = addPlaceholder(); }
     else v.innerHTML = viewList();
   } else if (ui.tab === 'meals') {
     v.innerHTML = viewMeals();
@@ -1046,7 +1049,8 @@ function listsPage() {
 function newListSheet() {
   openSheet(`<div class="sheettitle">Neue Liste</div>
     <form id="newListForm" autocomplete="off">
-      <input id="newListName" autofocus class="notein" placeholder="Name, z. B. Drogerie oder Party" aria-label="Name der Liste" required>
+      <input id="newListName" autofocus class="notein" placeholder="Name, z. B. Drogerie, Filme oder Urlaub" aria-label="Name der Liste" required>
+      ${typeSelect('nlType', '')}
       ${groupSelect('nlGroup', defaultGroup())}
       <button type="submit" class="btn">Anlegen</button>
     </form>`);
@@ -1057,6 +1061,11 @@ function listEditPage(id) {
   const n = (l.id === S.listId ? S.items : l.items || []).length;
   openPage('list:' + id, 'Liste bearbeiten', `
     <label class="field"><span>Name</span><input id="listName" data-id="${l.id}" value="${esc(l.name)}"></label>
+    ${typeSelect('leType', l.type || '', ` data-id="${l.id}"`)}
+    ${l.type === 'simple' ? `<label class="srow"><span class="pl">Abgehakt</span><select id="leDone" data-id="${l.id}" aria-label="Abgehakte Einträge"><option value="">rutscht nach unten</option><option value="keep"${l.keepDone ? ' selected' : ''}>bleibt stehen</option></select></label>` : ''}
+    <p class="sheetnote" style="margin:2px 4px 8px">${l.type === 'simple'
+      ? 'Eigene Reihenfolge und Abschnitte, z. B. für Filme oder Packlisten. Abschnitt anlegen: unten in der Liste. Sortieren: Eintrag gedrückt halten → „Sortieren“.'
+      : 'Sortiert sich nach dem Laufweg im Geschäft und nach Kategorien.'}</p>
     ${groupSelect('leGroup', l.g, 'Gruppe', ` data-id="${l.id}"`)}
     ${S.lists.length > 1 ? `<div class="actions" style="margin-top:16px"><button type="button" class="btn danger" data-act="dellist" data-id="${l.id}">${ui.confirmList === l.id ? `Wirklich löschen? (${n} Einträge)` : 'Liste löschen'}</button></div>` : ''}`, () => listEditPage(id));
 }
@@ -1072,7 +1081,8 @@ function switchList(id) {
   if (!next || next === cur) return;
   finishAll(); // angehakte Einträge noch in ihrer Liste abschließen
   if (cur) { cur.items = S.items; cur.storeId = S.storeId; }
-  S.listId = id; S.items = next.items || []; ui.showDone = false;
+  S.listId = id; S.items = next.items || []; ui.showDone = false; ui.addSec = null;
+  if (ui.wiggle === 'items') ui.wiggle = null;
   // Jede Liste merkt sich ihren Laden (ohne eigenen Laden bleibt der aktuelle; ein gelöschter Laden wird zu "Kein Laden")
   if (next.storeId !== undefined) S.storeId = S.stores.some((x) => x.id === next.storeId) ? next.storeId : null;
 }
@@ -1135,13 +1145,14 @@ function openEdit(id) {
     ${it.meals?.length ? `<p class="sheetnote ml" style="margin:2px 0 8px">${MEAL_ICON} Aus: ${esc(it.meals.join(', '))}</p>` : ''}
     <div id="photoBox">${photoBoxHtml(it)}</div>
     <input type="file" id="ePhoto" accept="image/*" hidden>
-    <div class="more" inert><div class="moreinner">
+    ${isSimple() ? (curList().secs?.length ? `<div class="more" inert><div class="moreinner">${secField(it)}</div></div>` : '') : `<div class="more" inert><div class="moreinner">
       <label class="srow"><span class="pl">Kategorie</span><select id="eCat" aria-label="Kategorie">${CATS.map((c) => `<option value="${c.id}"${c.id === it.cat ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select><button type="button" class="srowgo" data-act="editcat" aria-label="Kategorie öffnen">›</button></label>
       ${zoneField(it)}
       <p id="learnNote" class="sheetnote" hidden>Der Name wird als Stichwort der neuen Kategorie gemerkt.</p>
-    </div></div>
+    </div></div>`}
     <div class="actions">
       <button type="button" class="btn danger" data-act="delitem" data-id="${it.id}">Löschen</button>
+      ${isSimple() ? '<button type="button" class="btn ghost" data-act="sortitems">Sortieren</button>' : ''}
       <button type="submit" hidden>Speichern</button>
     </div></form>`);
 }
@@ -1369,12 +1380,28 @@ const WIGGLE = {
     list: '.zlist', row: '.zli', scroller: () => window,
     done(order) { const st = editStore(); if (!st) return; st.zones.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); ui.justDrew = Date.now(); commit(); },
   },
+  // Einträge einer einfachen Liste: eigene Reihenfolge, auch in einen anderen Abschnitt ziehen.
+  // Die Abschnitts-Köpfe (data-key „§id“) stehen mit in der Reihe und zählen als Plätze, werden aber nicht selbst gezogen.
+  items: {
+    list: '#simpleRows', row: '.row', slots: '.row, .secli', scroller: () => window,
+    done(order) {
+      let sec = '', n = 0;
+      for (const k of order) {
+        if (k.startsWith('§')) { sec = k.slice(1); continue; }
+        const it = S.items.find((i) => i.id === k);
+        if (!it) continue;
+        if (sec) it.sec = sec; else delete it.sec;
+        it.ord = n++;
+      }
+      commit();
+    },
+  },
 };
 function wiggleBar() { return '<div class="wigglebar"><span>Ziehen zum Sortieren</span><button type="button" class="btn small" data-act="wiggleoff">Fertig</button></div>'; }
 function dragRow(e, kind, row) {
-  const w = WIGGLE[kind], list = row.closest(w.list);
-  const before = [...list.children].filter((c) => c.matches(w.row)).map((c) => c.dataset.key).join();
-  sortDrag(e, row, row, list, w.row, w.scroller(list), (order) => { if (order && order.join() !== before) w.done(order); });
+  const w = WIGGLE[kind], list = row.closest(w.list), sel = w.slots || w.row;
+  const before = [...list.children].filter((c) => c.matches(sel)).map((c) => c.dataset.key).join();
+  sortDrag(e, row, row, list, sel, w.scroller(list), (order) => { if (order && order.join() !== before) w.done(order); });
 }
 function startWiggle(e, el) {
   const kind = el.closest('#catRows') ? 'cats' : 'zones', w = WIGGLE[kind], row = el.closest(w.row);
@@ -1575,6 +1602,7 @@ const armPending = () => { clearTimeout(pendT); if (ui.pending.size) pendT = set
 function toggleItem(id) {
   const it = S.items.find((i) => i.id === id);
   if (!it) return;
+  if (isSimple() && curList().keepDone) { it.done = !it.done; commit(); return; } // bleibt an seinem Platz stehen
   if (it.done) { it.done = false; commit(); armPending(); return; }
   if (ui.pending.has(id)) ui.pending.delete(id); else ui.pending.set(id, true);
   armPending();
@@ -1595,7 +1623,7 @@ function startRedraw(id) {
 document.addEventListener('pointerdown', (e) => {
   if (ui.drawing && e.target.closest?.('#planSvg')) return; // beim Zeichnen nicht als langes Drücken werten
   if (e.target.closest?.('.wiggle')) return; // im Wackelmodus verschiebt Ziehen, langes Drücken zählt nicht
-  const el = e.target.closest?.('.row, .zone, .zitem, .star, .mcard, .catrow');
+  const el = e.target.closest?.('.row, .zone, .zitem, .star, .mcard, .catrow, .secbtn');
   if (!el) return;
   const id = el.dataset.id;
   lpFired = false; lpStar = false;
@@ -1604,6 +1632,7 @@ document.addEventListener('pointerdown', (e) => {
     holdAfterLongPress();
     haptic();
     if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else if (el.classList.contains('mcard')) openMealEdit(id);
+    else if (el.classList.contains('secbtn')) sectionSheet(el.dataset.sec); // Abschnitt: umbenennen, verschieben, löschen
     else if (el.matches('.zitem, .catrow')) startWiggle(e, el); // Liste der Bereiche / Kategorien: sortieren
     else startRedraw(id); // Bereich im Grundriss: neu einzeichnen
   }, 450) };
@@ -1655,7 +1684,7 @@ function runSwipe(kind, act, id) {
 let sw = null;
 document.addEventListener('pointerdown', (e) => {
   const row = e.target.closest?.('.row, .swp');
-  if (!row || e.target.closest('#dlg') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (!row || e.target.closest('#dlg') || e.target.closest('.wiggle') || (e.pointerType === 'mouse' && e.button !== 0)) return;
   const kind = row.classList.contains('swp') ? 'meal' : 'item';
   sw = { row, kind, id: row.dataset.id || row.dataset.mid, x: e.clientX, y: e.clientY, active: false, pid: e.pointerId, th: Math.min(110, row.offsetWidth * 0.3) };
 });
@@ -1732,8 +1761,10 @@ function addFromInput() {
     const { qty, name } = parseEntry(p);
     const same = S.items.find((i) => !i.done && dupKey(i.name) === dupKey(name));
     if (same) { dups.push(same); return; } // steht schon auf der Liste (auch als Mehrzahl/Einzahl)
-    rememberName(name);
-    S.items.push({ id: uid(), name, qty, note: '', cat: guessCat(name), done: false, ts: Date.now() + n });
+    const it = { id: uid(), name, qty, note: '', cat: guessCat(name), done: false, ts: Date.now() + n };
+    if (isSimple()) { if (validSec(ui.addSec)) it.sec = ui.addSec; } // einfache Liste: in den gewählten Abschnitt, Wörter nicht für Einkaufs-Vorschläge merken
+    else rememberName(name);
+    S.items.push(it);
   });
   input.value = '';
   commit();
@@ -1749,7 +1780,7 @@ function updateSugg() {
   if (!box || !input) return;
   const last = input.value.split(/[,\n]/).pop();
   const q = parseEntry(last).name;
-  const list = suggestions(q);
+  const list = isSimple() ? [] : suggestions(q); // Einkaufs-Vorschläge passen nicht zu Filmen, Packlisten usw.
   if (!list.length) { box.hidden = true; box.innerHTML = ''; return; }
   const qf = fold(q.trim());
   box.innerHTML = list.map((m) => {
@@ -1825,6 +1856,23 @@ document.addEventListener('click', (e) => {
     case 'closedlg': break;
     case 'showdone': ui.showDone = !ui.showDone; render(); break;
     case 'cleardone': S.items = S.items.filter((i) => !i.done); commit(); break;
+    case 'resetdone': S.items.forEach((i) => { i.done = false; }); commit(); break;
+    case 'secpick': { // Abschnitt antippen: Neues landet dort (nochmal antippen: wieder oben ohne Abschnitt)
+      if (lpFired) { lpFired = false; break; }
+      ui.addSec = ui.addSec === el.dataset.sec ? null : el.dataset.sec; render();
+      if (ui.addSec) $('#addName')?.focus();
+      break;
+    }
+    case 'newsec': newSecSheet(); keep = true; break;
+    case 'secup': case 'secdown': moveSec(id, act === 'secup' ? -1 : 1); sectionSheet(id); keep = true; break;
+    case 'secdel': {
+      if (ui.confirmSec !== id) { ui.confirmSec = id; sectionSheet(id); keep = true; break; }
+      const l = curList(); l.secs = (l.secs || []).filter((s) => s.id !== id);
+      S.items.forEach((i) => { if (i.sec === id) delete i.sec; }); // Einträge bleiben, nur ohne Abschnitt
+      if (ui.addSec === id) ui.addSec = null;
+      commit(); break;
+    }
+    case 'sortitems': ui.wiggle = 'items'; closeSheet(); render(); keep = true; break;
     case 'catlist': flushSheetInputs(); ui.confirmCat = false; catListPage(); keep = true; break;
     case 'pinsugg': {
       const input = $('#pinName');
@@ -1950,6 +1998,7 @@ document.addEventListener('submit', (e) => {
     if (!name) return;
     const g = $('#nlGroup')?.value || defaultGroup();
     const l = { id: uid(), name, items: [], storeId: null, g }; // neue Listen starten ohne Geschäft
+    if ($('#nlType')?.value === 'simple') l.type = 'simple';
     if (g) S.lastGroup = g;
     S.lists.push(l);
     switchList(l.id);
@@ -1985,7 +2034,9 @@ document.addEventListener('submit', (e) => {
       }
       it.qty = $('#eQty').value.trim();
       it.note = $('#eNote').value.trim();
-      const cat = $('#eCat').value;
+      const secSel = $('#eSec');
+      if (secSel) { if (secSel.value) it.sec = secSel.value; else delete it.sec; }
+      const cat = $('#eCat') ? $('#eCat').value : f.dataset.cat; // einfache Liste: keine Kategorie-Auswahl
       if (cat !== f.dataset.cat) {
         // Von Hand geändert: der Name wird Stichwort der neuen Kategorie; gleiche offene Einträge ziehen mit
         learnKeyword(it.name, cat);
@@ -2554,6 +2605,97 @@ function haptic() {
   try { l.click(); } catch (_) { /* egal */ }
 }
 
+
+// ---------- Listen-Typen: Einkaufsliste (Standard) und einfache Liste ----------
+// Einfache Liste (l.type = 'simple'): kein Geschäft, keine Kategorien, eigene Reihenfolge (it.ord) und Abschnitte
+// (l.secs = [{ id, name }], Eintrag merkt sich it.sec). l.keepDone: Abgehakte bleiben an ihrem Platz stehen.
+const isSimple = (l = curList()) => l?.type === 'simple';
+const validSec = (id) => !!id && (curList()?.secs || []).some((s) => s.id === id);
+const secName = (id) => (curList()?.secs || []).find((s) => s.id === id)?.name || '';
+const addPlaceholder = () => (!isSimple() ? 'Was brauchst du?' : validSec(ui.addSec) ? `Zu „${secName(ui.addSec)}“ hinzufügen` : 'Neuer Eintrag');
+function typeSelect(id, cur, attrs = '') {
+  return `<label class="srow"><span class="pl">Art</span><select id="${id}" aria-label="Art der Liste"${attrs}><option value="">Einkaufsliste</option><option value="simple"${cur === 'simple' ? ' selected' : ''}>Einfache Liste</option></select></label>`;
+}
+function secField(it) {
+  const secs = curList()?.secs || [];
+  return `<label class="srow"><span class="pl">Abschnitt</span><select id="eSec" aria-label="Abschnitt"><option value="">–</option>${secs.map((s) => `<option value="${s.id}"${s.id === it.sec ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>`;
+}
+function simpleBody() {
+  const l = curList(), secs = l.secs || [], keep = !!l.keepDone;
+  const known = new Set(secs.map((s) => s.id));
+  const shown = S.items.filter((i) => keep || !i.done).sort((a, b) => (a.ord ?? a.ts) - (b.ord ?? b.ts));
+  const of = (sid) => shown.filter((i) => (known.has(i.sec) ? i.sec : '') === sid);
+  const done = S.items.filter((i) => i.done);
+  if (ui.wiggle === 'items') { // Sortieren: alles in einer Reihe, damit Einträge auch in andere Abschnitte wandern können
+    return `${wiggleBar()}<ul class="rows wiggle" id="simpleRows">${of('').map(rowHtml).join('')}${secs.map((s) => `<li class="secli" data-key="§${s.id}">${esc(s.name)}</li>${of(s.id).map(rowHtml).join('')}`).join('')}</ul>`;
+  }
+  const free = of('');
+  const head = (s) => {
+    const on = ui.addSec === s.id, n = of(s.id).filter((i) => !i.done).length;
+    return `<button type="button" class="grp grpbtn secbtn${on ? ' on' : ''}" data-act="secpick" data-sec="${s.id}" aria-pressed="${on}"><span class="gname">${esc(s.name)}</span>${on ? '<span class="nozone">Neues kommt hierher</span>' : ''}<span class="cnt">${n}</span></button>`;
+  };
+  let body = free.length ? `<ul class="rows">${free.map(rowHtml).join('')}</ul>` : '';
+  body += secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? `<ul class="rows">${its.map(rowHtml).join('')}</ul>` : '<p class="secempty">Noch leer</p>'); }).join('');
+  if (!body) body = `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
+  let doneHtml = '';
+  if (done.length && keep) doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">Alle Haken entfernen</button><button type="button" class="link clearbtn" data-act="cleardone">Abgehakte löschen</button></div>`;
+  else if (done.length) doneHtml = `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
+       ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
+  const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten</p>' : '';
+  return body + doneHtml + `<button type="button" class="link addsec" data-act="newsec">+ Abschnitt</button>` + tip;
+}
+function newSecSheet() {
+  openSheet(`<div class="sheettitle">Neuer Abschnitt</div>
+    <form id="newSecForm" autocomplete="off">
+      <input id="newSecName" autofocus class="notein" placeholder="Name, z. B. Kino, Streaming oder Kleidung" aria-label="Name des Abschnitts" required>
+      <button type="submit" class="btn">Anlegen</button>
+    </form>`);
+}
+function sectionSheet(id) {
+  const secs = curList()?.secs || [], i = secs.findIndex((s) => s.id === id);
+  if (i < 0) return;
+  if (ui.confirmSec && ui.confirmSec !== id) ui.confirmSec = null;
+  openSheet(`<div class="sheettitle">Abschnitt</div>
+    <input id="secNameIn" data-id="${id}" class="notein" style="margin-bottom:8px" value="${esc(secs[i].name)}" aria-label="Name des Abschnitts" autocomplete="off" enterkeyhint="done">
+    ${i > 0 ? `<button type="button" class="sheetbtn" data-act="secup" data-id="${id}">Nach oben</button>` : ''}
+    ${i < secs.length - 1 ? `<button type="button" class="sheetbtn" data-act="secdown" data-id="${id}">Nach unten</button>` : ''}
+    <button type="button" class="sheetbtn" data-act="sortitems">Einträge sortieren</button>
+    <button type="button" class="sheetbtn danger" data-act="secdel" data-id="${id}">${ui.confirmSec === id ? 'Wirklich löschen? (Einträge bleiben)' : 'Abschnitt löschen'}</button>`);
+}
+function moveSec(id, d) {
+  const secs = curList()?.secs || [], i = secs.findIndex((s) => s.id === id), j = i + d;
+  if (i < 0 || j < 0 || j >= secs.length) return;
+  [secs[i], secs[j]] = [secs[j], secs[i]];
+  commit();
+}
+document.addEventListener('submit', (e) => {
+  if (e.target.id !== 'newSecForm') return;
+  e.preventDefault();
+  const name = $('#newSecName').value.trim(), l = curList();
+  if (!name || !l) return;
+  const s = { id: uid(), name };
+  l.secs = [...(l.secs || []), s];
+  ui.addSec = s.id; // Neues kommt gleich in den neuen Abschnitt
+  closeSheet(); commit();
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'secNameIn') return;
+  const s = (curList()?.secs || []).find((x) => x.id === e.target.dataset.id), n = e.target.value.trim();
+  if (s && n && s.name !== n) { s.name = n; save(); render(); }
+});
+document.addEventListener('change', (e) => {
+  const t = e.target, l = S.lists.find((x) => x.id === t.dataset.id);
+  if (!l) return;
+  if (t.id === 'leType') {
+    if (t.value === 'simple') l.type = 'simple'; else delete l.type; // Abschnitte und Reihenfolge bleiben gemerkt, falls man zurückwechselt
+    if (l.id === S.listId) { ui.addSec = null; ui.wiggle = ui.wiggle === 'items' ? null : ui.wiggle; }
+    commit(); listEditPage(l.id);
+  } else if (t.id === 'leDone') {
+    if (t.value === 'keep') l.keepDone = true; else delete l.keepDone;
+    if (l.id === S.listId) finishAll();
+    commit();
+  }
+});
 
 // ---------- Gruppen in der Oberfläche ----------
 // Gruppen sind „Teilen-Kreise“: man sieht immer alles, jede Liste/jedes Geschäft/Essen gehört einer Gruppe.

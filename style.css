@@ -637,3 +637,16 @@ form .gline { margin: 0 2px 10px; }
 .gpl svg { flex: none; width: 15px; height: 15px; }
 .gname { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
 .gname svg { flex: none; color: var(--muted); }
+/* Einfache Liste: Abschnitte, „+ Abschnitt“, Sortieren */
+.bar[hidden] { display: none; }
+.secbtn.on .gname { color: var(--accent); }
+.secbtn.on { color: var(--accent); }
+.secempty { margin: 0 2px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: .85rem; }
+.addsec { display: block; margin-top: 10px; }
+.rows .secli { padding: 14px 12px 6px; border-top: 1px solid var(--line); background: var(--soft); font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
+.rows .secli:first-child { border-top: 0; }
+.wiggle > .row:not(.dragging) { animation: wiggle .2s ease-in-out infinite alternate; }
+.wiggle > .row { touch-action: pan-y; cursor: grab; }
+.wiggle > .row.dragging { position: relative; z-index: 2; background: var(--surface); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+@media (prefers-reduced-motion: reduce) { .wiggle > .row { animation: none; } }
+.rows:has(.dragging) { overflow: visible; }
