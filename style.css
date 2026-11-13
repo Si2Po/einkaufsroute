@@ -39,14 +39,16 @@ body {
   color: var(--ink);
   font: 16px/1.35 var(--font-ui);
   padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
-  padding-block: calc(env(safe-area-inset-top, 0px) + 12px) calc(28px + env(safe-area-inset-bottom, 0px));
+  padding-block: calc(env(safe-area-inset-top, 0px) + 26px) calc(28px + env(safe-area-inset-bottom, 0px));
   -webkit-tap-highlight-color: transparent;
 }
 /* Oberer Rand (Uhrzeit, Akku): eine feste Fläche in Hintergrundfarbe, damit die Liste beim Scrollen
-   nicht unter der Statusleiste durchläuft und dort verschwommen wirkt. Unten blendet sie weich aus. */
+   nicht unter der Statusleiste durchläuft. Der Inhalt beginnt 26px unter der Statusleiste: iOS 26 färbt die
+   Statusleiste leicht nach dem, was direkt darunter liegt (das blaue + schimmerte sonst oben rechts durch).
+   Unten blendet sie weich aus. */
 #topcover {
   position: fixed; top: 0; left: 0; right: 0; z-index: 30; pointer-events: none;
-  height: calc(env(safe-area-inset-top, 0px) + 14px);
+  height: calc(env(safe-area-inset-top, 0px) + 28px); /* 28px: siehe gesten.js (Höhe der Statusleiste) */
   background: linear-gradient(var(--bg) calc(100% - 6px), transparent);
 }
 .wrap { max-width: 560px; margin: 0 auto; }
@@ -391,7 +393,7 @@ html.kb .page { padding-bottom: 16px; }
 .pagehead {
   display: grid; justify-items: start; gap: 2px;
   position: sticky; top: 0; z-index: 2; background: var(--bg);
-  padding: calc(env(safe-area-inset-top, 0px) + 4px) 0 10px;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 10px; /* Abstand zur Statusleiste, wie die Hauptansicht (siehe #topcover) */
 }
 .wrap .pagehead { position: static; padding-top: 0; }
 .pageback {
@@ -566,7 +568,7 @@ html.lphold input, html.lphold textarea, html.lphold select { pointer-events: no
 /* Abbild einer Ansicht für Übergänge bei Geschäfte/Editor (app.js: wrapGhost). Liegt unter (Standard) oder über (top) der echten Ansicht. */
 .wrapghost {
   position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg);
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  padding: calc(env(safe-area-inset-top, 0px) + 26px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
 }
 .wrapghost.top { z-index: 14; box-shadow: -10px 0 30px rgba(0, 0, 0, .16); }
 .wrapghost .wrap { padding-bottom: 0; }
