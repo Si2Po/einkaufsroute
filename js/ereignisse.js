@@ -454,7 +454,7 @@ document.addEventListener('submit', (e) => {
     if (it) {
       const oldKey = normKey(it.name), oldName = it.name;
       it.name = $('#eName').value.trim() || it.name;
-      const pinSel = $('#eZone'), pinStore = curStore();
+      const pinSel = $('#eZone'), pinStore = listStore();
       if (pinStore) {
         const newKey = normKey(it.name);
         const wanted = pinSel ? pinSel.value : null;

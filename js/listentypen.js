@@ -77,7 +77,7 @@ function holdDrag(e, row) {
 // Einkaufsliste: Eintrag wurde gezogen. Reihenfolge merken (it.ord, bis der Eintrag weg ist). Landet er in einer anderen
 // Gruppe, lernt die App das: mit Geschäft = fester Bereich in diesem Geschäft, sonst / ohne Bereich = andere Kategorie.
 function shopDrop(order) {
-  const st = curStore(), from = {}, to = {};
+  const st = listStore(), from = {}, to = {};
   buildGroups(st).forEach((g) => g.items.forEach((i) => { from[i.id] = g.key; }));
   let gk = '', n = 0;
   const pos = {};

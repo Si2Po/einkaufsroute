@@ -53,7 +53,7 @@ function rowHtml(i) {
 
 function listBody() {
   if (isSimple()) return simpleBody();
-  const groups = buildGroups(curStore());
+  const groups = buildGroups(listStore());
   const done = S.items.filter((i) => i.done);
   // Eine einzige Reihe (Köpfe + Einträge, Optik wie Karten je Gruppe), damit Einträge per Halten und Ziehen
   // umsortiert und in eine andere Kategorie / einen anderen Bereich gezogen werden können (WIGGLE.items).
@@ -79,7 +79,7 @@ const pillName = () => curStore()?.name || 'Kein Geschäft';
 const barHtml = () => `
       <button type="button" class="pill" data-act="storesheet" aria-haspopup="dialog" aria-label="Geschäft wählen"><span id="pillName">${esc(pillName())}</span></button>`;
 function viewList() {
-  return `<div class="bar"${isSimple() ? ' hidden' : ''}>${barHtml()}    </div>
+  return `<div class="bar"${isSimple() || !storesOn() ? ' hidden' : ''}>${barHtml()}    </div>
     <div class="addwrap">
       <form id="addForm" class="add" autocomplete="off">
         <input id="addName" placeholder="${esc(addPlaceholder())}" aria-label="Neuer Eintrag" enterkeyhint="done">
@@ -93,7 +93,7 @@ function viewList() {
 function render() {
   const v = $('#view');
   if (ui.tab === 'list') {
-    if ($('#addForm')) { $('#listBody').innerHTML = listBody(); const b = $('.bar'); b.innerHTML = barHtml(); b.hidden = isSimple(); $('#addName').placeholder = addPlaceholder(); }
+    if ($('#addForm')) { $('#listBody').innerHTML = listBody(); const b = $('.bar'); b.innerHTML = barHtml(); b.hidden = isSimple() || !storesOn(); $('#addName').placeholder = addPlaceholder(); }
     else v.innerHTML = viewList();
   } else if (ui.tab === 'meals') {
     v.innerHTML = viewMeals();
@@ -127,7 +127,7 @@ function viewSettings() {
     <ul class="cards">
       ${row('accountsheet', 'Konto und Gruppen', typeof accountSub === 'function' ? accountSub() : 'Nicht angemeldet')}
       ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
-      ${row('tab', 'Geschäfte und Grundrisse', `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}`, ' data-tab="stores"')}
+      ${row('tab', 'Geschäfte und Grundrisse', storesOn() ? `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}` : 'Aus – Liste nur nach Kategorien', ' data-tab="stores"')}
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
       ${row('themepage', 'Darstellung', `${THEME_LABEL[themePref()]} · ${accentName()}`)}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}

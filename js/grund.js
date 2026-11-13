@@ -273,6 +273,10 @@ const ui = { tab: 'list', wiggle: null, editStoreId: null, selZone: null, drawin
 const curList = () => (S.lists || []).find((l) => l.id === S.listId) || null;
 const curStore = () => S.stores.find((s) => s.id === S.storeId) || null;
 const editStore = () => S.stores.find((s) => s.id === ui.editStoreId) || null;
+// Geschäfte verwenden (Schalter unter Einstellungen → Geschäfte, gilt nur für dieses Gerät). Aus: Die Liste sortiert nur nach
+// Kategorien, ohne Geschäft-Auswahl und Bereiche. Die gemeinsamen Daten (Geschäft der Liste) bleiben unverändert.
+function storesOn() { try { return localStorage.getItem('ek_stores') !== 'off'; } catch (_) { return true; } }
+const listStore = () => (storesOn() ? curStore() : null);
 const commit = () => { save(); render(); };
 // Einträge einer Liste (die aktive Liste hält ihre Einträge im Betrieb in S.items, siehe snapshot())
 const listItems = (l) => (l.id === S.listId ? S.items : l.items || []);

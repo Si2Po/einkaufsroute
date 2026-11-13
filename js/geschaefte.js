@@ -6,6 +6,7 @@ function viewStores() {
       <span><strong>${esc(s.name)}</strong><small>${groupTag(s.g)}${s.zones.length} ${s.zones.length === 1 ? 'Bereich' : 'Bereiche'}${s.id === S.storeId ? ' · aktiv' : ''}</small></span>
       <span class="go">›</span></button></li>`).join('');
   return `${pageHead('Einstellungen', 'Geschäfte', 'data-act="tab" data-tab="settings"')}
+    <div class="group" style="margin-bottom:10px"><label class="sheetbtn swrow"><span>In der Liste verwenden<small>Sortiert die Einkaufsliste nach dem Laufweg im Geschäft. Gilt nur für dieses Gerät.</small></span><input type="checkbox" switch id="storesSwitch"${storesOn() ? ' checked' : ''}></label></div>
     <p class="hint">Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.</p>
     ${S.stores.length ? `<ul class="cards">${cards}</ul>` : ''}
     <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">+ Neues Geschäft</button>`;
@@ -270,7 +271,7 @@ function editorSheet() {
     <button type="button" class="sheetbtn danger" data-act="delstore">${ui.confirmDel ? 'Wirklich löschen?' : 'Geschäft löschen'}</button>`);
 }
 function zoneField(it) {
-  const st = curStore();
+  const st = listStore();
   if (!st || !st.zones.length) return '';
   const pinned = pinIdx(st, it.name);
   return `<label class="srow"><span class="pl">Bereich</span><select id="eZone" aria-label="Bereich bei ${esc(st.name)}">
@@ -412,3 +413,10 @@ function bindPlan() {
   }, { passive: false });
 }
 
+
+// Schalter „In der Liste verwenden“ (nur dieses Gerät)
+document.addEventListener('change', (e) => {
+  if (e.target.id !== 'storesSwitch') return;
+  try { localStorage.setItem('ek_stores', e.target.checked ? 'on' : 'off'); } catch (_) { /* privat: gilt bis zum Schließen */ }
+  render();
+});
