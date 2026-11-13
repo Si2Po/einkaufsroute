@@ -24,6 +24,7 @@
   if (!S.stores.find((s) => s.id === S.storeId)) S.storeId = S.stores[0]?.id || null;
   save();
   render();
+  nudgeTop();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. in der Vorschau nicht möglich */ });
     // Neue Version übernommen: einmal neu laden, damit auch der neue Programmcode läuft.
@@ -41,3 +42,22 @@
   }
 })();
 
+
+// iPhone (Home-Bildschirm): Nach dem Öffnen wirkte der obere Rand unter der Statusleiste manchmal verschwommen,
+// bis man einmal gescrollt hat. Nach dem ersten Zeichnen lassen wir Safari den Rand neu berechnen:
+// die Fläche oben einmal neu zeichnen und (falls die Seite scrollen kann) ein unsichtbarer Mini-Scroll.
+function nudgeTop() {
+  const top = document.getElementById('topcover');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (window.scrollY > 2) return; // nur ganz oben, nie mitten aus der Liste springen
+    if (top) top.style.transform = 'translateZ(0)';
+    window.scrollTo(0, 1);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      if (top) top.style.transform = '';
+    });
+  }));
+}
+// Auch wenn die App aus dem Hintergrund zurückkommt
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') nudgeTop(); });
+window.addEventListener('pageshow', nudgeTop);
