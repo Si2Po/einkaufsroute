@@ -33,7 +33,8 @@ function helpPage() {
         <li>Unten auf <b>Teilen</b> ${ICON_SHARE} tippen.</li>
         <li><b>„Zum Home-Bildschirm“</b> wählen.</li>
       </ol>
-      <p>Danach die App immer über das neue Symbol öffnen. Sie hat dort einen eigenen Speicher: einmal neu anmelden, dann kommen deine Daten vom Konto.</p>`),
+      <p>Danach kannst du die App über das neue Symbol auf dem Home-Bildschirm öffnen.</p>
+      <p>Sie hat dort einen eigenen Speicher. Wenn du dich anmeldest, werden deine Listen, Kategorien, Essen und Geschäfte synchronisiert.</p>`),
     helpTopic('Die Liste bedienen', `
       <ul>
         <li><b>Tippen:</b> abhaken. Der Eintrag rutscht kurz danach nach „Erledigt“. Nochmal tippen macht es rückgängig.</li>
