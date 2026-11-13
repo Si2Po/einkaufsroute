@@ -147,7 +147,9 @@ if (IS_LOCAL) {
     if (!m) return;
     appVersion = `${m[1]} · lokal`;
     // Uhrzeit der zuletzt gespeicherten Datei anhängen: so sieht man, ob das Neuladen schon den neuesten Stand hat
-    const files = ['index.html', 'app.js', 'sync.js', 'style.css', 'sw.js'];
+    // alle Skripte, die index.html tatsächlich lädt (so bleibt die Liste von selbst aktuell)
+    const scripts = [...document.scripts].map((s) => s.getAttribute('src')).filter(Boolean);
+    const files = ['index.html', 'style.css', 'sw.js', ...scripts];
     return Promise.all(files.map((f) => fetch(f, { cache: 'no-store' }).then((r) => Date.parse(r.headers.get('Last-Modified')) || 0, () => 0)))
       .then((ts) => { const t = Math.max(...ts); if (t) appVersion += `, Stand ${new Date(t).toLocaleTimeString('de-DE')}`; });
   }).then(() => { if (ui.tab === 'settings') render(); }).catch(() => {});
