@@ -231,17 +231,19 @@ function wrapAnim(kind, ghost, fromX = 0) {
   update();
 })();
 // Was im Feld eines Sheets getippt, aber noch nicht mit + bestätigt wurde, geht beim Schließen nicht verloren (Komma trennt mehrere)
-let toastT;
+let toastT, toastUndo = null;
 // Kurze Meldung unten; popover liegt über dem offenen Sheet
 function toast(msg, undoFn) {
   let t = document.getElementById('toast');
   if (!t) { t = document.createElement('div'); t.id = 'toast'; t.setAttribute('popover', 'manual'); t.setAttribute('role', 'status'); document.body.appendChild(t); }
   t.textContent = msg;
+  toastUndo = null;
   if (undoFn) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'toastbtn'; b.textContent = 'Rückgängig';
-    b.onclick = () => { clearTimeout(toastT); try { t.hidePopover(); } catch (e) {} undoFn(); };
+    b.onclick = () => { toastUndo = null; clearTimeout(toastT); try { t.hidePopover(); } catch (e) {} undoFn(); };
     t.appendChild(b);
+    toastUndo = { run: b.onclick, until: Date.now() + 5000 }; // solange der Hinweis steht, geht Rückgängig auch per Schütteln
   }
   try { if (t.matches(':popover-open')) t.hidePopover(); t.showPopover(); } catch (e) { t.classList.add('fallback'); }
   clearTimeout(toastT);

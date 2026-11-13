@@ -98,6 +98,6 @@ function helpPage() {
       <p>Die App aktualisiert sich von selbst, sobald es eine neue Version gibt. Wenn du sofort nachsehen möchtest, öffne die Einstellungen und ziehe die Seite <b>ganz oben nach unten</b>. Welche Version du gerade hast, steht ganz unten in den Einstellungen.</p>`),
   ];
   openPage('help', 'Hilfe', `
-    <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="Kleine Späße">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label></div>
+    <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span>Schütteln für Rückgängig<small>Solange unten „Rückgängig“ zu sehen ist</small></span><input type="checkbox" switch id="shakeSwitch"${shakeOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="Kleine Späße">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label></div>
     <div class="helplist">${topics.join('')}</div>`); // ohne Neuaufbau beim Abgleich: aufgeklappte Themen bleiben offen
 }

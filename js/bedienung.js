@@ -237,3 +237,54 @@ function haptic() {
 }
 
 
+
+// ---------- Schütteln = Rückgängig (Schalter in der Hilfe, gilt nur für dieses Gerät) ----------
+// Wirkt nur, solange ein Hinweis mit „Rückgängig“ zu sehen ist (toastUndo, ca. 5 s). So macht Schütteln nie etwas Unerwartetes.
+// iPhone: Bewegungsdaten gibt es erst nach einer Erlaubnis, und danach fragen darf die App nur direkt nach einem Tipp.
+const shakeOn = () => { try { return localStorage.getItem('ek_shake') === 'on'; } catch (_) { return false; } };
+const motionNeedsAsk = () => typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function';
+let shakeListening = false;
+function listenShake() {
+  if (shakeListening) return;
+  shakeListening = true;
+  let peaks = [];
+  window.addEventListener('devicemotion', (e) => {
+    if (!shakeOn()) return;
+    const a = e.acceleration;
+    if (!a || a.x == null) return;
+    const strength = Math.hypot(a.x, a.y, a.z);
+    if (strength < 14) return; // normales Gehen und Hinlegen bleiben deutlich darunter
+    const now = Date.now();
+    peaks = peaks.filter((t) => now - t < 700);
+    peaks.push(now);
+    if (peaks.length >= 3) { peaks = []; onShake(); }
+  });
+}
+function onShake() {
+  if (!toastUndo || Date.now() > toastUndo.until) return;
+  haptic();
+  toastUndo.run();
+}
+// Erlaubnis holen (nur nach einem Tipp möglich). Ergebnis: true = Bewegung darf genutzt werden.
+async function askMotion() {
+  if (!motionNeedsAsk()) return true;
+  try { return (await DeviceMotionEvent.requestPermission()) === 'granted'; } catch (_) { return false; }
+}
+document.addEventListener('change', async (e) => {
+  if (e.target.id !== 'shakeSwitch') return;
+  const sw = e.target;
+  if (sw.checked && !(await askMotion())) {
+    sw.checked = false;
+    toast('Ohne Erlaubnis für „Bewegung“ geht Schütteln leider nicht.');
+    return;
+  }
+  try { localStorage.setItem('ek_shake', sw.checked ? 'on' : 'off'); } catch (_) { /* privat */ }
+  if (sw.checked) listenShake();
+});
+// Nach dem Neustart der App: Auf dem iPhone muss die Erlaubnis je Sitzung neu bestätigt werden; das geht still beim ersten Tipp.
+if (shakeOn()) {
+  if (motionNeedsAsk()) document.addEventListener('pointerup', () => { askMotion().then((ok) => { if (ok) listenShake(); }); }, { once: true });
+  else listenShake();
+}
+// Lokal testen (Chrome kann Schütteln nicht nachstellen): in der Konsole schuetteln() eingeben
+if (IS_LOCAL) window.schuetteln = onShake;
