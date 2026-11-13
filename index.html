@@ -22,7 +22,17 @@
 <div id="pages"></div>
 <nav id="tabbar" aria-label="Bereiche"></nav>
 <dialog id="dlg"></dialog>
-<script src="app.js"></script>
+<!-- Programm in mehreren Dateien. Reihenfolge ist wichtig: grund.js zuerst, start.js als letzte App-Datei, danach sync.js -->
+<script src="js/grund.js"></script>
+<script src="js/ansichten.js"></script>
+<script src="js/oberflaeche.js"></script>
+<script src="js/gesten.js"></script>
+<script src="js/ereignisse.js"></script>
+<script src="js/essen.js"></script>
+<script src="js/bedienung.js"></script>
+<script src="js/listentypen.js"></script>
+<script src="js/gruppen.js"></script>
+<script src="js/start.js"></script>
 <script src="sync.js"></script>
 </body>
 </html>

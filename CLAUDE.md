@@ -4,8 +4,10 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 
 ## Technik
 - Reines HTML/CSS/JavaScript, **kein Framework, kein Build-Schritt**. Soll so bleiben (läuft direkt auf GitHub Pages).
-- `index.html` lädt `style.css`, `app.js`, `sync.js`. `sw.js` ist der Service Worker (Offline), `manifest.webmanifest` die PWA-Beschreibung.
-- `app.js`: gesamte Logik und Oberfläche (Liste, Essen, Läden/Zonen-Editor, Einstellungen, Wischen, Sheets). Der Aufbau der Daten steht im Kommentar ganz oben.
+- `index.html` lädt `style.css`, die Programmdateien in `js/` (Reihenfolge wichtig) und `sync.js`. `sw.js` ist der Service Worker (Offline), `manifest.webmanifest` die PWA-Beschreibung.
+- `js/`: Logik und Oberfläche, aufgeteilt nach Bereichen. Normale Skript-Dateien (keine Module), sie teilen sich den globalen Bereich:
+  `grund.js` (Datenmodell im Kopfkommentar, Kategorien/Stichwörter, Vorschläge, Speichern, Zustand) → `ansichten.js` (Sortierung, Liste, Geschäfte, Grundriss, `render()`) → `oberflaeche.js` (Sheets, Seiten, Tastatur, Hinweise) → `gesten.js` (Sheet-Wischen, Ziehen, Wackelmodus, Grundriss bedienen) → `ereignisse.js` (Abhaken, Klicks, Formulare) → `essen.js` → `bedienung.js` (Aktualisieren, Darstellung, Haptik) → `listentypen.js` → `gruppen.js` → `start.js` (Start, zuletzt).
+  Was beim Laden sofort ausgeführt wird, darf nur Funktionen aus derselben oder einer früheren Datei aufrufen. Neue Dateien in `index.html`, `sw.js` (`FILES`) und `tools/synctest.html` eintragen. Lokaler Ladetest: `tools/errcheck.html` sammelt Fehler beim Laden.
 - `sync.js`: Konto, Haushalt, Abgleich mit Supabase (nur über `fetch`, keine Bibliothek), Sicherung als Datei/Text.
 - Lokal gespeichert wird in IndexedDB (Schlüssel `state`), Anmeldung und Abgleichstand unter `sync`, eine Sicherung unter `backup`.
 
@@ -13,13 +15,13 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 - Eine **Gruppe** ist technisch ein `household`. Jede Person hat „Persönlich“ (`kind = 'personal'`, nicht teilbar) und beliebig viele weitere Gruppen.
 - Gruppen sind „Teilen-Kreise“: Die App zeigt **immer alles** aus allen eigenen Gruppen. Listen, Geschäfte und Essen merken sich ihre Gruppe im Feld `g`.
 - Kategorien/Stichwörter gibt es pro Gruppe. Aktiv ist die gewählte Stichwortliste: `S.cats` gehört zur Gruppe `S.catGroup`, die anderen liegen in `S.gcats[g]`, Einstellungen (Tags, zuletzt getippt) analog `S.customTags/S.recent` bzw. `S.gset[g]`.
-- Neues landet in `S.lastGroup` (zuletzt benutzt), sonst `S.catGroup`, sonst „Persönlich“ (`defaultGroup()` in `app.js`). Gruppen-Auswahlfelder und -Hinweise erscheinen nur bei Anmeldung und mehr als einer Gruppe (`groupsOn()`).
+- Neues landet in `S.lastGroup` (zuletzt benutzt), sonst `S.catGroup`, sonst „Persönlich“ (`defaultGroup()` in `js/gruppen.js`). Gruppen-Auswahlfelder und -Hinweise erscheinen nur bei Anmeldung und mehr als einer Gruppe (`groupsOn()`).
 - Datenbank-Funktionen: `my_groups`, `create_group`, `rename_group`, `create_invite(g)`, `accept_invite`, `leave_group` (alle in `supabase/gruppen.sql`).
 
 ## Listen-Typen (seit 0.7.1)
 - Pro Liste: `l.type = 'simple'` = einfache Liste (fehlt = Einkaufsliste). Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, Abschnitte `l.secs = [{id, name}]` (Eintrag: `it.sec`), eigene Reihenfolge `it.ord` (sonst `ts`), `l.keepDone` = Abgehakte bleiben stehen.
 - Beide Listenarten zeigen ihre Einträge als eine Reihe `#listRows` (Köpfe `.secli` mit `data-key="§…"` + Zeilen), damit Halten-und-Ziehen (`holdDrag`, `WIGGLE.items`) ohne Umbau klappt. Einkaufsliste: `shopDrop()` lernt Kategorie bzw. festen Bereich. Essen-Favoriten = Tag `★` (`FAV`).
-- Code im Abschnitt „Listen-Typen“ in `app.js` (`isSimple()`, `simpleBody()`). Abgleich braucht nichts Extra: neue Felder reisen im Listen-/Eintrag-Dokument mit.
+- Code in `js/listentypen.js` (`isSimple()`, `simpleBody()`). Abgleich braucht nichts Extra: neue Felder reisen im Listen-/Eintrag-Dokument mit.
 
 ## Abgleich (Kurzfassung)
 - Jeder Laden, jede Kategorie, Liste, jeder Eintrag und jedes Essen ist ein Dokument in der Tabelle `docs` (Art `kind`), abgelegt in der Gruppe (`household_id`), zu der es gehört.

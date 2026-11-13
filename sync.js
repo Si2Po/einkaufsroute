@@ -649,7 +649,7 @@ document.addEventListener('click', async (e) => {
   const m = /^#join=([A-Za-z0-9]+)/.exec(location.hash);
   if (m) { sync.joinCode = m[1].toUpperCase(); try { localStorage.setItem('ek_join', sync.joinCode); } catch (_) { /* egal */ } history.replaceState(null, '', location.pathname + location.search); }
   else { try { sync.joinCode = localStorage.getItem('ek_join'); } catch (_) { /* egal */ } }
-  // auf den Start von app.js warten (S wird dort geladen)
+  // auf den Start der App warten (js/start.js) (S wird dort geladen)
   for (let i = 0; i < 200 && !(typeof S !== 'undefined' && S && S.lists); i++) await new Promise((r) => setTimeout(r, 50));
   if (sync.legacyHid) { // alle bisherigen Daten gehören zum bisherigen Haushalt (jetzt Gruppe „Einkauf“)
     for (const arr of [S.lists, S.stores, S.meals || []]) for (const x of arr) if (!x.g) x.g = sync.legacyHid;
