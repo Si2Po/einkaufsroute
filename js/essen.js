@@ -35,7 +35,7 @@ function mealCard(m) {
 function mealListHtml() {
   if (!meals().length) return '<p class="empty">Noch kein Essen. Lege eins an, dann kommen seine Zutaten mit einem Tipp auf die Liste.</p>';
   const list = filteredMeals();
-  return list.length ? `<ul class="cards">${list.map(mealCard).join('')}</ul><p class="tip">Tippen: auf die Liste · Gedrückt halten: bearbeiten</p>` : '<p class="empty">Nichts passt zu dieser Auswahl.</p>';
+  return list.length ? `<ul class="cards">${list.map(mealCard).join('')}</ul><p class="tip bedien">Tippen: auf die Liste · Gedrückt halten: bearbeiten</p>` : '<p class="empty">Nichts passt zu dieser Auswahl.</p>';
 }
 // Ein Tag zum Filtern. „★“ = nur Favoriten. Ein Tag ohne Essen wird mit „×“ angezeigt: Antippen entfernt ihn.
 function filterChip(t) {

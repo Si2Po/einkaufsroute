@@ -152,7 +152,7 @@ function viewEditor() {
   if (!S.showPlan) ui.drawing = false;
   const bar = ui.drawing && sel
     ? `<p class="hint live">Ziehen = neu · Kante/Ecke = anpassen · Mitte = schieben · Daneben tippen = fertig</p>`
-    : `<p class="hint">${S.showPlan ? (st.zones.length ? 'Antippen: bearbeiten · Gedrückt halten: im Plan Form ändern, in der Liste sortieren' : 'Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.') : (st.zones.length ? 'Reihenfolge = Laufweg. Lange drücken zum Sortieren.' : 'Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.')}</p><button type="button" class="btn small" data-act="addzone">+ Bereich</button>`;
+    : `<p class="hint${st.zones.length ? ' bedien' : ''}">${S.showPlan ? (st.zones.length ? 'Antippen: bearbeiten · Gedrückt halten: im Plan Form ändern, in der Liste sortieren' : 'Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.') : (st.zones.length ? 'Reihenfolge = Laufweg. Lange drücken zum Sortieren.' : 'Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.')}</p><button type="button" class="btn small" data-act="addzone">+ Bereich</button>`;
   return `
     <div class="edhead">
       <button type="button" class="pageback" data-act="back" aria-label="Zurück zu Geschäfte">${ICON_BACK}<span>Geschäfte</span></button>

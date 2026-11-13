@@ -13,14 +13,15 @@
 - [x] **Vibrieren beim Würfeln:** umgesetzt (haptic(): Android vibrieren, iPhone Schalter-Trick; auch bei langem Drücken und Ziehen zum Aktualisieren). kurzes Haptik-Feedback bei „Zufälliges Essen“ / „Nochmal würfeln“. `navigator.vibrate` gibt es auf dem iPhone nicht. Seit iOS 18 löst Safari aber beim Umschalten eines Schalters (`<input type="checkbox" switch>`) ein Haptik-Klicken aus; das lässt sich als Trick nutzen (unsichtbarer Schalter, beim Tippen mit umschalten). Nur ein kurzes „Klick“, kein langes Vibrieren. Später evtl. auch fürs Abhaken.
 - [x] **Standardreihenfolge „Kein Laden“** (erledigt: Kategorien per Griff sortieren, „Sonstiges“ bleibt unten) ansehen und ändern können (Reihenfolge der Kategorien, z. B. per Hoch/Runter in „Kategorien und Stichwörter“; die Reihenfolge wird schon mit dem Haushalt synchronisiert)
 
-## Idee: Hilfe-Bereich in den Einstellungen
-- [ ] Kurze Erklärung, wie man die Seite als App aufs iPhone holt (Safari → Teilen → „Zum Home-Bildschirm“, danach einmal neu anmelden, weil die App einen eigenen Speicher hat)
-- [ ] Wie man Einträge bedient: Tippen, lang drücken, wischen; Liste wechseln (zweiter Tipp auf „Liste“); Läden und Zonen
-- [ ] Konto und Gruppen: anmelden, einladen, beitreten, abgleichen, Sicherung
-- [ ] Gruppen erklären: Man sieht immer alles aus allen eigenen Gruppen; die Gruppe regelt nur, **wer etwas mitsieht**. „Persönlich“ sieht nur man selbst (nicht teilbar). Das **Personen-Symbol** (zwei Köpfe, z. B. „👥 Einkauf“ bei Listen und Geschäften) zeigt, zu welcher Gruppe etwas gehört. Gruppe ändern: Liste/Geschäft bearbeiten → „Gruppe“; beim Essen ganz unten beim Personen-Symbol. Kategorien und Stichwörter: unter Kategorien „Stichwörter von“ wählen, wer dieselbe Gruppe wählt, lernt gemeinsam. Geschäft aus anderer Gruppe für eine Liste gewählt → App fragt, ob es mit umziehen soll.
-- [ ] Wichtiges: Offline-Betrieb, was bei „Abmelden“ passiert, neue Version laden (App einmal schließen und neu öffnen). Versionsnummer anzeigen (steht bisher unten in den Einstellungen)
-- [ ] Als eigene Unterseite mit der gemeinsamen Seiten-Komponente umsetzen; ggf. beim ersten Start kurze Einführung
-- [ ] Schalter „Hinweise anzeigen“: blendet alle kleinen Bedienhinweise (z. B. „Tippen: … · Gedrückt halten: …“ unter Liste und Essen) überall ein oder aus. Heute verschwindet nur der Hinweis in der Liste nach einer Weile von selbst (S.tipSeen).
+## Hilfe-Bereich in den Einstellungen (lokal umgesetzt, `js/hilfe.js`)
+- [x] Kurze Erklärung, wie man die Seite als App aufs iPhone holt (Safari → Teilen → „Zum Home-Bildschirm“, danach einmal neu anmelden, weil die App einen eigenen Speicher hat)
+- [x] Wie man Einträge bedient: Tippen, lang drücken, wischen; Liste wechseln (zweiter Tipp auf „Liste“); Läden und Zonen
+- [x] Konto und Gruppen: anmelden, einladen, beitreten, abgleichen, Sicherung
+- [x] Gruppen erklären: Man sieht immer alles aus allen eigenen Gruppen; die Gruppe regelt nur, **wer etwas mitsieht**. „Persönlich“ sieht nur man selbst (nicht teilbar). Das **Personen-Symbol** (zwei Köpfe, z. B. „👥 Einkauf“ bei Listen und Geschäften) zeigt, zu welcher Gruppe etwas gehört. Gruppe ändern: Liste/Geschäft bearbeiten → „Gruppe“; beim Essen ganz unten beim Personen-Symbol. Kategorien und Stichwörter: unter Kategorien „Stichwörter von“ wählen, wer dieselbe Gruppe wählt, lernt gemeinsam. Geschäft aus anderer Gruppe für eine Liste gewählt → App fragt, ob es mit umziehen soll.
+- [x] Wichtiges: Offline-Betrieb, was bei „Abmelden“ passiert, neue Version laden (App einmal schließen und neu öffnen). Versionsnummer anzeigen (steht bisher unten in den Einstellungen)
+- [x] Als eigene Unterseite (Themen zum Aufklappen)
+- [ ] Später vielleicht: beim ersten Start eine kurze Einführung
+- [x] Schalter „Hinweise anzeigen“: blendet alle kleinen Bedienhinweise (z. B. „Tippen: … · Gedrückt halten: …“ unter Liste und Essen) überall ein oder aus. Heute verschwindet nur der Hinweis in der Liste nach einer Weile von selbst (S.tipSeen).
 
 ## Idee: Einkaufsverhalten lernen
 - [ ] Beim Abhaken merkt sich die App Produkt + Datum (Kaufhistorie, im Haushalt geteilt)
@@ -31,13 +32,13 @@
 ## Gruppen (0.7.0, Details in PLAN-GRUPPEN.md)
 Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, anlegen/umbenennen/einladen/beitreten/verlassen, Abgleich pro Gruppe, alles sichtbar mit Gruppen-Hinweis (Personen-Symbol), Listen/Geschäfte/Essen in andere Gruppe verschieben, Rückfrage beim Geschäft, Stichwörter pro Gruppe wählbar, Beitreten ersetzt nichts mehr. Private Listen = Listen in „Persönlich“.
 - [ ] **Test mit echtem Konto** (lokal über `lokal-starten.cmd` anmelden), dann hochladen; zuerst eigenes iPhone, danach das Gerät der Partnerin
-- [ ] Hilfe-Text zu Gruppen (siehe Hilfe-Bereich oben)
+- [x] Hilfe-Text zu Gruppen (siehe Hilfe-Bereich oben)
 - [x] **Listen-Typen (0.7.1):** Typ **pro Liste** („Art“: Einkaufsliste / Einfache Liste), beim Anlegen wählbar, im Bearbeiten änderbar.
   Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, **Abschnitte** (unten „+ Abschnitt“, Abschnitt antippen = Neues kommt dorthin (Kopf farbig), gedrückt halten = umbenennen/verschieben/löschen),
   eigene Reihenfolge (Eintrag gedrückt halten und ziehen startet den Wackelmodus, auch in andere Abschnitte; nur gedrückt halten = bearbeiten), **pro Liste wählbar**, ob Abgehakte nach unten rutschen oder stehen bleiben („Alle Haken entfernen“).
 - [x] **Einkaufsliste: Halten und ziehen** (0.7.1): Reihenfolge innerhalb einer Gruppe frei (it.ord, sonst Reihenfolge des Hinzufügens), in andere Kategorie (ohne Geschäft) bzw. anderen Bereich (mit Geschäft, merkt sich das Geschäft) ziehen = lernen, mit „Rückgängig“.
 - [x] **Essen: Favoriten** (0.7.1) als fester Tag „★“ (immer erster Filter-Tag, Favoriten oben, sonst A–Z, Stern im Essen-Sheet)
-- [ ] Hilfe-Text zu Listen-Typen, Ziehen und Favoriten
+- [x] Hilfe-Text zu Listen-Typen, Ziehen und Favoriten
 - [ ] Später: neue Gruppe mit Kategorien/Stichwörtern einer bestehenden Gruppe starten (heute bekommt eine neue Gruppe die Standard-Kategorien, sobald jemand sie unter „Stichwörter von“ wählt)
 - [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
 

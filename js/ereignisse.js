@@ -239,6 +239,7 @@ document.addEventListener('click', (e) => {
     case 'swipesheet': swipePage(); keep = true; break;
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
+    case 'helppage': helpPage(); keep = true; break;
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;

@@ -73,7 +73,7 @@ function doneBlock(done) {
        ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
 }
 // Bedienhinweis unter der Liste, bis zum ersten Bearbeiten (S.tipSeen)
-const listTip = (dragWord) => (S.items.length && !S.tipSeen ? `<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: ${dragWord}</p>` : '');
+const listTip = (dragWord) => (S.items.length && !S.tipSeen ? `<p class="tip bedien">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: ${dragWord}</p>` : '');
 const pillName = () => curStore()?.name || 'Kein Geschäft';
 
 const barHtml = () => `
@@ -131,6 +131,7 @@ function viewSettings() {
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
       ${row('themepage', 'Darstellung', `${THEME_LABEL[themePref()]} · ${accentName()}`)}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
+      ${row('helppage', 'Hilfe', 'So funktioniert die App · Hinweise')}
     </ul>
     ${appVersion ? `<p class="tip">Version ${esc(appVersion)}</p>` : ''}`;
 }
