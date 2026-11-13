@@ -66,7 +66,7 @@ function helpPage() {
       </ul>`),
     helpTopic('Essen', `
       <ul>
-        <li><b>Antippen:</b> Zutaten auswählen, Personen anpassen und mit einem Tipp auf die Liste setzen. Die Mengen rechnen sich mit.</li>
+        <li><b>Antippen:</b> Zutaten auswählen, Personenanzahl anpassen und mit einem Tipp auf die Liste setzen. Die Mengen rechnen sich mit.</li>
         <li><b>Basis</b>-Zutaten (z. B. Salz, Öl) hast du meist da: sie sind nicht vorausgewählt.</li>
         <li><b>Tags</b> sind kurze Merkmale wie „schnell“ oder „Nudeln“.<br>
           Du vergibst sie beim Bearbeiten eines Essens.<br>
