@@ -43,7 +43,7 @@ function helpPage() {
         <li><b>Halten und ziehen:</b> umsortieren, zum Beispiel nach Wichtigkeit. Ziehst du einen Eintrag zu einer anderen Kategorie oder einem anderen Bereich, merkt sich die App das. Mit „Rückgängig“ lässt es sich zurücknehmen.</li>
         <li><b>Wischen</b> nach links oder rechts: was dann passiert, stellst du unter Einstellungen → Wischen ein.</li>
         <li><b>Tippen:</b> abhaken. Der Eintrag rutscht kurz danach nach „Erledigt“. Nochmal tippen macht es rückgängig.</li>
-        <li><b>Vielleicht fällig:</b> Kaufst du etwas regelmäßig (mindestens dreimal), schlägt die App es über der Liste vor, sobald es wieder Zeit dafür ist. Antippen setzt es auf die Liste, × blendet den Vorschlag eine Weile aus.</li>
+        <li><b>Vielleicht fällig:</b> Kaufst du etwas regelmäßig (mindestens dreimal), schlägt die App es über der Liste vor, sobald es wieder Zeit dafür ist. Antippen setzt es auf die Liste, × blendet den Vorschlag eine Weile aus. Unter Einstellungen → Vorschläge siehst du, was erkannt wurde, kannst den Rhythmus ändern und eigene Vorschläge anlegen.</li>
       </ul>`),
     helpTopic('Einkaufsliste und einfache Liste', `
       <p>Beim Anlegen (oder unter „Liste bearbeiten“) wählst du die <b>Art</b>:</p>
@@ -103,6 +103,6 @@ function helpPage() {
       <p>Die App aktualisiert sich von selbst, sobald es eine neue Version gibt. Wenn du sofort nachsehen möchtest, öffne die Einstellungen und ziehe die Seite <b>ganz oben nach unten</b>. Welche Version du gerade hast, steht ganz unten in den Einstellungen.</p>`),
   ];
   openPage('help', 'Hilfe', `
-    <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span>Vorschläge<small>„Vielleicht fällig“ über der Einkaufsliste</small></span><input type="checkbox" switch id="dueSwitch"${dueOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="Kleine Späße">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label></div>
+    <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="Kleine Späße">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label></div>
     <div class="helplist">${topics.join('')}</div>`); // ohne Neuaufbau beim Abgleich: aufgeklappte Themen bleiben offen
 }

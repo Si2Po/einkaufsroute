@@ -131,6 +131,7 @@ function viewSettings() {
       ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
       ${row('themepage', 'Darstellung', `${THEME_LABEL[themePref()]} · ${accentName()}`)}
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
+      ${row('duepage', 'Vorschläge', dueSub())}
       ${row('helppage', 'Hilfe', 'So funktioniert die App · Hinweise')}
     </ul>
     ${appVersion ? `<p class="tip" data-act="vertap">Version ${esc(appVersion)}</p>` : ''}`;

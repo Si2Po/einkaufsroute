@@ -250,6 +250,10 @@ document.addEventListener('click', (e) => {
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
     case 'helppage': helpPage(); keep = true; break;
+    case 'duepage': duePage(); keep = true; break;
+    case 'duenew': dueNewSheet(); keep = true; break;
+    case 'dueedit': ui.confirmDueDel = false; dueEditSheet(el.dataset.g, el.dataset.key); keep = true; break;
+    case 'dueauto': case 'duedel': keep = dueAction(act); break;
     case 'catimport': ui.confirmImp = false; catImportSheet(); keep = true; break;
     case 'catimp': keep = catImport(el.dataset.mode); break;
     case 'vertap': funVersionTap(); keep = true; break; // Versionsnummer: 7× tippen = Statistik

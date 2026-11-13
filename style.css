@@ -717,3 +717,4 @@ p.tip[data-act="vertap"] { cursor: default; -webkit-user-select: none; user-sele
 .dueadd small { color: var(--muted); font-weight: 500; font-size: .75rem; }
 .duex { display: grid; place-items: center; flex: none; width: 40px; padding: 0; border: 0; border-left: 1px solid var(--line); background: none; color: var(--muted); }
 .duex svg { display: block; }
+.srow .duenum { flex: 0 0 64px; width: 64px; border: 0; background: transparent; font-size: 16px; padding: 12px 0; color: var(--ink); text-align: center; }
