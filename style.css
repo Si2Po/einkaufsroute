@@ -654,10 +654,27 @@ form .gline { margin: 0 2px 10px; }
 .wiggle > .row:not(.dragging) { animation: wiggle .2s ease-in-out infinite alternate; }
 .wiggle > .row { touch-action: pan-y; cursor: grab; }
 .wiggle > .row.dragging { position: relative; z-index: 2; transition: none; box-shadow: 0 8px 22px rgba(0, 0, 0, .28); border-radius: 12px; border-bottom: 1px solid var(--line); }
-.srows + .wigglebar { margin-top: 12px; }
 @media (prefers-reduced-motion: reduce) { .wiggle > .row { animation: none; } }
 /* Favoriten bei Essen (Tag „★“) */
 .favmark { color: var(--accent); margin-right: 5px; }
 .favchip { font-size: 1rem; line-height: 1; min-width: 40px; }
 .favbtn { margin-left: 8px; padding: 2px 6px; border: 0; background: none; color: var(--muted); font-size: 1.35rem; line-height: 1; vertical-align: -2px; text-transform: none; letter-spacing: 0; cursor: pointer; }
 .favbtn.on { color: var(--accent); }
+/* Sortieren in Listen: „Ziehen zum Sortieren / Fertig“ schwebt immer über der Tab-Leiste (auch in langen Listen sichtbar) */
+.wigglebar.floatbar {
+  position: fixed; z-index: 19; left: 0; right: 0; margin: 0 auto; width: calc(100% - 24px); max-width: 520px; box-sizing: border-box;
+  bottom: calc(max(10px, calc(env(safe-area-inset-bottom, 0px) - 10px)) + 72px);
+  padding: 6px 6px 6px 18px; border-radius: 999px; border: 1px solid var(--glass-line, var(--line));
+  background: color-mix(in srgb, var(--surface) var(--bar-p, 72%), transparent);
+  -webkit-backdrop-filter: blur(var(--bar-blur, 22px)) saturate(1.8); backdrop-filter: blur(var(--bar-blur, 22px)) saturate(1.8);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .16), 0 0 0 .5px var(--line);
+}
+.wigglebar.floatbar .btn { border-radius: 999px; }
+.srows.wiggle { margin-bottom: 64px; } /* Platz, damit der letzte Eintrag nicht unter der Leiste liegt */
+@media (orientation: landscape) and (max-height: 520px) {
+  .wigglebar.floatbar { max-width: 420px; bottom: calc(max(6px, calc(env(safe-area-inset-bottom, 0px) - 14px)) + 50px); }
+}
+/* Hinweis (z. B. „Rückgängig“ nach dem Verschieben) über die schwebende Sortier-Leiste setzen */
+body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-bottom, 0px) + 140px); }
+@media (orientation: landscape) and (max-height: 520px) { body:has(.floatbar) #toast { bottom: calc(env(safe-area-inset-bottom, 0px) + 108px); } }
+.wigglebar.floatbar { background: color-mix(in srgb, var(--surface) min(100%, calc(var(--bar-p, 72%) + 18%)), transparent); } /* etwas deckender als die Tab-Leiste: Text bleibt lesbar */

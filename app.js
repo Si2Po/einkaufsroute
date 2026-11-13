@@ -315,7 +315,7 @@ function listBody() {
     ? `<ul class="srows${ui.wiggle === 'items' ? ' wiggle' : ''}" id="listRows">${groups.map((g) => (g.free
         ? `<li class="grp secli grpbtn" role="button" tabindex="0" data-act="assigncat" data-cat="${g.free}" data-key="§${g.key}"><span class="gname">${esc(g.label)}</span><span class="nozone">Bereich wählen ›</span><span class="cnt">${g.items.length}</span></li>`
         : `<li class="grp secli" data-key="§${g.key}"><span class="gname">${esc(g.label)}</span><span class="cnt">${g.items.length}</span></li>`)
-        + g.items.map(rowHtml).join('')).join('')}</ul>${ui.wiggle === 'items' ? wiggleBar() : ''}`
+        + g.items.map(rowHtml).join('')).join('')}</ul>${ui.wiggle === 'items' ? wiggleBar(true) : ''}`
     : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
   if (ui.wiggle === 'items' && groups.length) return body;
   const doneHtml = done.length
@@ -1400,7 +1400,7 @@ const WIGGLE = {
     },
   },
 };
-function wiggleBar() { return '<div class="wigglebar"><span>Ziehen zum Sortieren</span><button type="button" class="btn small" data-act="wiggleoff">Fertig</button></div>'; }
+function wiggleBar(float) { return '<div class="wigglebar' + (float ? ' floatbar' : '') + '"><span>Ziehen zum Sortieren</span><button type="button" class="btn small" data-act="wiggleoff">Fertig</button></div>'; }
 function dragRow(e, kind, row) {
   const w = WIGGLE[kind], list = row.closest(w.list), sel = w.slots || w.row;
   const before = [...list.children].filter((c) => c.matches(sel)).map((c) => c.dataset.key).join();
@@ -2645,7 +2645,7 @@ function simpleBody() {
   };
   const rows = of('').map(rowHtml).join('') + secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? its.map(rowHtml).join('') : '<li class="secempty">Noch leer</li>'); }).join('');
   const body = rows ? `<ul class="srows${wig ? ' wiggle' : ''}" id="listRows">${rows}</ul>` : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
-  if (wig) return body + wiggleBar(); // „Fertig“ unten: oben verrutscht nichts, und es ist mit dem Daumen erreichbar
+  if (wig) return body + wiggleBar(true); // „Fertig“ schwebt über der Tab-Leiste: oben verrutscht nichts, immer mit dem Daumen erreichbar
   let doneHtml = '';
   if (done.length && keep) doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">Alle Haken entfernen</button><button type="button" class="link clearbtn" data-act="cleardone">Abgehakte löschen</button></div>`;
   else if (done.length) doneHtml = `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
@@ -2664,6 +2664,9 @@ function holdDrag(e, row) {
   sw = null; // kein Wischen auf dieser Zeile
   dragArmed = true;
   row.classList.add('lifted');
+  // Schon beim Anheben zeigen, dass Ziehen sortiert (schwebende Leiste über der Tab-Leiste)
+  if (!list.nextElementSibling?.classList.contains('floatbar')) list.insertAdjacentHTML('afterend', wiggleBar(true));
+  const hint = list.nextElementSibling, dropHint = () => { if (!ui.wiggle) hint?.remove(); };
   const before = [...list.children].filter((c) => c.matches(w.slots)).map((c) => c.dataset.key).join();
   const off = () => { dragArmed = false; document.removeEventListener('pointermove', mv, true); document.removeEventListener('pointerup', up, true); document.removeEventListener('pointercancel', cancel, true); };
   const mv = (ev) => {
@@ -2675,8 +2678,8 @@ function holdDrag(e, row) {
       if (order && order.join() !== before) w.done(order); else render(); // zeigt den Wackelmodus mit „Fertig“
     });
   };
-  const up = (ev) => { if (ev.pointerId !== pid) return; off(); row.classList.remove('lifted'); openEdit(id); };
-  const cancel = (ev) => { if (ev.pointerId !== pid) return; off(); row.classList.remove('lifted'); };
+  const up = (ev) => { if (ev.pointerId !== pid) return; off(); row.classList.remove('lifted'); dropHint(); openEdit(id); };
+  const cancel = (ev) => { if (ev.pointerId !== pid) return; off(); row.classList.remove('lifted'); dropHint(); };
   document.addEventListener('pointermove', mv, true);
   document.addEventListener('pointerup', up, true);
   document.addEventListener('pointercancel', cancel, true);
