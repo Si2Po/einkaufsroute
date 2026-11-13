@@ -249,6 +249,8 @@ document.addEventListener('click', (e) => {
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
     case 'helppage': helpPage(); keep = true; break;
+    case 'catimport': ui.confirmImp = false; catImportSheet(); keep = true; break;
+    case 'catimp': keep = catImport(el.dataset.mode); break;
     case 'vertap': funVersionTap(); keep = true; break; // Versionsnummer: 7× tippen = Statistik
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;

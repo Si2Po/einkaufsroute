@@ -22,8 +22,53 @@ function catListPage() {
     ${ui.wiggle === 'cats' ? wiggleBar() : ''}
     <div class="group${ui.wiggle === 'cats' ? ' wiggle' : ''}" id="catRows">${rows}</div>
     ${missing.length ? `<div class="group"><button type="button" class="sheetbtn" data-act="restoredefaults">Fehlende Standard-Kategorien zurückholen <small>${missing.length}</small></button></div>` : ''}
-    <button type="button" class="btn ghost" data-act="newcatsheet">+ Neue Kategorie</button>`, catListPage);
+    <button type="button" class="btn ghost" data-act="newcatsheet">+ Neue Kategorie</button>
+    ${groupsOn() ? '<div class="group" style="margin-top:12px"><button type="button" class="sheetbtn" data-act="catimport"><span>Von anderer Gruppe übernehmen</span><small>›</small></button></div>' : ''}`, catListPage);
   if (q) updateCatSearch();
+}
+
+// ---------- Kategorien und Stichwörter aus einer anderen Gruppe übernehmen ----------
+// Ziel ist immer die gerade gewählte Stichwortliste (S.cats, Gruppe S.catGroup). Die der anderen Gruppen liegen in S.gcats[g].
+//   ergänzen: fehlende Kategorien und Stichwörter kommen dazu, Vorhandenes bleibt
+//   ersetzen: genaue Kopie der anderen Gruppe (mit Rückfrage)
+function catImportSheet() {
+  const others = sync.groups.filter((x) => x.id !== S.catGroup);
+  if (!others.length) { toast('Es gibt keine andere Gruppe.'); return; }
+  if (!others.some((x) => x.id === ui.impFrom)) ui.impFrom = others[0].id;
+  openSheet(`<div class="sheettitle">Kategorien übernehmen</div>
+    <p class="sheetnote" style="margin:0 4px 8px">In „${esc(gName(S.catGroup))}“ übernehmen aus:</p>
+    <label class="srow"><span class="pl gpl">${ICON_GROUP}Von</span><select id="impFrom" aria-label="Von Gruppe">${others.map((x) => `<option value="${x.id}"${x.id === ui.impFrom ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
+    <div class="actions" style="margin-top:12px">
+      <button type="button" class="btn" style="flex:1" data-act="catimp" data-mode="add">Ergänzen</button>
+      <button type="button" class="btn danger" style="flex:1" data-act="catimp" data-mode="replace">${ui.confirmImp ? 'Wirklich ersetzen?' : 'Ersetzen'}</button>
+    </div>
+    <p class="sheetnote" style="margin:8px 4px 0"><b>Ergänzen:</b> Fehlende Kategorien und Stichwörter kommen dazu, alles Vorhandene bleibt.<br><b>Ersetzen:</b> Die Kategorien hier werden eine genaue Kopie, bisherige Stichwörter gehen verloren${S.catGroup === personalGroup() ? '' : ` – auch für alle anderen in „${esc(gName(S.catGroup))}“`}.</p>`);
+}
+document.addEventListener('change', (e) => { if (e.target.id === 'impFrom') { ui.impFrom = e.target.value; ui.confirmImp = false; } });
+// Gibt true zurück, wenn das Sheet offen bleiben soll (Rückfrage beim Ersetzen)
+function catImport(mode) {
+  const from = ui.impFrom, src = (S.gcats || {})[from];
+  if (!src || !src.length) { ui.confirmImp = false; toast(`In „${gName(from)}“ gibt es noch keine eigenen Kategorien.`); return false; }
+  if (mode === 'replace' && !ui.confirmImp) { ui.confirmImp = true; catImportSheet(); return true; }
+  ui.confirmImp = false;
+  const before = S.cats.map(cloneCat);
+  let added = 0;
+  if (mode === 'replace') {
+    S.cats = src.map(cloneCat);
+    if (!S.cats.some((c) => c.id === 'sonst')) S.cats.push(cloneCat(DEFAULT_CATS.find((d) => d.id === 'sonst')));
+  } else {
+    const have = new Set(S.cats.flatMap((c) => c.kw)); // ein Stichwort soll nur in einer Kategorie stehen
+    for (const sc of src) {
+      let c = S.cats.find((x) => x.id === sc.id);
+      if (!c) { c = { id: sc.id, name: sc.name, kw: [] }; CATS = S.cats; insertBeforeFallback(c); added++; }
+      sc.kw.forEach((k) => { if (!have.has(k)) { c.kw.push(k); have.add(k); added++; } });
+    }
+  }
+  CATS = S.cats; indexCats();
+  commit(); catListPage();
+  const msg = mode === 'replace' ? `Kategorien von „${gName(from)}“ übernommen` : (added ? `${added} Kategorien/Stichwörter ergänzt` : 'Nichts Neues zum Ergänzen');
+  toast(msg, () => { S.cats = before; CATS = S.cats; indexCats(); commit(); catListPage(); });
+  return false;
 }
 // Suche über alle Stichwörter: zeigt, in welcher Kategorie ein Produkt steckt (und wo ein neues Wort landen würde)
 function updateCatSearch() {
