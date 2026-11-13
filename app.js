@@ -1332,7 +1332,7 @@ function bindSheetGestures() {
 // scroller: was beim Ziehen an den Rand mitscrollt (window oder eine Seite).
 let sortingNow = false;
 // Während des Ziehens darf die Seite nicht scrollen (sonst bricht Safari das Ziehen ab)
-document.addEventListener('touchmove', (e) => { if (sortingNow && e.cancelable) e.preventDefault(); }, { passive: false });
+document.addEventListener('touchmove', (e) => { if ((sortingNow || dragArmed) && e.cancelable) e.preventDefault(); }, { passive: false });
 function sortDrag(e, handle, li, list, sel, scroller, done) {
   e.preventDefault();
   sortingNow = true;
@@ -1631,7 +1631,7 @@ document.addEventListener('pointerdown', (e) => {
     holdAfterLongPress();
     haptic();
     if (el.classList.contains('star')) { lpStar = true; starSheet(); }
-    else if (el.classList.contains('row')) { if (isSimple() && el.closest('#listBody')) holdDrag(e, id); else openEdit(id); }
+    else if (el.classList.contains('row')) { if (el.closest('#simpleRows')) holdDrag(e, el); else openEdit(id); }
     else if (el.classList.contains('mcard')) openMealEdit(id);
     else if (el.classList.contains('secbtn')) sectionSheet(el.dataset.sec); // Abschnitt: umbenennen, verschieben, löschen
     else if (el.matches('.zitem, .catrow')) startWiggle(e, el); // Liste der Bereiche / Kategorien: sortieren
@@ -2627,41 +2627,50 @@ function simpleBody() {
   const shown = S.items.filter((i) => keep || !i.done).sort((a, b) => (a.ord ?? a.ts) - (b.ord ?? b.ts));
   const of = (sid) => shown.filter((i) => (known.has(i.sec) ? i.sec : '') === sid);
   const done = S.items.filter((i) => i.done);
-  if (ui.wiggle === 'items') { // Sortieren: alles in einer Reihe, damit Einträge auch in andere Abschnitte wandern können
-    return `${wiggleBar()}<ul class="rows wiggle" id="simpleRows">${of('').map(rowHtml).join('')}${secs.map((s) => `<li class="secli" data-key="§${s.id}">${esc(s.name)}</li>${of(s.id).map(rowHtml).join('')}`).join('')}</ul>`;
-  }
-  const free = of('');
+  const wig = ui.wiggle === 'items';
+  // Immer eine einzige Reihe (Einträge + Abschnitts-Köpfe), damit beim Ziehen nichts umgebaut werden muss und Einträge
+  // in andere Abschnitte wandern können. Die Optik (Karten je Abschnitt) kommt aus dem CSS (.srows).
   const head = (s) => {
     const on = ui.addSec === s.id, n = of(s.id).filter((i) => !i.done).length;
-    return `<button type="button" class="grp grpbtn secbtn${on ? ' on' : ''}" data-act="secpick" data-sec="${s.id}" aria-pressed="${on}"><span class="gname">${esc(s.name)}</span><span class="cnt">${n}</span></button>`;
+    return `<li class="grp secli secbtn${on ? ' on' : ''}" role="button" tabindex="0" data-act="secpick" data-sec="${s.id}" data-key="§${s.id}" aria-pressed="${on}"><span class="gname">${esc(s.name)}</span><span class="cnt">${n}</span></li>`;
   };
-  let body = free.length ? `<ul class="rows">${free.map(rowHtml).join('')}</ul>` : '';
-  body += secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? `<ul class="rows">${its.map(rowHtml).join('')}</ul>` : '<p class="secempty">Noch leer</p>'); }).join('');
-  if (!body) body = `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
+  const rows = of('').map(rowHtml).join('') + secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? its.map(rowHtml).join('') : '<li class="secempty">Noch leer</li>'); }).join('');
+  const body = rows ? `<ul class="srows${wig ? ' wiggle' : ''}" id="simpleRows">${rows}</ul>` : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
+  if (wig) return body + wiggleBar(); // „Fertig“ unten: oben verrutscht nichts, und es ist mit dem Daumen erreichbar
   let doneHtml = '';
   if (done.length && keep) doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">Alle Haken entfernen</button><button type="button" class="link clearbtn" data-act="cleardone">Abgehakte löschen</button></div>`;
   else if (done.length) doneHtml = `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
        ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
-  const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten</p>' : '';
+  const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: sortieren</p>' : '';
   return body + doneHtml + `<button type="button" class="link addsec" data-act="newsec">+ Abschnitt</button>` + tip;
 }
-// Einfache Liste, Eintrag gedrückt halten: loslassen = bearbeiten, ziehen = sortieren (danach bleibt der Wackelmodus an).
-// Der Wackelmodus startet schon beim langen Drücken, damit die Seite beim Ziehen nicht scrollt; ohne Bewegung wird er wieder beendet.
-function holdDrag(e, id) {
-  ui.wiggle = 'items'; render();
-  const w = WIGGLE.items, list = $('#simpleRows'), row = list?.querySelector(`.row[data-id="${id}"]`);
-  if (!row) { ui.wiggle = null; render(); openEdit(id); return; }
-  sw = null; // kein Wischen auf der alten Zeile
-  const x0 = e.clientX, y0 = e.clientY;
-  let moved = false;
-  const mv = (ev) => { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 10) moved = true; };
-  document.addEventListener('pointermove', mv, true);
+// Einfache Liste, Eintrag gedrückt halten: der Eintrag hebt sich leicht an.
+//   loslassen ohne Bewegung = bearbeiten, Finger bewegen = Eintrag ziehen (danach bleibt der Wackelmodus an).
+// Es wird nichts neu aufgebaut, der Eintrag bleibt genau unter dem Finger. Solange er angehoben ist, scrollt die Seite nicht.
+let dragArmed = false;
+function holdDrag(e, row) {
+  const list = row.closest('#simpleRows'), id = row.dataset.id;
+  if (!list) { openEdit(id); return; }
+  const w = WIGGLE.items, x0 = e.clientX, y0 = e.clientY, pid = e.pointerId;
+  sw = null; // kein Wischen auf dieser Zeile
+  dragArmed = true;
+  row.classList.add('lifted');
   const before = [...list.children].filter((c) => c.matches(w.slots)).map((c) => c.dataset.key).join();
-  sortDrag(e, row, row, list, w.slots, w.scroller(list), (order) => {
-    document.removeEventListener('pointermove', mv, true);
-    if (!moved) { ui.wiggle = null; render(); openEdit(id); return; }
-    if (order && order.join() !== before) w.done(order); else render();
-  });
+  const off = () => { dragArmed = false; document.removeEventListener('pointermove', mv, true); document.removeEventListener('pointerup', up, true); document.removeEventListener('pointercancel', cancel, true); };
+  const mv = (ev) => {
+    if (ev.pointerId !== pid || Math.hypot(ev.clientX - x0, ev.clientY - y0) < 8) return;
+    off();
+    row.classList.remove('lifted');
+    ui.wiggle = 'items'; list.classList.add('wiggle');
+    sortDrag(ev, row, row, list, w.slots, w.scroller(list), (order) => {
+      if (order && order.join() !== before) w.done(order); else render(); // zeigt den Wackelmodus mit „Fertig“
+    });
+  };
+  const up = (ev) => { if (ev.pointerId !== pid) return; off(); row.classList.remove('lifted'); openEdit(id); };
+  const cancel = (ev) => { if (ev.pointerId !== pid) return; off(); row.classList.remove('lifted'); };
+  document.addEventListener('pointermove', mv, true);
+  document.addEventListener('pointerup', up, true);
+  document.addEventListener('pointercancel', cancel, true);
 }
 function newSecSheet() {
   openSheet(`<div class="sheettitle">Neuer Abschnitt</div>

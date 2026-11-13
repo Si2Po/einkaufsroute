@@ -637,16 +637,23 @@ form .gline { margin: 0 2px 10px; }
 .gpl svg { flex: none; width: 15px; height: 15px; }
 .gname { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
 .gname svg { flex: none; color: var(--muted); }
-/* Einfache Liste: Abschnitte, „+ Abschnitt“, Sortieren */
+/* Einfache Liste: eine einzige Reihe (Einträge + Abschnitts-Köpfe), sieht aber aus wie eine Karte je Abschnitt */
 .bar[hidden] { display: none; }
-.secbtn.on .gname { color: var(--accent); }
-.secbtn.on { color: var(--accent); }
-.secempty { margin: 0 2px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: .85rem; }
+.srows { list-style: none; margin: 0; padding: 0; }
+.srows > .row { background: var(--surface); border: 1px solid var(--line); border-bottom: 0; }
+.srows > .row:first-child, .srows > .secli + .row { border-radius: 12px 12px 0 0; }
+.srows > .row:last-child, .srows > .row:has(+ .secli) { border-bottom: 1px solid var(--line); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+.srows > .secli { cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.srows > .secli:first-child { margin-top: 2px; }
+.secbtn.on, .secbtn.on .gname { color: var(--accent); }
+.secempty { margin: 0 2px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: .85rem; list-style: none; }
 .addsec { display: block; margin-top: 10px; }
-.rows .secli { padding: 14px 12px 6px; border-top: 1px solid var(--line); background: var(--soft); font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
-.rows .secli:first-child { border-top: 0; }
+/* Gedrückt halten: Eintrag hebt sich leicht an */
+.srows > .row { transition: transform .15s ease, box-shadow .15s ease; }
+.srows > .row.lifted { transform: scale(1.02); box-shadow: 0 8px 22px rgba(0, 0, 0, .28); position: relative; z-index: 2; border-radius: 12px; border-bottom: 1px solid var(--line); }
+/* Wackelmodus */
 .wiggle > .row:not(.dragging) { animation: wiggle .2s ease-in-out infinite alternate; }
 .wiggle > .row { touch-action: pan-y; cursor: grab; }
-.wiggle > .row.dragging { position: relative; z-index: 2; background: var(--surface); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.wiggle > .row.dragging { position: relative; z-index: 2; transition: none; box-shadow: 0 8px 22px rgba(0, 0, 0, .28); border-radius: 12px; border-bottom: 1px solid var(--line); }
+.srows + .wigglebar { margin-top: 12px; }
 @media (prefers-reduced-motion: reduce) { .wiggle > .row { animation: none; } }
-.rows:has(.dragging) { overflow: visible; }
