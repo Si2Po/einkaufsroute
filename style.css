@@ -705,3 +705,4 @@ body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-b
 .stat span { font-size: .78rem; color: var(--muted); }
 p.tip[data-act="vertap"] { cursor: default; -webkit-user-select: none; user-select: none; }
 .swrow .funicon { font-size: 1.4rem; line-height: 1; }
+.srows > .row:first-child { margin-top: 12px; } /* einfache Liste ohne Abschnitt oben: gleicher Abstand zur Eingabe wie mit Überschrift */
