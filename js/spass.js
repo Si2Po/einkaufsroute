@@ -162,7 +162,7 @@ function funVersionTap() {
   if (verTaps === 7) {
     verTaps = 0;
     try { document.getElementById('toast')?.hidePopover(); } catch (_) { /* kein Hinweis offen */ }
-    haptic(); statsPage();
+    haptic(); ui.confirmStats = false; statsPage();
   }
 }
 function statsPage() {
@@ -181,5 +181,16 @@ function statsPage() {
     <div class="sheettitle" style="margin-top:14px">Am häufigsten gekauft</div>
     ${rows(topOf(st.prods, 5), '×')}
     <div class="sheettitle" style="margin-top:14px">Lieblingsessen</div>
-    ${rows(topOf(st.meals, 3), '×')}`);
+    ${rows(topOf(st.meals, 3), '×')}
+    <div class="actions" style="margin-top:18px"><button type="button" class="btn danger" data-act="statsreset">${ui.confirmStats ? 'Wirklich zurücksetzen?' : 'Statistik zurücksetzen'}</button></div>`);
 }
+// Zurücksetzen mit Rückfrage (zweimal tippen), zählt danach wieder ab heute
+document.addEventListener('click', (e) => {
+  if (!e.target.closest?.('[data-act="statsreset"]')) return;
+  if (!ui.confirmStats) { ui.confirmStats = true; statsPage(); return; }
+  ui.confirmStats = false;
+  delete S.stats;
+  save();
+  statsPage();
+  toast('Statistik zurückgesetzt');
+});
