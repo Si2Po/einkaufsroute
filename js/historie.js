@@ -99,3 +99,21 @@ document.addEventListener('click', (e) => {
   }
   commit();
 });
+
+// Lokal testen (nur auf localhost): erfundene ältere Käufe anlegen, damit sofort Vorschläge erscheinen.
+// Sie liegen unter g = '' und werden deshalb nie abgeglichen. In der Browser-Konsole: testVorschlaege() / testVorschlaegeWeg()
+if (IS_LOCAL) {
+  window.testVorschlaege = () => {
+    const n = Date.now(), ago = (d) => n - d * DAY;
+    const fake = [['Klopapier', [70, 49, 28]], ['Kaffee', [22, 15, 8]], ['Spülmaschinentabs', [95, 63, 32]], ['Butter', [20, 10, 2]]];
+    S.hist = S.hist || {}; S.hist[''] = S.hist[''] || {};
+    fake.forEach(([name, days]) => { const key = dupKey(name); S.hist[''][key] = { id: key, name, t: days.map(ago), test: true }; if (S.snooze) delete S.snooze[key]; });
+    commit();
+    return 'Test-Käufe angelegt: Klopapier, Kaffee, Spülmaschinentabs sollten vorgeschlagen werden (Butter nicht, die ist noch nicht fällig).';
+  };
+  window.testVorschlaegeWeg = () => {
+    Object.keys(S.hist?.[''] || {}).forEach((k) => { if (S.hist[''][k].test) delete S.hist[''][k]; });
+    commit();
+    return 'Test-Käufe entfernt.';
+  };
+}
