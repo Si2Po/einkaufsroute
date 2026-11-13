@@ -53,13 +53,23 @@ function funItemAdded(names) {
     }
   }
 }
-// Zufälliges Essen gewürfelt. Nach 7× ohne Entscheidung: Pizza-Vorschlag (einmal je Würfel-Runde).
+// Zufälliges Essen gewürfelt. Ab 7× ohne Entscheidung kommen Sprüche (ROLL_LINES), bis ein Essen auf die Liste kommt.
 function funRolled() {
   stats().rolls++;
   save();
   ui.rollStreak = (ui.rollStreak || 0) + 1;
-  if (ui.rollStreak === 7 && funOn()) setTimeout(() => toast('Kannst du dich nicht entscheiden? Bestell doch einfach eine Pizza. 🍕'), 600);
+  const line = ROLL_LINES[ui.rollStreak];
+  if (line && funOn()) setTimeout(() => toast(line), 600);
 }
+// Würfeln ohne Entscheidung: die App wird langsam ungeduldig (Zahl = wie oft hintereinander gewürfelt)
+const ROLL_LINES = {
+  7: 'Kannst du dich nicht entscheiden? Bestell doch einfach eine Pizza. 🍕',
+  10: 'Wir sind hier nicht bei Kniffel. 🎲',
+  13: 'Ok … gibt es überhaupt etwas, das dir schmeckt?!',
+  16: 'Der Würfel braucht jetzt eine kurze Pause. 😮‍💨',
+  20: 'Nimm einfach das nächste. Versprochen, es wird lecker. 🙏',
+  25: '…',
+};
 function funMealAdded(m) {
   ui.rollStreak = 0;
   const st = stats();
