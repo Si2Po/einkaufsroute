@@ -54,7 +54,7 @@ function helpPage() {
     helpTopic('Geschäfte und Grundriss', `
       <ul>
         <li>Lege für jedes Geschäft seine <b>Bereiche</b> in der Reihenfolge deines Laufwegs an und wähle, welche Kategorien dort liegen. Die Liste sortiert sich dann genau so.</li>
-        <li>Der <b>Grundriss</b> ist freiwillig: Bereiche einzeichnen hilft beim Wiederfinden, für die Sortierung reicht die Reihenfolge.</li>
+        <li>Der <b>Grundriss</b> ist optional: Bereiche einzeichnen hilft beim Wiederfinden, für die Sortierung reicht die Reihenfolge.</li>
         <li>Liegt ein Produkt woanders als seine Kategorie, ziehe es in der Liste in den richtigen Bereich (oder wähle im Eintrag den „Bereich“). Das gilt dann nur für dieses Geschäft.</li>
         <li>Liegt eine Kategorie in mehreren Bereichen, bestimmt der <b>★</b> beim Bereich, wohin sie normalerweise gehört.</li>
       </ul>`),
