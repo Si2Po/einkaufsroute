@@ -1064,7 +1064,7 @@ function listEditPage(id) {
     ${typeSelect('leType', l.type || '', ` data-id="${l.id}"`)}
     ${l.type === 'simple' ? `<label class="srow"><span class="pl">Abgehakt</span><select id="leDone" data-id="${l.id}" aria-label="Abgehakte Einträge"><option value="">rutscht nach unten</option><option value="keep"${l.keepDone ? ' selected' : ''}>bleibt stehen</option></select></label>` : ''}
     <p class="sheetnote" style="margin:2px 4px 8px">${l.type === 'simple'
-      ? 'Eigene Reihenfolge und Abschnitte, z. B. für Filme oder Packlisten. Abschnitt anlegen: unten in der Liste. Sortieren: Eintrag gedrückt halten → „Sortieren“.'
+      ? 'Eigene Reihenfolge und Abschnitte, z. B. für Filme oder Packlisten. Abschnitt anlegen: unten in der Liste. Sortieren: Eintrag gedrückt halten und ziehen.'
       : 'Sortiert sich nach dem Laufweg im Geschäft und nach Kategorien.'}</p>
     ${groupSelect('leGroup', l.g, 'Gruppe', ` data-id="${l.id}"`)}
     ${S.lists.length > 1 ? `<div class="actions" style="margin-top:16px"><button type="button" class="btn danger" data-act="dellist" data-id="${l.id}">${ui.confirmList === l.id ? `Wirklich löschen? (${n} Einträge)` : 'Liste löschen'}</button></div>` : ''}`, () => listEditPage(id));
@@ -1152,7 +1152,6 @@ function openEdit(id) {
     </div></div>`}
     <div class="actions">
       <button type="button" class="btn danger" data-act="delitem" data-id="${it.id}">Löschen</button>
-      ${isSimple() ? '<button type="button" class="btn ghost" data-act="sortitems">Sortieren</button>' : ''}
       <button type="submit" hidden>Speichern</button>
     </div></form>`);
 }
@@ -1631,7 +1630,9 @@ document.addEventListener('pointerdown', (e) => {
     lpFired = true; lp = null;
     holdAfterLongPress();
     haptic();
-    if (el.classList.contains('star')) { lpStar = true; starSheet(); } else if (el.classList.contains('row')) openEdit(id); else if (el.classList.contains('mcard')) openMealEdit(id);
+    if (el.classList.contains('star')) { lpStar = true; starSheet(); }
+    else if (el.classList.contains('row')) { if (isSimple() && el.closest('#listBody')) holdDrag(e, id); else openEdit(id); }
+    else if (el.classList.contains('mcard')) openMealEdit(id);
     else if (el.classList.contains('secbtn')) sectionSheet(el.dataset.sec); // Abschnitt: umbenennen, verschieben, löschen
     else if (el.matches('.zitem, .catrow')) startWiggle(e, el); // Liste der Bereiche / Kategorien: sortieren
     else startRedraw(id); // Bereich im Grundriss: neu einzeichnen
@@ -2632,7 +2633,7 @@ function simpleBody() {
   const free = of('');
   const head = (s) => {
     const on = ui.addSec === s.id, n = of(s.id).filter((i) => !i.done).length;
-    return `<button type="button" class="grp grpbtn secbtn${on ? ' on' : ''}" data-act="secpick" data-sec="${s.id}" aria-pressed="${on}"><span class="gname">${esc(s.name)}</span>${on ? '<span class="nozone">Neues kommt hierher</span>' : ''}<span class="cnt">${n}</span></button>`;
+    return `<button type="button" class="grp grpbtn secbtn${on ? ' on' : ''}" data-act="secpick" data-sec="${s.id}" aria-pressed="${on}"><span class="gname">${esc(s.name)}</span><span class="cnt">${n}</span></button>`;
   };
   let body = free.length ? `<ul class="rows">${free.map(rowHtml).join('')}</ul>` : '';
   body += secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? `<ul class="rows">${its.map(rowHtml).join('')}</ul>` : '<p class="secempty">Noch leer</p>'); }).join('');
@@ -2643,6 +2644,24 @@ function simpleBody() {
        ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
   const tip = S.items.length && !S.tipSeen ? '<p class="tip">Tippen: abhaken · Gedrückt halten: bearbeiten</p>' : '';
   return body + doneHtml + `<button type="button" class="link addsec" data-act="newsec">+ Abschnitt</button>` + tip;
+}
+// Einfache Liste, Eintrag gedrückt halten: loslassen = bearbeiten, ziehen = sortieren (danach bleibt der Wackelmodus an).
+// Der Wackelmodus startet schon beim langen Drücken, damit die Seite beim Ziehen nicht scrollt; ohne Bewegung wird er wieder beendet.
+function holdDrag(e, id) {
+  ui.wiggle = 'items'; render();
+  const w = WIGGLE.items, list = $('#simpleRows'), row = list?.querySelector(`.row[data-id="${id}"]`);
+  if (!row) { ui.wiggle = null; render(); openEdit(id); return; }
+  sw = null; // kein Wischen auf der alten Zeile
+  const x0 = e.clientX, y0 = e.clientY;
+  let moved = false;
+  const mv = (ev) => { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 10) moved = true; };
+  document.addEventListener('pointermove', mv, true);
+  const before = [...list.children].filter((c) => c.matches(w.slots)).map((c) => c.dataset.key).join();
+  sortDrag(e, row, row, list, w.slots, w.scroller(list), (order) => {
+    document.removeEventListener('pointermove', mv, true);
+    if (!moved) { ui.wiggle = null; render(); openEdit(id); return; }
+    if (order && order.join() !== before) w.done(order); else render();
+  });
 }
 function newSecSheet() {
   openSheet(`<div class="sheettitle">Neuer Abschnitt</div>
