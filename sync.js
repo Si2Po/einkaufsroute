@@ -398,6 +398,7 @@ async function syncRun() {
       for (const t of touched) { if (t.gone) continue; const d = cur2.get(t.g)?.get(t.id); if (d) gsOf(t.g).known[t.id] = knownEntry(d); }
       changed = true;
     }
+    if (await siriTake()) changed = true; // Siri-Eingang (siri.js): setzt sync.dirty, der nächste Durchgang lädt die Einträge hoch
     if (changed) { sync.quiet = true; save(); }
     persistSync();
     sync.status = 'ok'; sync.err = ''; sync.last = Date.now();
@@ -472,6 +473,8 @@ function accountPage(msg) {
       <button type="button" class="btn ghost" data-act="acc_newgroup">+ Neue Gruppe</button>
       <button type="button" class="btn ghost" data-act="acc_joinsheet">Einladung annehmen</button>
     </div>
+    <div class="sheettitle" style="margin-top:16px">Siri</div>
+    <div class="group"><button type="button" class="sheetbtn" data-act="siripage"><span>Mit Siri hinzufügen</span><small>auch bei gesperrtem iPhone ›</small></button></div>
     ${dataRow}
     <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>`, () => accountPage(ui.accMsg));
 }

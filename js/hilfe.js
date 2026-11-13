@@ -47,17 +47,9 @@ function helpPage() {
         <li><b>Vielleicht fällig:</b> Kaufst du etwas regelmäßig (mindestens dreimal), schlägt die App es über der Liste vor, sobald es wieder Zeit dafür ist. Antippen setzt es auf die Liste, × blendet den Vorschlag eine Weile aus. Unter Einstellungen → Vorschläge siehst du, was erkannt wurde, kannst den Rhythmus ändern und eigene Vorschläge anlegen.</li>
       </ul>`),
     helpTopic('Mit Siri hinzufügen', `
-      <p>Mit einem <b>Kurzbefehl</b> sagst du „Hey Siri, Einkauf“ und dann einfach, was fehlt, z. B. „Milch und zwei Butter“.</p>
-      <ol>
-        <li>Die App <b>Kurzbefehle</b> öffnen und mit <b>+</b> einen neuen Kurzbefehl anlegen.</li>
-        <li>Aktion <b>„Text diktieren“</b> hinzufügen.</li>
-        <li>Aktion <b>„URL“</b> hinzufügen und eintragen:<br><code class="sel">${esc(location.origin + location.pathname)}?neu=</code><br>
-          Direkt dahinter die Variable <b>„Diktierter Text“</b> einsetzen.</li>
-        <li>Aktion <b>„URLs öffnen“</b> hinzufügen.</li>
-        <li>Oben den Namen ändern, z. B. in <b>„Einkauf“</b>. So heißt dann auch der Siri-Befehl.</li>
-      </ol>
-      <p>Soll alles immer in eine bestimmte Liste, häng an die Adresse noch <b>&amp;liste=Name</b> an, z. B. <code>&amp;liste=Einkaufsliste</code>. Sonst landet es in der Liste, die du zuletzt offen hattest.</p>
-      <p><b>Wichtig:</b> Der Kurzbefehl öffnet die App in <b>Safari</b>, nicht über das Symbol auf dem Home-Bildschirm. Safari hat einen eigenen Speicher. Melde dich deshalb auch in Safari einmal an, dann erscheinen die Einträge nach ein paar Sekunden auch in der App.</p>`),
+      <p>Mit einem <b>Kurzbefehl</b> sagst du „Hey Siri, Einkauf“ und dann einfach, was fehlt, z. B. „Milch und zwei Butter“. Das klappt auch bei gesperrtem iPhone.</p>
+      <p>Einrichten unter Einstellungen → Konto und Gruppen → <b>Siri</b> (dafür musst du angemeldet sein). Dort wählst du die Liste und bekommst eine Schritt-für-Schritt-Anleitung mit allem zum Kopieren.</p>
+      <p>Die Einträge erscheinen auf der Liste, sobald jemand aus der Gruppe die App offen hat.</p>`),
     helpTopic('Einkaufsliste und einfache Liste', `
       <p>Beim Anlegen (oder unter „Liste bearbeiten“) wählst du die <b>Art</b>:</p>
       <ul>

@@ -188,20 +188,22 @@ function addFromInput() {
   if (r.dups.length) { flashItem(r.dups[0].id); toast(`${r.dups.map((d) => '„' + d.name + '“').join(', ')} steht schon auf der Liste`); }
   else funItemAdded(r.added);
 }
-// Text (getippt, gesprochen oder per Kurzbefehl) in die aktuelle Liste übernehmen. Speichert noch nicht.
+// Text (getippt, gesprochen oder per Kurzbefehl/Siri) in eine Liste übernehmen, ohne Angabe in die offene. Speichert noch nicht.
 // Gibt null zurück, wenn nichts drinstand, sonst { added: [Namen], dups: [schon vorhandene Einträge] }.
-function addText(text) {
+function addText(text, l = curList()) {
   const parts = splitSpoken(text); // auch Gesprochenes: „Milch, Brot und zwei Butter“
-  if (!parts.length) return null;
+  if (!parts.length || !l) return null;
+  const open = l === curList();
+  const items = open ? S.items : (l.items = l.items || []); // die offene Liste steht in S.items
   const dups = [], added = [];
   parts.forEach((p, n) => {
     const { qty, name } = parseEntry(p);
-    const same = S.items.find((i) => !i.done && dupKey(i.name) === dupKey(name));
+    const same = items.find((i) => !i.done && dupKey(i.name) === dupKey(name));
     if (same) { dups.push(same); return; } // steht schon auf der Liste (auch als Mehrzahl/Einzahl)
     const it = { id: uid(), name, qty, note: '', cat: guessCat(name), done: false, ts: Date.now() + n };
-    if (isSimple()) { if (validSec(ui.addSec)) it.sec = ui.addSec; } // einfache Liste: in den gewählten Abschnitt, Wörter nicht für Einkaufs-Vorschläge merken
+    if (isSimple(l)) { if (open && validSec(ui.addSec)) it.sec = ui.addSec; } // einfache Liste: in den gewählten Abschnitt, Wörter nicht für Einkaufs-Vorschläge merken
     else rememberName(name);
-    S.items.push(it);
+    items.push(it);
     added.push(name);
   });
   return { added, dups };

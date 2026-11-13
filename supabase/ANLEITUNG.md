@@ -53,3 +53,10 @@ Die App funktioniert danach unverändert weiter; die Gruppen-Funktionen kommen m
 3. Erwartet: „Success. No rows returned“. Bei einer Fehlermeldung: Text kopieren und mir schicken.
 Ohne diesen Schritt funktioniert die App normal weiter; die Kaufhistorie bleibt dann nur auf dem jeweiligen Gerät
 und wird erst nach dem SQL mit der Gruppe geteilt (nach dem nächsten Start der App).
+
+## 8. Siri nachrüsten (einmalig, ab App-Version 0.7.8)
+1. Supabase → **SQL Editor** → „New query“.
+2. Den kompletten Inhalt von `siri.sql` einfügen und **Run** drücken.
+3. Erwartet: „Success. No rows returned“. Bei einer Fehlermeldung: Text kopieren und mir schicken.
+Danach in der App: Einstellungen → Konto und Gruppen → **Siri**. Ohne diesen Schritt läuft die App normal weiter,
+die Siri-Seite weist dann nur darauf hin, dass das SQL noch fehlt.
