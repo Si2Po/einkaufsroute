@@ -697,3 +697,11 @@ body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-b
 .sheethead .sheettitle, .favbtn { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .favbtn:focus { outline: none; }
 .favbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+/* Kleine Späße: Konfetti über allem, ohne Klicks abzufangen; Statistik-Kacheln */
+.confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; }
+.statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px; text-align: center; display: grid; gap: 2px; }
+.stat b { font-size: 1.5rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.stat span { font-size: .78rem; color: var(--muted); }
+p.tip[data-act="vertap"] { cursor: default; -webkit-user-select: none; user-select: none; }
+.swrow .funicon { font-size: 1.4rem; line-height: 1; }

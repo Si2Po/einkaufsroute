@@ -10,15 +10,21 @@ let pendT;
 function finishAll() {
   clearTimeout(pendT);
   if (!ui.pending.size) return;
-  ui.pending.forEach((_, id) => { const it = S.items.find((i) => i.id === id); if (it && !it.done) it.done = true; });
+  const checked = [];
+  ui.pending.forEach((_, id) => { const it = S.items.find((i) => i.id === id); if (it && !it.done) { it.done = true; checked.push(it); } });
   ui.pending.clear();
   commit();
+  funChecked(checked);
 }
 const armPending = () => { clearTimeout(pendT); if (ui.pending.size) pendT = setTimeout(finishAll, CHECK_DELAY); };
 function toggleItem(id) {
   const it = S.items.find((i) => i.id === id);
   if (!it) return;
-  if (isSimple() && curList().keepDone) { it.done = !it.done; commit(); return; } // bleibt an seinem Platz stehen
+  if (isSimple() && curList().keepDone) { // bleibt an seinem Platz stehen
+    it.done = !it.done; commit();
+    if (it.done) funChecked([it]);
+    return;
+  }
   if (it.done) { it.done = false; commit(); armPending(); return; }
   if (ui.pending.has(id)) ui.pending.delete(id); else ui.pending.set(id, true);
   armPending();
@@ -83,6 +89,7 @@ function mealSwipeToList(id) {
   const m = mealById(id);
   if (!m) return;
   const lid = S.listId, r = addMealItems(m, m.base || 2, new Set(m.ing.filter((i) => !i.basic).map((i) => i.id)));
+  funMealAdded(m);
   save();
   toast(`${m.name}: ${addedMsg(r)}`, r.added ? () => {
     if (S.listId !== lid) return;
@@ -174,7 +181,7 @@ function addFromInput() {
   const input = $('#addName');
   const parts = input.value.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
   if (!parts.length) return;
-  const dups = [];
+  const dups = [], added = [];
   parts.forEach((p, n) => {
     const { qty, name } = parseEntry(p);
     const same = S.items.find((i) => !i.done && dupKey(i.name) === dupKey(name));
@@ -183,11 +190,13 @@ function addFromInput() {
     if (isSimple()) { if (validSec(ui.addSec)) it.sec = ui.addSec; } // einfache Liste: in den gewählten Abschnitt, Wörter nicht für Einkaufs-Vorschläge merken
     else rememberName(name);
     S.items.push(it);
+    added.push(name);
   });
   input.value = '';
   commit();
   updateSugg();
   if (dups.length) { flashItem(dups[0].id); toast(`${dups.map((d) => '„' + d.name + '“').join(', ')} steht schon auf der Liste`); }
+  else funItemAdded(added);
 }
 function flashItem(id) {
   const row = $(`.row[data-id="${id}"]`);
@@ -240,6 +249,7 @@ document.addEventListener('click', (e) => {
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
     case 'helppage': helpPage(); keep = true; break;
+    case 'vertap': funVersionTap(); keep = true; break; // Versionsnummer: 7× tippen = Statistik
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;

@@ -133,7 +133,7 @@ function viewSettings() {
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
       ${row('helppage', 'Hilfe', 'So funktioniert die App · Hinweise')}
     </ul>
-    ${appVersion ? `<p class="tip">Version ${esc(appVersion)}</p>` : ''}`;
+    ${appVersion ? `<p class="tip" data-act="vertap">Version ${esc(appVersion)}</p>` : ''}`;
 }
 // Versionsnummer: steht nur an einer Stelle, im Namen des Caches in sw.js ("einkaufsroute-v0.6.1").
 // Die App liest sie aus dem Cache, aus dem sie gerade läuft.

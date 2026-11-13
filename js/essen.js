@@ -184,10 +184,12 @@ function mealToList() {
   const r = addMealItems(m, ui.mealPortions, ui.mealPick);
   closeSheet(); save();
   toast(addedMsg(r));
+  funMealAdded(m);
 }
 function randomMeal() {
   const pool = filteredMeals();
   if (!pool.length) { toast(meals().length ? 'Nichts passt zu dieser Auswahl' : 'Lege zuerst ein Essen an'); return; }
+  funRolled();
   const opts = pool.length > 1 ? pool.filter((m) => m.id !== ui.lastRandom) : pool;
   const m = opts[Math.floor(Math.random() * opts.length)];
   ui.lastRandom = m.id;
