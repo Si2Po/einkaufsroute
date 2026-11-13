@@ -89,13 +89,13 @@ function helpPage() {
     helpTopic('Konto, Abgleich und Sicherung', `
       <ul>
         <li>Wenn du angemeldet bist, gleicht die App deine Daten automatisch ab: jedes Mal, wenn du sie öffnest, und danach alle paar Sekunden, solange sie geöffnet ist. Änderungen der anderen in deinen Gruppen siehst du so nach kurzer Zeit auch bei dir.</li>
-        <li><b>Ohne Netz</b> funktioniert alles weiter. Änderungen werden nachgeholt, sobald wieder Netz da ist.</li>
-        <li>Ändern zwei Personen gleichzeitig dasselbe, gilt die letzte Änderung.</li>
-        <li><b>Abmelden:</b> deine Daten bleiben auf diesem Gerät.</li>
-        <li><b>Sicherung:</b> Konto und Gruppen → Daten sichern und übertragen (als Datei oder Text).</li>
+        <li><b>Ohne Netz</b> kannst du die App ganz normal weiter benutzen, zum Beispiel im Laden ohne Empfang. Deine Änderungen werden abgeglichen, sobald du wieder Netz hast.</li>
+        <li>Ändern zwei Personen gleichzeitig denselben Eintrag, bleibt die Änderung erhalten, die zuletzt abgeglichen wurde.</li>
+        <li><b>Abmelden:</b> Wenn du dich abmeldest, bleiben deine Daten auf diesem Gerät erhalten. Sie werden dann nur nicht mehr abgeglichen.</li>
+        <li><b>Sicherung:</b> Unter Einstellungen → Konto und Gruppen → Daten sichern und übertragen kannst du alles als Datei oder als Text sichern. So nimmst du deine Daten auch auf ein anderes Gerät mit.</li>
       </ul>`),
     helpTopic('Neue Version', `
-      <p>Die App aktualisiert sich von selbst. Sofort nachsehen: auf der Seite Einstellungen <b>ganz oben nach unten ziehen</b>. Die Versionsnummer steht dort ganz unten.</p>`),
+      <p>Die App aktualisiert sich von selbst, sobald es eine neue Version gibt. Wenn du sofort nachsehen möchtest, öffne die Einstellungen und ziehe die Seite <b>ganz oben nach unten</b>. Welche Version du gerade hast, steht ganz unten in den Einstellungen.</p>`),
   ];
   openPage('help', 'Hilfe', `
     <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label></div>
