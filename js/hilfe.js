@@ -78,7 +78,7 @@ function helpPage() {
     helpTopic('Gruppen und das Personen-Symbol', `
       <ul>
         <li>Du siehst immer <b>alles</b> aus allen deinen Gruppen. Die Gruppe regelt nur, <b>wer etwas mitsieht</b>.</li>
-        <li><b>Persönlich</b> siehst nur du. Weitere Gruppen (z. B. „Einkauf“) teilst du mit anderen.</li>
+        <li><b>Persönlich</b> siehst nur du. Weitere Gruppen (z. B. „Einkauf“) kannst du mit anderen teilen.</li>
         <li>Das Symbol ${ICON_GROUP} zeigt, zu welcher Gruppe eine Liste oder ein Geschäft gehört.</li>
         <li>Gruppe ändern: Liste oder Geschäft bearbeiten → „Gruppe“. Beim Essen ganz unten beim ${ICON_GROUP}.</li>
         <li>Wählst du für eine Liste ein Geschäft aus einer anderen Gruppe, fragt die App, ob es mit umziehen soll, damit alle danach sortieren können.</li>
