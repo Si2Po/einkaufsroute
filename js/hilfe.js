@@ -37,7 +37,7 @@ function helpPage() {
       <p>Sie hat dort einen eigenen Speicher. Wenn du dich anmeldest, werden deine Listen, Kategorien, Essen und Geschäfte synchronisiert.</p>`),
     helpTopic('Die Liste bedienen', `
       <ul>
-        <li><b>Liste wählen oder anlegen:</b> unten ein zweites Mal auf „Liste“ tippen.</li>
+        <li><b>Liste wählen oder anlegen:</b> unten ein zweites Mal auf ${TAB_ICONS.list} „Liste“ tippen.</li>
         <li><b>Hinzufügen:</b> oben eintippen und mit + bestätigen. Mehrere Dinge auf einmal gehen auch: einfach durch Komma trennen, z. B. „Milch, Brot, 2 Butter“. Eine Zahl am Anfang wird zur Menge.</li>
         <li><b>Gedrückt halten:</b> Eintrag bearbeiten (Name, Menge, Notiz, Foto). Im Sheet <b>nach oben wischen</b> zeigt Kategorie und Bereich.</li>
         <li><b>Halten und ziehen:</b> umsortieren, zum Beispiel nach Wichtigkeit. Ziehst du einen Eintrag zu einer anderen Kategorie oder einem anderen Bereich, merkt sich die App das. Mit „Rückgängig“ lässt es sich zurücknehmen.</li>
