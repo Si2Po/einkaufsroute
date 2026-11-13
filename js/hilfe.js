@@ -42,8 +42,9 @@ function helpPage() {
         <li><b>Gedrückt halten:</b> Eintrag bearbeiten (Name, Menge, Notiz, Foto). Im Sheet <b>nach oben wischen</b> zeigt Kategorie und Bereich.</li>
         <li><b>Halten und ziehen:</b> umsortieren, zum Beispiel nach Wichtigkeit. Ziehst du einen Eintrag zu einer anderen Kategorie oder einem anderen Bereich, merkt sich die App das. Mit „Rückgängig“ lässt es sich zurücknehmen.</li>
         <li><b>Wischen</b> nach links oder rechts: was dann passiert, stellst du unter Einstellungen → Wischen ein.</li>
-        <li><b>Tippen:</b> abhaken. Der Eintrag rutscht kurz danach nach „Erledigt“. Nochmal tippen macht es rückgängig.</li>      </ul>`),
+        <li><b>Tippen:</b> abhaken. Der Eintrag rutscht kurz danach nach „Erledigt“. Nochmal tippen macht es rückgängig.</li>
         <li><b>Vielleicht fällig:</b> Kaufst du etwas regelmäßig (mindestens dreimal), schlägt die App es über der Liste vor, sobald es wieder Zeit dafür ist. Antippen setzt es auf die Liste, × blendet den Vorschlag eine Weile aus.</li>
+      </ul>`),
     helpTopic('Einkaufsliste und einfache Liste', `
       <p>Beim Anlegen (oder unter „Liste bearbeiten“) wählst du die <b>Art</b>:</p>
       <ul>
