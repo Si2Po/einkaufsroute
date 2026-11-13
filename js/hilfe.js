@@ -82,7 +82,8 @@ function helpPage() {
         <li>Das Symbol ${ICON_GROUP} zeigt, zu welcher Gruppe eine Liste oder ein Geschäft gehört.</li>
         <li>Gruppe ändern: Liste oder Geschäft bearbeiten → „Gruppe“. Beim Essen ganz unten beim ${ICON_GROUP}.</li>
         <li>Wählst du für eine Liste ein Geschäft aus einer anderen Gruppe, fragt die App, ob es mit umziehen soll, damit alle danach sortieren können.</li>
-        <li>Unter Kategorien wählst du „Stichwörter von“: wer dieselbe Gruppe wählt, nutzt und lernt dieselben Stichwörter.</li>
+        <li><b>Kategorien und Stichwörter</b> gehören zu einer Gruppe und werden mit ihr geteilt. Was die App dazulernt, lernt sie für alle in der Gruppe.<br>
+          Unter Kategorien wählst du bei „Stichwörter von“, welche Gruppe deine Listen zum Einordnen verwenden.</li>
         <li>Anlegen, einladen, beitreten, verlassen: Einstellungen → Konto und Gruppen.</li>
       </ul>`, ICON_GROUP),
     helpTopic('Konto, Abgleich und Sicherung', `

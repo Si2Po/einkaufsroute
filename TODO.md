@@ -39,10 +39,11 @@ Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, a
 - [x] **Einkaufsliste: Halten und ziehen** (0.7.1): Reihenfolge innerhalb einer Gruppe frei (it.ord, sonst Reihenfolge des Hinzufügens), in andere Kategorie (ohne Geschäft) bzw. anderen Bereich (mit Geschäft, merkt sich das Geschäft) ziehen = lernen, mit „Rückgängig“.
 - [x] **Essen: Favoriten** (0.7.1) als fester Tag „★“ (immer erster Filter-Tag, Favoriten oben, sonst A–Z, Stern im Essen-Sheet)
 - [x] Hilfe-Text zu Listen-Typen, Ziehen und Favoriten
-- [ ] Später: neue Gruppe mit Kategorien/Stichwörtern einer bestehenden Gruppe starten (heute bekommt eine neue Gruppe die Standard-Kategorien, sobald jemand sie unter „Stichwörter von“ wählt)
+- [ ] **Kategorien von einer Gruppe in eine andere übernehmen** (Idee Besitzer): unter Kategorien „Übernehmen von [Gruppe]“. Vorschlag: *ergänzen* (fehlende Kategorien und Stichwörter dazu, Eigenes bleibt) statt ersetzen; ersetzt auch den alten Punkt „neue Gruppe mit Kategorien einer bestehenden starten“.
 - [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
 
 ## Später / optional
+- [ ] **Wortanfänge und -endungen je Kategorie** (Idee Besitzer): z. B. alles, was mit „TK“ / „TK-“ beginnt, ist Tiefkühl; alles, was auf „-saft“ endet, ist Getränke. Heute erkennen Stichwörter nur den Anfang eines Wortes („tk-“ passt auf „TK-Erbsen“, aber nicht auf „TK Erbsen“; Endungen wie „Orangensaft“ gar nicht).
 - [ ] Aufräumen: Löschmarkierungen (deleted=true) in der Tabelle docs nach ca. 90 Tagen endgültig entfernen (z. B. geplante Datenbank-Funktion), und die lokale Liste „known“ in sync.js entsprechend kürzen. Frist wegen lange offline gewesener Geräte nicht zu kurz wählen. Fotos auf kleine Größe verkleinern, bevor sie hochgeladen werden.
 - [ ] Impressum und Datenschutzerklärung, falls die App an Fremde weitergegeben wird
 - [ ] Sprach-Eingabe mit KI-Kategorisierung
