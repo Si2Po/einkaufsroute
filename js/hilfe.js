@@ -75,7 +75,7 @@ function helpPage() {
         <li><b>Zufälliges Essen</b> wählt eins aus, passend zu den gewählten Tags. Der Würfel würfelt neu.</li>
         <li><b>Gedrückt halten:</b> Essen bearbeiten (Zutaten, Tags, Foto, Kochanleitung).</li>
       </ul>`),
-    helpTopic('Gruppen und das Personen-Symbol', `
+    helpTopic('Gruppen', `
       <ul>
         <li>Du siehst immer <b>alles</b> aus allen deinen Gruppen. Die Gruppe regelt nur, <b>wer etwas mitsieht</b>.</li>
         <li><b>Persönlich</b> siehst nur du. Weitere Gruppen (z. B. „Einkauf“) kannst du mit anderen teilen.</li>
