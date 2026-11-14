@@ -48,6 +48,6 @@ Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, a
 - [x] (0.7.9, `aufraeumen.sql`; Fotos waren schon verkleinert) Aufräumen: Löschmarkierungen (deleted=true) in der Tabelle docs nach ca. 90 Tagen endgültig entfernen (z. B. geplante Datenbank-Funktion), und die lokale Liste „known“ in sync.js entsprechend kürzen. Frist wegen lange offline gewesener Geräte nicht zu kurz wählen. Fotos auf kleine Größe verkleinern, bevor sie hochgeladen werden.
 - [x] Seite „Über diese App“ (`ueber.html`: Hobbyprojekt, ohne Gewähr, Datenorte, wer was sieht, selbst betreiben, Kontakt) + „Konto löschen“ (`schritte/konto_loeschen.sql`).
 - [x] Spracheingabe (0.7.7: Gesprochenes zerlegen; 0.7.8: Siri-Kurzbefehl über `siri.sql`, klappt auch gesperrt)
-- [ ] Optional: eigener Mikrofon-Knopf in der App (Web Speech API) oder KI-Kategorisierung über eine Supabase-Funktion
+- [x] ~~Optional: eigener Mikrofon-Knopf in der App (Web Speech API) oder KI-Kategorisierung über eine Supabase-Funktion~~ – wird nicht gemacht (Siri und Tastatur-Mikrofon reichen)
 - [ ] Laden nach Standort vorschlagen
 - [x] Ohne Mailversand gelöst (0.7.9): „Confirm email“ in Supabase aus, Passwort ändern in der App, „Passwort vergessen“ = Besitzer setzt es mit `supabase/passwort_setzen.sql`. Eigener Mailversand (SMTP) nur, falls doch mal nötig.
