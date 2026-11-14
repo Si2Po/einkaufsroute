@@ -9,13 +9,13 @@ In diesem Ordner:
 Alle Schritte sind ausgeführt. Kommt eine neue Änderung dazu, steht sie unten in der Liste, und du führst nur diese aus:
 1. Supabase → **SQL Editor** → „New query“.
 2. Den kompletten Inhalt der Datei einfügen und **Run** drücken.
-3. Erwartet: „Success. No rows returned“. Bei einer Fehlermeldung: Text kopieren und mir schicken.
+3. Erwartet: „Success. No rows returned“.
 
 | Schritt | Datei | Ab App-Version | Ausgeführt |
 |---|---|---|---|
 | 1 | `schritte/schema.sql` (Grundaufbau) | – | ja |
 | 2 | `schritte/fix_invite.sql` (Korrektur) | – | ja |
-| 3 | `schritte/gruppen.sql` (Gruppen) | 0.7.0 | ja (12.11.2026) |
+| 3 | `schritte/gruppen.sql` (Gruppen) | 0.7.0 | ja |
 | 4 | `schritte/historie.sql` (Kaufhistorie) | 0.7.5 | ja |
 | 5 | `schritte/siri.sql` (Siri) | 0.7.8 | ja |
 | 6 | `schritte/aufraeumen.sql` (Aufräumen) | 0.7.9 | ja |
@@ -30,9 +30,9 @@ Fehlt ein Schritt, läuft die App trotzdem; nur die jeweilige Funktion geht dann
    Region **Central EU (Frankfurt)**, Plan Free. Ein paar Minuten warten.
 2. **SQL Editor** → „New query“ → den kompletten Inhalt von **`komplett.sql`** einfügen → **Run**. Erwartet: „Success. No rows returned“.
 3. **Authentication → Sign In / Providers → Email**: „Email“ an, **„Confirm email“ aus** → Save. (Die App verschickt keine Mails.)
-4. **Project Settings → API Keys**: **Project URL** und **Publishable key** (`sb_publishable_…`) an mich schicken.
-   Ich trage sie in `config.js` ein. Beide Werte sind dafür gedacht, in der App zu stehen.
-   **Niemals schicken:** den `secret`-/`service_role`-Key und das Datenbank-Passwort.
+4. **Project Settings → API Keys**: **Project URL** und **Publishable key** (`sb_publishable_…`) in `config.js` eintragen.
+   Beide Werte sind dafür gedacht, in der App zu stehen.
+   **Niemals** den `secret`-/`service_role`-Key oder das Datenbank-Passwort irgendwo eintragen oder weitergeben.
 5. In der App neu registrieren. Daten zurückholen: Einstellungen → Konto und Gruppen → Daten sichern und übertragen → Sicherung laden.
    Deshalb ab und zu eine Sicherung als Datei speichern.
 

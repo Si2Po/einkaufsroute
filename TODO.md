@@ -1,53 +1,10 @@
-# Einkaufsroute – Merkliste (noch nicht umgesetzt)
+# Einkaufsroute – Ideen
 
-## Neu aufgenommen
-- [x] **Design anpassen:** (Feinschliff vom Besitzer abgehakt) Teil 1 erledigt (Farben neutraler, Darstellung Automatisch/Hell/Dunkel, schwebende Glas-Leiste, Glas-Sheets). Offen: Feinschliff nach iPhone-Test (z. B. Glas für Kopfzeilen, Schriftgrößen, Abstände)
-- [x] **Animationen und Übergänge überarbeiten** (Einstellungs-Unterseiten als Seiten mit Zurück-Pfeil und Wisch vom linken Rand, Läden gleiten herein, Tabwechsel blendet weich; Sheets mit einheitlicher Kopfzeile „Fertig“/„Abbrechen“, Schließen behält Änderungen): Wechsel zwischen Bereichen und Öffnen von Details. In den Einstellungen passt das „›“ (deutet eine neue Seite an) nicht zum Bottom-Sheet, das von unten kommt und nach unten weggewischt wird. Vorschlag: Einstellungs-Unterpunkte als echte Seiten mit Einblenden von rechts, Zurück-Pfeil und Wisch-zurück; Sheets nur für Schnellaktionen (Listenwahl, Details eines Eintrags). Dazu sanfter Übergang beim Tabwechsel. **Wichtig: einheitliche Bedienung.** Jede Unterseite lässt sich gleich verlassen (Zurück-Pfeil und Wisch vom linken Rand), jedes Sheet gleich (Wisch nach unten, Fertig). Eine gemeinsame Seiten- und Sheet-Komponente statt Einzellösungen. „Bewegung reduzieren“ (prefers-reduced-motion) beachten.
-- [x] **Einstellungen aufräumen:** „Daten sichern und übertragen" in „Konto und Haushalt" einordnen
-- [x] **Stichwörter überarbeiten:** Obst & Gemüse in der Mehrzahl (Vorschläge), Erkennung über den Wortstamm (Einzahl wird weiter erkannt), gespeicherte Stichwörter werden einmalig umgestellt
-- [x] **Oberer Rand auf dem iPhone:** Inhalt scrollt unter den Rand und wirkt verschwommen → mehr Abstand (safe-area-inset-top, Margin)
-- [x] **Tastatur prüfen:** darf keine Eingabefelder verdecken. Teilweise muss man das Feld verlassen und neu antippen, bis sich alles richtig verschiebt.
-- [x] **PWA-Icon** gestalten (Regale + Laufweg + Haken)
-- [x] **Ziehen zum Aktualisieren:** (Liste = Abgleich, Einstellungen = nach Update suchen) In der Mitte der Liste nach unten wischen; ist man schon ganz oben und zieht weiter, startet ein Abgleich (wie „Pull to Refresh“ in iOS-Apps). Mit kleinem Kreis/Pfeil oben, der zeigt, dass gleich aktualisiert wird. Darf nicht mit dem Wischen auf Einträgen (links/rechts) oder dem Scrollen kollidieren.
-- [x] **Drehen sperren (Darstellung):** verworfen. Ein Hinweis ist unerwünscht, Gegendrehen würde Gesten, Sheets und Tastatur kaputt machen. Stattdessen Querformat-Layout optimiert; Sperre bleibt Sache des Kontrollzentrums. Option „Nur Hochformat“. Achtung: Web-Apps auf dem iPhone können die Drehung nicht wirklich sperren (Safari unterstützt das nicht, auch nicht über das Manifest). Möglich: im Querformat einen Hinweis „Bitte Handy drehen“ zeigen oder den Inhalt per CSS zurückdrehen. Erst klären, ob das reicht; sonst bleibt die Sperre im Kontrollzentrum des iPhones.
-- [x] **Vibrieren beim Würfeln:** umgesetzt (haptic(): Android vibrieren, iPhone Schalter-Trick; auch bei langem Drücken und Ziehen zum Aktualisieren). kurzes Haptik-Feedback bei „Zufälliges Essen“ / „Nochmal würfeln“. `navigator.vibrate` gibt es auf dem iPhone nicht. Seit iOS 18 löst Safari aber beim Umschalten eines Schalters (`<input type="checkbox" switch>`) ein Haptik-Klicken aus; das lässt sich als Trick nutzen (unsichtbarer Schalter, beim Tippen mit umschalten). Nur ein kurzes „Klick“, kein langes Vibrieren. Später evtl. auch fürs Abhaken.
-- [x] **Standardreihenfolge „Kein Laden“** (erledigt: Kategorien per Griff sortieren, „Sonstiges“ bleibt unten) ansehen und ändern können (Reihenfolge der Kategorien, z. B. per Hoch/Runter in „Kategorien und Stichwörter“; die Reihenfolge wird schon mit dem Haushalt synchronisiert)
+## Offen
+- [ ] Geschäft nach Standort vorschlagen (Ort je Geschäft speichern, Standort-Freigabe nötig)
+- [ ] `supabase/komplett.sql` einmal an einem leeren Test-Projekt prüfen
 
-## Hilfe-Bereich in den Einstellungen (0.7.3, `js/hilfe.js`)
-- [x] Kurze Erklärung, wie man die Seite als App aufs iPhone holt (Safari → Teilen → „Zum Home-Bildschirm“, danach einmal neu anmelden, weil die App einen eigenen Speicher hat)
-- [x] Wie man Einträge bedient: Tippen, lang drücken, wischen; Liste wechseln (zweiter Tipp auf „Liste“); Läden und Zonen
-- [x] Konto und Gruppen: anmelden, einladen, beitreten, abgleichen, Sicherung
-- [x] Gruppen erklären: Man sieht immer alles aus allen eigenen Gruppen; die Gruppe regelt nur, **wer etwas mitsieht**. „Persönlich“ sieht nur man selbst (nicht teilbar). Das **Personen-Symbol** (zwei Köpfe, z. B. „👥 Einkauf“ bei Listen und Geschäften) zeigt, zu welcher Gruppe etwas gehört. Gruppe ändern: Liste/Geschäft bearbeiten → „Gruppe“; beim Essen ganz unten beim Personen-Symbol. Kategorien und Stichwörter: unter Kategorien „Stichwörter von“ wählen, wer dieselbe Gruppe wählt, lernt gemeinsam. Geschäft aus anderer Gruppe für eine Liste gewählt → App fragt, ob es mit umziehen soll.
-- [x] Wichtiges: Offline-Betrieb, was bei „Abmelden“ passiert, neue Version laden (App einmal schließen und neu öffnen). Versionsnummer anzeigen (steht bisher unten in den Einstellungen)
-- [x] Als eigene Unterseite (Themen zum Aufklappen)
-- [x] Einführung (0.8.0): neue Nutzer starten ohne Beispieldaten, Willkommens-Hinweise in Liste, Essen und Geschäfte (wegklickbar, `ek_intro`), Hilfe → „Einführung nochmal zeigen“; bisherige Nutzer sehen sie nicht ungefragt
-- [x] Schalter „Hinweise anzeigen“: blendet alle kleinen Bedienhinweise (z. B. „Tippen: … · Gedrückt halten: …“ unter Liste und Essen) überall ein oder aus. Heute verschwindet nur der Hinweis in der Liste nach einer Weile von selbst (S.tipSeen).
-
-## Einkaufsverhalten lernen (0.7.5: `js/historie.js`, braucht `supabase/historie.sql`)
-- [x] Beim Abhaken merkt sich die App Produkt + Datum (Kaufhistorie, im Haushalt geteilt)
-- [x] Aus den Abständen den typischen Rhythmus berechnen (z. B. Klopapier alle ~3 Wochen, Spülmaschinenpulver alle ~3 Monate)
-- [x] Wenn ein Produkt „fällig" ist, als Vorschlag anzeigen („Klopapier? zuletzt vor 3 Wochen") mit Tipp = auf die Liste, Wisch = „nicht jetzt"
-- [x] Nur Produkte vorschlagen, die mindestens 3 Mal gekauft wurden; Vorschläge abschaltbar (Hilfe → Vorschläge)
-- [x] Rhythmus von Hand (Einstellungen → Vorschläge: erkannte Produkte bearbeiten, eigene Vorschläge anlegen, entfernen)
-
-## Gruppen (0.7.0, Details in PLAN-GRUPPEN.md)
-Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, anlegen/umbenennen/einladen/beitreten/verlassen, Abgleich pro Gruppe, alles sichtbar mit Gruppen-Hinweis (Personen-Symbol), Listen/Geschäfte/Essen in andere Gruppe verschieben, Rückfrage beim Geschäft, Stichwörter pro Gruppe wählbar, Beitreten ersetzt nichts mehr. Private Listen = Listen in „Persönlich“.
-- [x] **Test mit echtem Konto**, hochgeladen (0.7.0) und im Alltag in Benutzung
-- [x] Hilfe-Text zu Gruppen (siehe Hilfe-Bereich oben)
-- [x] **Listen-Typen (0.7.1):** Typ **pro Liste** („Art“: Einkaufsliste / Einfache Liste), beim Anlegen wählbar, im Bearbeiten änderbar.
-  Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, **Abschnitte** (unten „+ Abschnitt“, Abschnitt antippen = Neues kommt dorthin (Kopf farbig), gedrückt halten = umbenennen/verschieben/löschen),
-  eigene Reihenfolge (Eintrag gedrückt halten und ziehen startet den Wackelmodus, auch in andere Abschnitte; nur gedrückt halten = bearbeiten), **pro Liste wählbar**, ob Abgehakte nach unten rutschen oder stehen bleiben („Alle Haken entfernen“).
-- [x] **Einkaufsliste: Halten und ziehen** (0.7.1): Reihenfolge innerhalb einer Gruppe frei (it.ord, sonst Reihenfolge des Hinzufügens), in andere Kategorie (ohne Geschäft) bzw. anderen Bereich (mit Geschäft, merkt sich das Geschäft) ziehen = lernen, mit „Rückgängig“.
-- [x] **Essen: Favoriten** (0.7.1) als fester Tag „★“ (immer erster Filter-Tag, Favoriten oben, sonst A–Z, Stern im Essen-Sheet)
-- [x] Hilfe-Text zu Listen-Typen, Ziehen und Favoriten
-- [x] **Kategorien von einer Gruppe in eine andere übernehmen** (umgesetzt: Kategorien → „Von anderer Gruppe übernehmen“, ergänzen oder ersetzen mit Rückfrage, Rückgängig) (Idee Besitzer): unter Kategorien „Übernehmen von [Gruppe]“. Vorschlag: *ergänzen* (fehlende Kategorien und Stichwörter dazu, Eigenes bleibt) statt ersetzen; ersetzt auch den alten Punkt „neue Gruppe mit Kategorien einer bestehenden starten“.
-- [x] Einzelne Liste per Link teilen, ohne Konto (0.8.0: `gast.sql`, `gast.html`, `teilen.js`; Gäste: ansehen, abhaken, hinzufügen; ohne Geschäfte, nach Kategorien sortiert)
-
-## Später / optional
-- [x] **Wortanfänge und -endungen je Kategorie** (umgesetzt als Stichwort mit Stern: „tk*“, „*saft“, „*bio*“; Muster gewinnen vor normalen Stichwörtern, ein genau gelernter Name vor allem) (Idee Besitzer): z. B. alles, was mit „TK“ / „TK-“ beginnt, ist Tiefkühl; alles, was auf „-saft“ endet, ist Getränke. Heute erkennen Stichwörter nur den Anfang eines Wortes („tk-“ passt auf „TK-Erbsen“, aber nicht auf „TK Erbsen“; Endungen wie „Orangensaft“ gar nicht).
-- [x] (0.7.9, `aufraeumen.sql`; Fotos waren schon verkleinert) Aufräumen: Löschmarkierungen (deleted=true) in der Tabelle docs nach ca. 90 Tagen endgültig entfernen (z. B. geplante Datenbank-Funktion), und die lokale Liste „known“ in sync.js entsprechend kürzen. Frist wegen lange offline gewesener Geräte nicht zu kurz wählen. Fotos auf kleine Größe verkleinern, bevor sie hochgeladen werden.
-- [x] Seite „Über diese App“ (`ueber.html`: Hobbyprojekt, ohne Gewähr, Datenorte, wer was sieht, selbst betreiben, Kontakt) + „Konto löschen“ (`schritte/konto_loeschen.sql`).
-- [x] Spracheingabe (0.7.7: Gesprochenes zerlegen; 0.7.8: Siri-Kurzbefehl über `siri.sql`, klappt auch gesperrt)
-- [x] ~~Optional: eigener Mikrofon-Knopf in der App (Web Speech API) oder KI-Kategorisierung über eine Supabase-Funktion~~ – wird nicht gemacht (Siri und Tastatur-Mikrofon reichen)
-- [ ] Laden nach Standort vorschlagen
-- [x] Ohne Mailversand gelöst (0.7.9): „Confirm email“ in Supabase aus, Passwort ändern in der App, „Passwort vergessen“ = Besitzer setzt es mit `supabase/passwort_setzen.sql`. Eigener Mailversand (SMTP) nur, falls doch mal nötig.
+## Bewusst nicht
+- Eigener Mikrofon-Knopf oder KI-Kategorien: Siri-Kurzbefehl und Tastatur-Mikrofon reichen.
+- Drehen sperren: Web-Apps auf dem iPhone können die Drehung nicht sperren; stattdessen ist das Querformat-Layout angepasst.
+- Eigener Mailversand: Registrieren ohne Bestätigungsmail, vergessene Passwörter setzt der Betreiber (`supabase/passwort_setzen.sql`).

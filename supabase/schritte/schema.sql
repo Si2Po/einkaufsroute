@@ -203,5 +203,5 @@ revoke execute on function public.create_invite(), public.accept_invite(text), p
 grant execute on function public.create_invite(), public.accept_invite(text), public.create_share(uuid),
   public.join_share(text), public.revoke_share(uuid) to authenticated;
 
--- Live-Updates auf beiden Handys
+-- Live-Updates (von der App derzeit nicht genutzt)
 alter publication supabase_realtime add table public.docs;

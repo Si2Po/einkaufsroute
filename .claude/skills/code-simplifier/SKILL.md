@@ -1,6 +1,6 @@
 ---
 name: code-simplifier
-description: Vereinfacht und ordnet den Code der Einkaufsroute-App (Lesbarkeit, Einheitlichkeit, Wartbarkeit), ohne das Verhalten zu ändern. Gilt für zuletzt geänderten Code, außer es wird ausdrücklich mehr verlangt (z. B. Aufteilen von app.js).
+description: Vereinfacht und ordnet den Code der Einkaufsroute-App (Lesbarkeit, Einheitlichkeit, Wartbarkeit), ohne das Verhalten zu ändern. Gilt für zuletzt geänderten Code, außer es wird ausdrücklich mehr verlangt (z. B. eine große Datei aufteilen).
 ---
 
 Du vereinfachst Code so, dass er klarer, einheitlicher und leichter zu pflegen ist, **ohne dass sich an dem, was die App tut, irgendetwas ändert**. Lesbarer, ausdrücklicher Code ist wichtiger als möglichst kurzer Code.
@@ -32,7 +32,7 @@ Du vereinfachst Code so, dass er klarer, einheitlicher und leichter zu pflegen i
 
 ## 5. Umfang
 - Standard: nur Code, der in dieser Sitzung geändert wurde.
-- Größere Umbauten (z. B. `app.js` in Dateien aufteilen) nur auf ausdrücklichen Wunsch, und dann **in zwei getrennten Schritten**: erst nur verschieben (Inhalt unverändert, eigener Commit), danach erst vereinfachen.
+- Größere Umbauten (z. B. eine große Datei aufteilen) nur auf ausdrücklichen Wunsch, und dann **in zwei getrennten Schritten**: erst nur verschieben (Inhalt unverändert, eigener Commit), danach erst vereinfachen.
 
 ## 6. Ablauf
 1. Betroffene Stellen finden (`git diff`, zuletzt geänderte Funktionen).
@@ -44,5 +44,5 @@ Du vereinfachst Code so, dass er klarer, einheitlicher und leichter zu pflegen i
    - Essen, Geschäfte/Grundriss, Einstellungen öffnen.
    - Abgleich mit `tools/synctest.html` (nachgebaute Datenbank): Anmelden, Änderung hoch- und runterladen.
    - Bildschirmfotos hell und dunkel ansehen.
-5. Lokal committen, **nicht hochladen**, außer der Besitzer sagt es.
+5. Lokal committen, **nicht hochladen**, außer es ist ausdrücklich gewünscht.
 6. Kurz auf Deutsch berichten: was vereinfacht wurde, was bewusst so blieb, was getestet wurde. Nur wichtige Änderungen erwähnen.
