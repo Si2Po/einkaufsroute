@@ -86,8 +86,11 @@ const isOffline = (e) => e instanceof TypeError || e.name === 'AbortError';
 
 // ---------- Anmeldung ----------
 function takeSession(r) {
-  sync.sess = { access_token: r.access_token, refresh_token: r.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (r.expires_in || 3600), user: { id: r.user.id, email: r.user.email } };
+  sync.sess = { access_token: r.access_token, refresh_token: r.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (r.expires_in || 3600), user: { id: r.user.id, email: r.user.email, name: r.user.user_metadata?.name || '' } };
 }
+// Benutzername (optional, beim Konto in Supabase gespeichert): Andere sehen ihn statt der E-Mail. Ohne: Teil vor dem @.
+const shortMail = (m) => String(m || '').split('@')[0];
+const memberName = (g, m) => g.names?.[m] || shortMail(m);
 let refreshing = null;
 function refreshSession() {
   if (!sync.sess) return Promise.resolve(false);
@@ -513,7 +516,9 @@ function accountPage(msg) {
       <strong style="overflow-wrap:anywhere">${esc(sync.sess.user.email)}</strong>
       <p class="sheetnote" style="margin:2px 0 0">${STATUS_TXT[sync.status] || ''}${sync.status === 'ok' && sync.last ? ' · ' + ago(sync.last) : ''}${sync.err && sync.status !== 'ok' ? '<br>' + esc(sync.err) : ''}</p>
     </div>
-    <div class="group" style="margin-top:8px"><button type="button" class="sheetbtn" data-act="acc_pwpage"><span>Passwort ändern</span><small>›</small></button></div>
+    <label class="field" style="margin-top:12px"><span>Benutzername (optional)</span><input id="accName" value="${esc(sync.sess.user.name || '')}" placeholder="${esc(shortMail(sync.sess.user.email))}" maxlength="30" autocomplete="nickname" enterkeyhint="done"></label>
+    <p class="sheetnote" style="margin:4px 4px 0">So sehen dich die anderen in deinen Gruppen, statt deiner E-Mail-Adresse.</p>
+    <div class="group" style="margin-top:12px"><button type="button" class="sheetbtn" data-act="acc_pwpage"><span>Passwort ändern</span><small>›</small></button></div>
     ${note}
     <div class="sheettitle" style="margin-top:16px">Gruppen</div>
     <p class="sheetnote" style="margin:0 4px 8px">Was in einer Gruppe liegt, sehen alle ihre Mitglieder. Du selbst siehst immer alles aus allen deinen Gruppen.</p>
@@ -541,7 +546,7 @@ function groupPage(id, msg) {
     ${msgNote(msg)}
     <div class="sheettitle" style="margin-top:12px">Mitglieder</div>
     <div class="group">${(g.members || []).map((m) => memberRow(g, m, me)).join('') || '<p class="sheetnote">–</p>'}</div>
-    ${personal || canManage(g) ? '' : `<p class="sheetnote" style="margin:8px 4px 0">Einladen und Mitglieder entfernen kann nur ${esc(g.owner || 'wer die Gruppe verwaltet')}.</p>`}
+    ${personal || canManage(g) ? '' : `<p class="sheetnote" style="margin:8px 4px 0">Einladen und Mitglieder entfernen kann nur ${esc(g.owner ? memberName(g, g.owner) : 'wer die Gruppe verwaltet')}.</p>`}
     ${personal ? '' : `<div class="actions" style="margin-top:12px">
       ${canManage(g) ? `<button type="button" class="btn" data-act="acc_invite" data-id="${id}">Person einladen</button>` : ''}
       <button type="button" class="btn danger" data-act="acc_leave" data-id="${id}">${ui.confirmLeave === id ? 'Wirklich verlassen?' : 'Gruppe verlassen'}</button>
@@ -559,7 +564,7 @@ function memberRow(g, m, me) {
     const sure = ui.confirmRm === g.id + '|' + m;
     right = `<button type="button" class="link${sure ? ' danger' : ''}" data-act="acc_rmmember" data-id="${g.id}" data-mail="${esc(m)}">${sure ? 'Wirklich entfernen?' : 'Entfernen'}</button>`;
   }
-  return `<div class="sheetbtn"><span style="overflow-wrap:anywhere">${esc(m)}</span>${right}</div>`;
+  return `<div class="sheetbtn"><span style="overflow-wrap:anywhere">${esc(memberName(g, m))}</span>${right}</div>`;
 }
 function newGroupSheet(msg) {
   openSheet(`<div class="sheettitle">Neue Gruppe</div>
@@ -734,7 +739,8 @@ document.addEventListener('click', async (e) => {
     const g = el.dataset.id, mail = el.dataset.mail, key = g + '|' + mail;
     if (ui.confirmRm !== key) { ui.confirmRm = key; groupPage(g); return; }
     ui.confirmRm = null;
-    try { await api('/rest/v1/rpc/remove_member', { method: 'POST', body: JSON.stringify({ g, mail }) }); await refreshGroups(true); groupPage(g, `${mail} ist nicht mehr in der Gruppe.`); }
+    const who = memberName(sync.groups.find((x) => x.id === g) || {}, mail);
+    try { await api('/rest/v1/rpc/remove_member', { method: 'POST', body: JSON.stringify({ g, mail }) }); await refreshGroups(true); groupPage(g, `${who} ist nicht mehr in der Gruppe.`); }
     catch (err) { groupPage(g, '!' + niceError(err)); }
   }
   else if (act === 'acc_joinsheet') joinPage('');
@@ -764,6 +770,19 @@ document.addEventListener('click', async (e) => {
     }
   }
 }, true);
+// Benutzername speichern (beim Verlassen des Feldes bzw. „Fertig“ auf der Tastatur). Leer = wieder der Teil vor dem @.
+document.addEventListener('change', async (e) => {
+  if (e.target.id !== 'accName' || !sync.sess) return;
+  const name = e.target.value.trim().slice(0, 30);
+  if (name === (sync.sess.user.name || '')) return;
+  try {
+    const r = await api('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ data: { name } }) });
+    sync.sess.user.name = r?.user_metadata?.name ?? name;
+    persistSync();
+    await refreshGroups(true);
+    accountPage(name ? 'Benutzername gespeichert.' : 'Benutzername entfernt.');
+  } catch (err) { accountPage('!' + niceError(err)); }
+});
 // Abmelden auf diesem Gerät: Daten bleiben, werden aber nicht mehr abgeglichen. Danach Kontoseite und render() aufrufen.
 async function signOutHere() {
   sync.sess = null; forgetGroups(); sync.status = 'out'; sync.err = '';

@@ -170,6 +170,8 @@ language sql stable security definer set search_path = public as $$
            'members', (select coalesce(jsonb_agg(u.email order by mm.created_at), '[]'::jsonb)
                          from public.household_members mm join auth.users u on u.id = mm.user_id
                         where mm.household_id = h.id),
+           'names', (select coalesce(jsonb_object_agg(u.email, coalesce(nullif(left(trim(u.raw_user_meta_data->>'name'), 30), ''), split_part(u.email, '@', 1))), '{}'::jsonb)
+                       from public.household_members mm join auth.users u on u.id = mm.user_id where mm.household_id = h.id),
            'owner', (select u.email from auth.users u where u.id = public.group_owner(h.id)),
            'mine', public.group_owner(h.id) = auth.uid())
          order by (h.kind = 'personal') desc, h.created_at), '[]'::jsonb)
