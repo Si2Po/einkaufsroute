@@ -46,7 +46,7 @@ Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, a
 ## Später / optional
 - [x] **Wortanfänge und -endungen je Kategorie** (umgesetzt als Stichwort mit Stern: „tk*“, „*saft“, „*bio*“; Muster gewinnen vor normalen Stichwörtern, ein genau gelernter Name vor allem) (Idee Besitzer): z. B. alles, was mit „TK“ / „TK-“ beginnt, ist Tiefkühl; alles, was auf „-saft“ endet, ist Getränke. Heute erkennen Stichwörter nur den Anfang eines Wortes („tk-“ passt auf „TK-Erbsen“, aber nicht auf „TK Erbsen“; Endungen wie „Orangensaft“ gar nicht).
 - [x] (0.7.9, `aufraeumen.sql`; Fotos waren schon verkleinert) Aufräumen: Löschmarkierungen (deleted=true) in der Tabelle docs nach ca. 90 Tagen endgültig entfernen (z. B. geplante Datenbank-Funktion), und die lokale Liste „known“ in sync.js entsprechend kürzen. Frist wegen lange offline gewesener Geräte nicht zu kurz wählen. Fotos auf kleine Größe verkleinern, bevor sie hochgeladen werden.
-- [x] Seite „Über diese App“ (`ueber.html`: Hobbyprojekt, ohne Gewähr, Datenorte, wer was sieht, selbst betreiben, Kontakt) + „Konto löschen“ (`schritte/konto_loeschen.sql`). Offen: Name und E-Mail in `ueber.html` eintragen (Platzhalter [NAME], [E-MAIL])
+- [x] Seite „Über diese App“ (`ueber.html`: Hobbyprojekt, ohne Gewähr, Datenorte, wer was sieht, selbst betreiben, Kontakt) + „Konto löschen“ (`schritte/konto_loeschen.sql`).
 - [x] Spracheingabe (0.7.7: Gesprochenes zerlegen; 0.7.8: Siri-Kurzbefehl über `siri.sql`, klappt auch gesperrt)
 - [ ] Optional: eigener Mikrofon-Knopf in der App (Web Speech API) oder KI-Kategorisierung über eine Supabase-Funktion
 - [ ] Laden nach Standort vorschlagen
