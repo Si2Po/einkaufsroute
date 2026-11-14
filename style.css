@@ -750,3 +750,4 @@ body.guest #gName { font-size: 16px; }
 .aback { margin: 0 4px 10px; }
 .aback a { text-decoration: none; font-weight: 600; }
 .delinfo { margin: 0 4px 10px; padding-left: 20px; }
+.link.danger { color: var(--warn); }

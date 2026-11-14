@@ -1,4 +1,4 @@
--- Einkaufsroute – komplette Datenbank (Stand App-Version 0.8.0, mit konto_loeschen.sql)
+-- Einkaufsroute – komplette Datenbank (Stand App-Version 0.8.1)
 --
 -- NUR FÜR EIN NEUES, LEERES Supabase-Projekt (z. B. Notfall oder Test-Projekt).
 -- Für die bestehende Datenbank NICHT nötig: die ist über die einzelnen Schritte in supabase/schritte/ schon auf diesem Stand.
@@ -152,14 +152,26 @@ create policy docs_update on public.docs for update
 
 -- ═════════ Gruppen ═════════
 
--- Meine Gruppen mit Mitgliedern (E-Mail-Adressen)
+-- Wer verwaltet die Gruppe (darf einladen und Mitglieder entfernen)? Wer sie angelegt hat; ist diese Person
+-- nicht mehr Mitglied, das Mitglied, das am längsten dabei ist.
+create function public.group_owner(g uuid) returns uuid
+language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select h.created_by from public.households h
+      where h.id = g and exists (select 1 from public.household_members m where m.household_id = g and m.user_id = h.created_by)),
+    (select m.user_id from public.household_members m where m.household_id = g order by m.created_at, m.user_id limit 1));
+$$;
+
+-- Meine Gruppen mit Mitgliedern (E-Mail-Adressen), wer sie verwaltet (owner) und ob ich das bin (mine)
 create function public.my_groups() returns jsonb
 language sql stable security definer set search_path = public as $$
   select coalesce(jsonb_agg(jsonb_build_object(
            'id', h.id, 'name', h.name, 'kind', h.kind,
            'members', (select coalesce(jsonb_agg(u.email order by mm.created_at), '[]'::jsonb)
                          from public.household_members mm join auth.users u on u.id = mm.user_id
-                        where mm.household_id = h.id))
+                        where mm.household_id = h.id),
+           'owner', (select u.email from auth.users u where u.id = public.group_owner(h.id)),
+           'mine', public.group_owner(h.id) = auth.uid())
          order by (h.kind = 'personal') desc, h.created_at), '[]'::jsonb)
     from public.households h
     join public.household_members m on m.household_id = h.id and m.user_id = auth.uid();
@@ -192,9 +204,26 @@ begin
   if (select kind from public.households where id = g) = 'personal' then
     raise exception '„Persönlich“ kann nicht geteilt werden';
   end if;
+  if public.group_owner(g) is distinct from auth.uid() then
+    raise exception 'Einladen kann nur, wer die Gruppe verwaltet';
+  end if;
   c := upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10));
   insert into public.invites (code, household_id, created_by) values (c, g, auth.uid());
   return c;
+end $$;
+
+-- Mitglied entfernen: nur wer die Gruppe verwaltet, nicht sich selbst (dafür „Gruppe verlassen“)
+create function public.remove_member(g uuid, mail text) returns void
+language plpgsql security definer set search_path = public as $$
+declare u uuid;
+begin
+  if public.group_owner(g) is distinct from auth.uid() then raise exception 'Entfernen kann nur, wer die Gruppe verwaltet'; end if;
+  select a.id into u from auth.users a join public.household_members m on m.user_id = a.id and m.household_id = g
+   where lower(a.email) = lower(trim(mail));
+  if u is null then raise exception 'Diese Person ist nicht in der Gruppe'; end if;
+  if u = auth.uid() then raise exception 'Zum Austreten bitte „Gruppe verlassen“ nehmen'; end if;
+  delete from public.household_members where household_id = g and user_id = u;
+  delete from public.guest_links where household_id = g and created_by = u;
 end $$;
 
 create function public.accept_invite(c text) returns uuid
@@ -422,7 +451,7 @@ revoke execute on all functions in schema public from public, anon, authenticate
 grant execute on function public.is_member(uuid) to authenticated;   -- wird in den Zugriffsregeln gebraucht
 grant execute on function
   public.my_groups(), public.create_group(text), public.rename_group(uuid, text), public.create_invite(uuid),
-  public.accept_invite(text), public.leave_group(uuid), public.delete_account(), public.purge_deleted(),
+  public.accept_invite(text), public.leave_group(uuid), public.remove_member(uuid, text), public.delete_account(), public.purge_deleted(),
   public.siri_new_key(uuid, text), public.siri_set_list(uuid, text), public.siri_info(), public.siri_off(), public.siri_take(),
   public.guest_link(uuid, text), public.guest_link_off(text)
   to authenticated;

@@ -540,12 +540,26 @@ function groupPage(id, msg) {
     <p class="sheetnote" style="margin:4px">${personal ? 'Nur für dich. Diese Gruppe kann nicht geteilt oder verlassen werden.' : 'Alle Mitglieder sehen, was in dieser Gruppe liegt.'} Darin: ${what}.</p>
     ${msgNote(msg)}
     <div class="sheettitle" style="margin-top:12px">Mitglieder</div>
-    <div class="group">${(g.members || []).map((m) => `<div class="sheetbtn"><span style="overflow-wrap:anywhere">${esc(m)}</span>${m === me ? '<small>du</small>' : ''}</div>`).join('') || '<p class="sheetnote">–</p>'}</div>
+    <div class="group">${(g.members || []).map((m) => memberRow(g, m, me)).join('') || '<p class="sheetnote">–</p>'}</div>
+    ${personal || canManage(g) ? '' : `<p class="sheetnote" style="margin:8px 4px 0">Einladen und Mitglieder entfernen kann nur ${esc(g.owner || 'wer die Gruppe verwaltet')}.</p>`}
     ${personal ? '' : `<div class="actions" style="margin-top:12px">
-      <button type="button" class="btn" data-act="acc_invite" data-id="${id}">Person einladen</button>
+      ${canManage(g) ? `<button type="button" class="btn" data-act="acc_invite" data-id="${id}">Person einladen</button>` : ''}
       <button type="button" class="btn danger" data-act="acc_leave" data-id="${id}">${ui.confirmLeave === id ? 'Wirklich verlassen?' : 'Gruppe verlassen'}</button>
     </div>
     ${ui.confirmLeave === id ? `<p class="sheetnote" style="color:var(--warn);margin:6px 4px">Danach siehst du die Listen, Geschäfte und Essen dieser Gruppe nicht mehr.${(g.members || []).length <= 1 ? ' Du bist das letzte Mitglied: die Gruppe wird mit allem gelöscht.' : ''}</p>` : ''}`}`, () => groupPage(id));
+}
+// Einladen und Mitglieder entfernen darf nur, wer die Gruppe verwaltet (gruppen_rechte.sql).
+// Kennt die Datenbank das noch nicht (kein „mine“ in my_groups), bleibt es wie früher: alle dürfen einladen.
+const canManage = (g) => g.mine !== false;
+function memberRow(g, m, me) {
+  let right = '';
+  if (m === me) right = `<small>du${m === g.owner ? ' · verwaltet' : ''}</small>`;
+  else if (m === g.owner) right = '<small>verwaltet</small>';
+  else if (g.mine) {
+    const sure = ui.confirmRm === g.id + '|' + m;
+    right = `<button type="button" class="link${sure ? ' danger' : ''}" data-act="acc_rmmember" data-id="${g.id}" data-mail="${esc(m)}">${sure ? 'Wirklich entfernen?' : 'Entfernen'}</button>`;
+  }
+  return `<div class="sheetbtn"><span style="overflow-wrap:anywhere">${esc(m)}</span>${right}</div>`;
 }
 function newGroupSheet(msg) {
   openSheet(`<div class="sheettitle">Neue Gruppe</div>
@@ -714,6 +728,13 @@ document.addEventListener('click', async (e) => {
     if (ui.confirmLeave !== g) { ui.confirmLeave = g; groupPage(g); return; }
     ui.confirmLeave = null;
     try { await api('/rest/v1/rpc/leave_group', { method: 'POST', body: JSON.stringify({ g }) }); await refreshGroups(true); await syncRun(); render(); accountPage('Gruppe verlassen.'); }
+    catch (err) { groupPage(g, '!' + niceError(err)); }
+  }
+  else if (act === 'acc_rmmember') {
+    const g = el.dataset.id, mail = el.dataset.mail, key = g + '|' + mail;
+    if (ui.confirmRm !== key) { ui.confirmRm = key; groupPage(g); return; }
+    ui.confirmRm = null;
+    try { await api('/rest/v1/rpc/remove_member', { method: 'POST', body: JSON.stringify({ g, mail }) }); await refreshGroups(true); groupPage(g, `${mail} ist nicht mehr in der Gruppe.`); }
     catch (err) { groupPage(g, '!' + niceError(err)); }
   }
   else if (act === 'acc_joinsheet') joinPage('');

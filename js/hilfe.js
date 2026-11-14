@@ -135,7 +135,8 @@ function helpPage() {
         <li><b>Kategorien und Stichwörter</b> gehören zu einer Gruppe und werden mit ihr geteilt. Was die App dazulernt, lernt sie für alle in der Gruppe.<br>
           Unter Kategorien wählst du bei „Stichwörter von“, welche Gruppe deine Listen zum Einordnen verwenden.<br>
           Mit „Von anderer Gruppe übernehmen“ (ganz unten bei den Kategorien) holst du Kategorien und Stichwörter aus einer anderen Gruppe dazu.</li>
-        <li>Unter Einstellungen → Konto und Gruppen kannst du neue Gruppen anlegen, andere Personen einladen, einer Gruppe beitreten oder sie wieder verlassen.</li>
+        <li>Unter Einstellungen → Konto und Gruppen kannst du neue Gruppen anlegen, einer Gruppe beitreten oder sie wieder verlassen.</li>
+        <li><b>Einladen und Mitglieder entfernen</b> kann nur, wer die Gruppe angelegt hat (steht bei den Mitgliedern als „verwaltet“). Verlässt diese Person die Gruppe, übernimmt das Mitglied, das am längsten dabei ist. Umbenennen dürfen alle.</li>
       </ul>`, ICON_GROUP),
     helpTopic('Konto, Abgleich und Sicherung', `
       <ul>

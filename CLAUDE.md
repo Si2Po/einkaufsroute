@@ -20,7 +20,7 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 - Gruppen sind „Teilen-Kreise“: Die App zeigt **immer alles** aus allen eigenen Gruppen. Listen, Geschäfte und Essen merken sich ihre Gruppe im Feld `g`.
 - Kategorien/Stichwörter gibt es pro Gruppe. Aktiv ist die gewählte Stichwortliste: `S.cats` gehört zur Gruppe `S.catGroup`, die anderen liegen in `S.gcats[g]`, Einstellungen (Tags, zuletzt getippt) analog `S.customTags/S.recent` bzw. `S.gset[g]`.
 - Neues landet in `S.lastGroup` (zuletzt benutzt), sonst `S.catGroup`, sonst „Persönlich“ (`defaultGroup()` in `js/gruppen.js`). Gruppen-Auswahlfelder und -Hinweise erscheinen nur bei Anmeldung und mehr als einer Gruppe (`groupsOn()`).
-- Datenbank-Funktionen: `my_groups`, `create_group`, `rename_group`, `create_invite(g)`, `accept_invite`, `leave_group` (alle in `supabase/komplett.sql`, ursprünglich `supabase/schritte/gruppen.sql`).
+- Datenbank-Funktionen: `my_groups` (mit `owner`/`mine`), `create_group`, `rename_group` (alle), `create_invite(g)` und `remove_member(g, mail)` (nur Verwalter = `group_owner(g)`: Ersteller, sonst ältestes Mitglied; `schritte/gruppen_rechte.sql`, ab 0.8.1), `accept_invite`, `leave_group` (alle in `supabase/komplett.sql`, ursprünglich `supabase/schritte/gruppen.sql`).
 
 ## Listen-Typen (seit 0.7.1)
 - Pro Liste: `l.type = 'simple'` = einfache Liste (fehlt = Einkaufsliste). Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, Abschnitte `l.secs = [{id, name}]` (Eintrag: `it.sec`), eigene Reihenfolge `it.ord` (sonst `ts`), `l.keepDone` = Abgehakte bleiben stehen.
