@@ -50,12 +50,13 @@ function filterChip(t) {
 }
 function viewMeals() {
   const tags = allTags();
-  return `<div class="edhead"><h2>Essen</h2></div>${introCard('meals')}
+  return `<div class="edhead"><h2>Essen</h2></div>
     ${meals().length ? `<input id="mealQ" type="search" class="notein catsearch" placeholder="Essen oder Zutat suchen" aria-label="Essen suchen" autocomplete="off" value="${esc(ui.mealQ)}">` : ''}
     <div class="chips mtags" role="group" aria-label="Tags">${tags.map(filterChip).join('')}${ui.ovTagInput
       ? '<form id="mOvTagForm" class="tagadd" autocomplete="off"><input id="mOvTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
       : '<button type="button" class="chip tagplus" data-act="m_ovtagplus" aria-label="Neuen Tag anlegen">+</button>'}</div>
     <div class="actions mact">${meals().length ? '<button type="button" class="btn" data-act="m_random">Zufälliges Essen</button>' : ''}<button type="button" class="btn ghost" data-act="m_new">+ Neues Essen</button></div>
+    ${introCard('meals') /* Einführung (hilfe.js) */}
     <div id="mealList">${mealListHtml()}</div>`;
 }
 function startMeal(id, random) {

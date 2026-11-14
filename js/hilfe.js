@@ -24,9 +24,9 @@ document.addEventListener('change', (e) => {
 // Jeder Hinweis erscheint, bis man „Verstanden“ tippt. Gemerkt wird das nur auf diesem Gerät (ek_intro).
 // In der Hilfe holt „Einführung nochmal zeigen“ alle zurück.
 const INTRO = {
-  list: ['Willkommen! 👋', 'Schreib oben, was du brauchst, z. B. „Milch, 2 Butter und 500g Pasta“. Die App sortiert alles nach Kategorien. <b>Tippen</b> hakt ab, <b>gedrückt halten</b> bearbeitet. Mehr steht unter Einstellungen → Hilfe.'],
+  list: ['Willkommen! 👋', 'Schreib oben, was du brauchst, z. B. „Milch, 2 Butter und 500g Pasta“. Die App sortiert alles nach Kategorien. <b>Tippen</b> hakt ab, <b>gedrückt halten</b> bearbeitet.</p><p>Unter Einstellungen → <b>Geschäfte</b> kannst du dein Geschäft anlegen. Dann sortiert sich die Liste nach deinem Weg durch den Laden. Mehr steht unter Einstellungen → Hilfe.'],
   meals: ['Eure Essen', 'Sammle hier Gerichte mit ihren Zutaten. Antippen setzt die Zutaten auf die Einkaufsliste, passend zur Personenanzahl. Leg dein erstes Essen mit „+ Neues Essen“ an.'],
-  stores: ['Geschäfte (optional)', 'Leg dein Geschäft an und ordne seine Bereiche in der Reihenfolge deines Laufwegs. Dann sortiert sich die Liste genau so, wie du durch den Laden gehst. Brauchst du das nicht, schalte „In der Liste verwenden“ aus.']
+  stores: ['Geschäfte (optional)', 'Leg dein Geschäft an und teile es in <b>Bereiche</b> ein, in der Reihenfolge deines Laufwegs (z. B. Obst, Brot, Kühlregal). Jedem Bereich ordnest du <b>Kategorien</b> zu. Dann sortiert sich die Liste genau so, wie du durch den Laden gehst.</p><p>Liegt ein einzelnes <b>Produkt</b> woanders als seine Kategorie, zieh es in der Liste in den richtigen Bereich. Das merkt sich die App für dieses Geschäft.</p><p>Brauchst du keine Geschäfte, schalte „In der Liste verwenden“ aus.']
 };
 function introSeen() {
   try { return JSON.parse(localStorage.getItem('ek_intro') || '{}') || {}; } catch (_) { return {}; }
@@ -44,6 +44,20 @@ function introDismiss(key) { setIntroSeen({ ...introSeen(), [key]: 1 }); }
 function introSkipAll() {
   try { if (localStorage.getItem('ek_intro') !== null) return; } catch (_) { return; }
   setIntroSeen(Object.fromEntries(Object.keys(INTRO).map((k) => [k, 1])));
+}
+
+// ---------- Über diese App ----------
+// Der Text steht nur in ueber.html (die Gast-Ansicht verlinkt die Datei direkt). In der App erscheint er als normale
+// Unterseite (Zurück-Pfeil, Wisch vom Rand): Die Abschnitte (.abox) werden aus der Datei übernommen, offline aus dem Cache.
+async function aboutPage() {
+  openPage('about', 'Über diese App', '<p class="sheetnote">Wird geladen …</p>');
+  let html;
+  try {
+    const doc = new DOMParser().parseFromString(await (await fetch('ueber.html')).text(), 'text/html');
+    html = [...doc.querySelectorAll('.abox')].map((b) => b.outerHTML).join('');
+  } catch (_) { /* unten: Hinweis */ }
+  if (pageTop() !== 'about') return; // inzwischen zurückgegangen
+  openPage('about', 'Über diese App', html ? `<div class="about">${html}</div>` : '<p class="sheetnote">Konnte gerade nicht geladen werden. Bitte später nochmal versuchen.</p>');
 }
 
 // ---------- Hilfe-Seite ----------

@@ -738,7 +738,7 @@ body.guest #gName { font-size: 16px; }
 .gfoot a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
 /* Einführung: Willkommens-Hinweise (js/hilfe.js, introCard) */
-.intro { background: var(--card, var(--soft)); border: 1px solid var(--accent); border-radius: 16px; padding: 14px 16px 10px; margin: 4px 0 16px; }
+.intro { background: var(--card, var(--soft)); border: 1px solid var(--accent); border-radius: 16px; padding: 14px 16px 10px; margin: 16px 0; }
 .intro strong { display: block; font-size: 1.05rem; margin-bottom: 4px; }
 .intro p { margin: 0 0 6px; line-height: 1.45; color: var(--ink); }
 .intro .link { color: var(--accent); font-weight: 600; padding: 6px 0; }

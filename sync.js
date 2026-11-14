@@ -503,7 +503,7 @@ function accountPage(msg) {
       <details class="pwforgot"><summary>Passwort vergessen?</summary>
         <p class="sheetnote">Die App verschickt keine E-Mails. Wende dich an die Person, die die App betreut: Sie kann dir ein neues Passwort setzen. Damit meldest du dich an und änderst es danach unter Konto und Gruppen → Passwort ändern.</p>
       </details>
-      <p class="sheetnote" style="margin:12px 4px 0"><a href="ueber.html" class="link">Über diese App und Datenschutz</a></p>
+      <p class="sheetnote" style="margin:12px 4px 0"><button type="button" class="link" data-act="aboutpage">Über diese App und Datenschutz</button></p>
       ${dataRow}`, () => accountPage(ui.accMsg));
     return;
   }
