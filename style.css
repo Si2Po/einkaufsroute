@@ -734,3 +734,5 @@ body.guest .wrap { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px))
 .ghead p b { color: var(--warn); font-weight: 600; }
 body.guest #gName { font-size: 16px; }
 .gfoot { margin: 24px 4px 0; color: var(--muted); font-size: .85rem; text-align: center; line-height: 1.5; }
+.ghint { margin: 6px 6px 14px; color: var(--muted); font-size: .85rem; line-height: 1.4; }
+.gfoot a { color: var(--accent); text-decoration: none; font-weight: 600; }

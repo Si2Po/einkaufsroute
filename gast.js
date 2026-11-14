@@ -4,11 +4,11 @@
    Daten der App auf diesem Gerät nicht an. Alles läuft über die Funktionen in supabase/schritte/gast.sql.
    Einkaufsliste: nach den Kategorien der Gruppe sortiert. Einfache Liste: Abschnitte und eigene Reihenfolge. */
 
-const G = { t: decodeURIComponent(location.hash.slice(1)).trim(), list: null, gone: false, offline: false, showDone: false, pending: new Map() };
+const G = { t: decodeURIComponent(location.hash.slice(1)).trim(), list: null, gone: false, offline: false, showDone: false, pending: new Map(), marked: new Set() }; // marked: angetippt, noch nicht gespeichert
 
 async function rpc(fn, args) {
   const res = await fetch(`${EK.url}/rest/v1/rpc/${fn}`, {
-    method: 'POST', headers: { apikey: EK.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ t: G.t, ...args })
+    method: 'POST', keepalive: true, headers: { apikey: EK.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ t: G.t, ...args })
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   return res.json();
@@ -28,11 +28,11 @@ async function load() {
   draw();
 }
 
-const rowHtml = (i) => `<li class="row${i.done ? ' done' : ''}" role="checkbox" aria-checked="${!!i.done}" tabindex="0" data-id="${esc(i.id)}">
+const rowHtml = (i) => { const on = i.done || G.marked.has(i.id); return `<li class="row${on ? ' done' : ''}" role="checkbox" aria-checked="${on}" tabindex="0" data-id="${esc(i.id)}">
     <span class="chk" aria-hidden="true"></span>
     <span class="txt"><span class="nm">${esc(i.name)}</span>${i.note ? `<span class="nt">${esc(i.note)}</span>` : ''}</span>
     ${i.qty ? `<span class="qty">${esc(i.qty)}</span>` : ''}
-  </li>`;
+  </li>`; };
 const head = (name, n) => `<li class="grp secli"><span class="gname">${esc(name)}</span><span class="cnt">${n}</span></li>`;
 
 function body() {
@@ -72,8 +72,9 @@ function draw() {
         <input id="gName" aria-label="Neuer Eintrag" enterkeyhint="done">
         <button type="submit" class="plus" aria-label="Hinzufügen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
       </form></div>
+      <p class="ghint">Mehreres auf einmal mit Komma oder „und“ trennen. Eine Zahl am Anfang wird zur Menge, z. B. „500g Pasta, 2 Gurken und Milch“.</p>
       <div id="gList"></div>
-      <p class="gfoot">Tippen = abhaken. Mehreres auf einmal mit Komma trennen.<br>Geteilt mit der App Einkaufsroute.</p>`;
+      <p class="gfoot">Geteilt mit der App <a href="./">Einkaufsroute</a></p>`;
   }
   document.getElementById('gTitle').textContent = G.list.name || 'Liste';
   document.getElementById('gSub').innerHTML = `Geteilte Liste${G.offline ? ' · <b>keine Verbindung</b>' : ''}`;
@@ -81,12 +82,33 @@ function draw() {
   document.getElementById('gList').innerHTML = body();
 }
 
-async function toggle(id) {
-  const it = G.list?.items.find((i) => i.id === id);
+// Abhaken wie in der App: Der Haken erscheint sofort, die Einträge wandern aber erst nach „Erledigt“ (und werden erst dann
+// gespeichert), wenn CHECK_DELAY lang nichts mehr angetippt wurde. Nochmal tippen nimmt den Haken zurück.
+// Einfache Liste mit „bleibt stehen“ und Haken entfernen: sofort.
+const CHECK_DELAY = 2500;
+let markT;
+const findItem = (id) => G.list?.items.find((i) => i.id === id);
+function toggle(id) {
+  const it = findItem(id);
   if (!it) return;
-  it.done = !it.done; G.pending.set(id, it.done); draw();
-  try { await rpc('guest_check', { iid: id, done: it.done }); } catch (_) { G.offline = true; }
-  G.pending.delete(id);
+  if (it.done || (G.list.type === 'simple' && G.list.keepDone)) { setDone([id], !it.done); return; }
+  if (G.marked.has(id)) G.marked.delete(id); else G.marked.add(id);
+  clearTimeout(markT);
+  if (G.marked.size) markT = setTimeout(flushMarked, CHECK_DELAY);
+  draw();
+}
+function flushMarked() {
+  clearTimeout(markT);
+  if (!G.marked.size) return;
+  const ids = [...G.marked];
+  G.marked.clear();
+  setDone(ids, true);
+}
+async function setDone(ids, done) {
+  ids.forEach((id) => { const it = findItem(id); if (it) { it.done = done; G.pending.set(id, done); } });
+  draw();
+  await Promise.all(ids.map((id) => rpc('guest_check', { iid: id, done }).catch(() => { G.offline = true; })));
+  ids.forEach((id) => G.pending.delete(id));
   load();
 }
 
@@ -118,6 +140,7 @@ document.addEventListener('submit', (e) => {
 });
 // Änderungen der anderen: alle 10 Sekunden nachsehen, solange die Seite offen ist
 setInterval(() => { if (document.visibilityState === 'visible') load(); }, 10000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); else flushMarked(); });
+window.addEventListener('pagehide', flushMarked); // Seite verlassen: Angetipptes gleich speichern
 window.addEventListener('hashchange', () => { G.t = decodeURIComponent(location.hash.slice(1)).trim(); G.gone = false; G.list = null; load(); });
 load();
