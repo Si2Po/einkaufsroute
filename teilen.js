@@ -1,5 +1,5 @@
 'use strict';
-/* Liste per Link teilen, ohne Konto (Datenbank: supabase/gast.sql, Gast-Ansicht: gast.html + gast.js).
+/* Liste per Link teilen, ohne Konto (Datenbank: supabase/schritte/gast.sql, Gast-Ansicht: gast.html + gast.js).
    „Per Link teilen“ erzeugt einen Schlüssel (guest_link). Er steht in der Liste als l.share und reist mit dem
    Abgleich zu allen in der Gruppe, damit jeder den Link noch einmal verschicken kann. „Teilen beenden“
    (guest_link_off) macht ihn sofort ungültig. Gäste können nur abhaken und hinzufügen. */

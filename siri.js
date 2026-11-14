@@ -1,5 +1,5 @@
 'use strict';
-/* Siri-Eingang (Datenbank: supabase/siri.sql).
+/* Siri-Eingang (Datenbank: supabase/schritte/siri.sql).
    Ein Siri-Kurzbefehl schickt das Gesagte mit einem persönlichen Siri-Schlüssel an die Datenbank (siri_add), auch bei
    gesperrtem iPhone. Dort liegt es im Eingangskorb der Gruppe. Beim Abgleich holt die App den Korb ab (siri_take),
    zerlegt den Text wie beim Tippen und setzt die Einträge auf die gewählte Liste. Das macht das Gerät aus der Gruppe,
@@ -59,7 +59,7 @@ function siriPage(msg) {
   const intro = '<p class="sheetnote" style="margin:0 4px 12px">Sag „Hey Siri, Einkauf“ und dann, was fehlt. Das klappt auch bei gesperrtem iPhone. Die Einträge erscheinen auf der Liste, sobald jemand aus der Gruppe die App offen hat.</p>';
   let body;
   if (!sync.sess) body = '<p class="sheetnote">Für Siri musst du angemeldet sein.</p>';
-  else if (siri.noSql) body = '<p class="sheetnote" style="color:var(--warn)">Die Datenbank kennt Siri noch nicht. Bitte zuerst die Datei <b>supabase/siri.sql</b> im SQL-Editor von Supabase ausführen.</p>';
+  else if (siri.noSql) body = '<p class="sheetnote" style="color:var(--warn)">Die Datenbank kennt Siri noch nicht. Bitte zuerst die Datei <b>supabase/schritte/siri.sql</b> im SQL-Editor von Supabase ausführen.</p>';
   else if (siri.info === undefined) body = '<p class="sheetnote">Wird geladen …</p>';
   else {
     const info = siri.info, cur = info ? info.lid : S.listId;

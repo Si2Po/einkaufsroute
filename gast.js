@@ -1,7 +1,7 @@
 'use strict';
 /* Gast-Ansicht (gast.html#SCHLÜSSEL): eine per Link geteilte Liste, ohne Konto.
    Benutzt aus js/grund.js nur Hilfsfunktionen (Text zerlegen, Kategorie erraten, esc) und fasst die gespeicherten
-   Daten der App auf diesem Gerät nicht an. Alles läuft über die Funktionen in supabase/gast.sql.
+   Daten der App auf diesem Gerät nicht an. Alles läuft über die Funktionen in supabase/schritte/gast.sql.
    Einkaufsliste: nach den Kategorien der Gruppe sortiert. Einfache Liste: Abschnitte und eigene Reihenfolge. */
 
 const G = { t: decodeURIComponent(location.hash.slice(1)).trim(), list: null, gone: false, offline: false, showDone: false, pending: new Map() };

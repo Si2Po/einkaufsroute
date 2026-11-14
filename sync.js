@@ -211,13 +211,13 @@ async function buildDocs() {
     await put(g, 'list', l.id, { ...rest, _o: i }, null, l.private);
     for (const it of items || []) await put(g, 'item', it.id, { ...it, _list: l.id }, l.id, l.private);
   }
-  // Kaufhistorie (ein Dokument je Produkt und Gruppe). Erst, wenn die Datenbank die Art „hist“ kennt (supabase/historie.sql).
+  // Kaufhistorie (ein Dokument je Produkt und Gruppe). Erst, wenn die Datenbank die Art „hist“ kennt (supabase/schritte/historie.sql).
   if (!sync.noHist) for (const [g, h] of Object.entries(snap.hist || {})) for (const e of Object.values(h)) await put(g, 'hist', e.id, e);
   return out;
 }
 const knownEntry = (d) => ({ h: d.h, lid: d.lid, kind: d.row.kind, l: d.row.list_id, v: d.row.visible_to });
 
-// ---------- Aufräumen (supabase/aufraeumen.sql) ----------
+// ---------- Aufräumen (supabase/schritte/aufraeumen.sql) ----------
 // Gelöschtes bleibt auf dem Server als leere Markierung. Nach PURGE_DAYS räumt purge_deleted() sie weg.
 // Lokal merkt sich „known“ zu jeder Löschung, wann sie bekannt wurde (t), und vergisst sie nach derselben Frist.
 const PURGE_DAYS = 90; // DAY (ein Tag in ms) kommt aus js/historie.js
