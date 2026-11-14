@@ -41,7 +41,7 @@ Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, a
 - [x] **Essen: Favoriten** (0.7.1) als fester Tag „★“ (immer erster Filter-Tag, Favoriten oben, sonst A–Z, Stern im Essen-Sheet)
 - [x] Hilfe-Text zu Listen-Typen, Ziehen und Favoriten
 - [x] **Kategorien von einer Gruppe in eine andere übernehmen** (umgesetzt: Kategorien → „Von anderer Gruppe übernehmen“, ergänzen oder ersetzen mit Rückfrage, Rückgängig) (Idee Besitzer): unter Kategorien „Übernehmen von [Gruppe]“. Vorschlag: *ergänzen* (fehlende Kategorien und Stichwörter dazu, Eigenes bleibt) statt ersetzen; ersetzt auch den alten Punkt „neue Gruppe mit Kategorien einer bestehenden starten“.
-- [ ] Später: einzelne Liste per Link an Außenstehende teilen (Gäste, ohne Konto)
+- [x] Einzelne Liste per Link teilen, ohne Konto (0.8.0: `gast.sql`, `gast.html`, `teilen.js`; Gäste: ansehen, abhaken, hinzufügen; ohne Geschäfte, nach Kategorien sortiert)
 
 ## Später / optional
 - [x] **Wortanfänge und -endungen je Kategorie** (umgesetzt als Stichwort mit Stern: „tk*“, „*saft“, „*bio*“; Muster gewinnen vor normalen Stichwörtern, ein genau gelernter Name vor allem) (Idee Besitzer): z. B. alles, was mit „TK“ / „TK-“ beginnt, ist Tiefkühl; alles, was auf „-saft“ endet, ist Getränke. Heute erkennen Stichwörter nur den Anfang eines Wortes („tk-“ passt auf „TK-Erbsen“, aber nicht auf „TK Erbsen“; Endungen wie „Orangensaft“ gar nicht).

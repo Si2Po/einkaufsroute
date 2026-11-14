@@ -7,10 +7,7 @@
    Ablauf eines Durchgangs (für jede eigene Gruppe): erst eigene Änderungen hochladen (Vergleich über Hash), dann Änderungen der anderen holen.
    Gewinnt bei gleichzeitiger Änderung am selben Dokument: wer zuletzt hochlädt. Gelöschtes bleibt als Markierung (deleted) erhalten. */
 
-const EK = Object.assign({
-  url: 'https://hshlepbjrqqfpvjcghmy.supabase.co',
-  key: 'sb_publishable_yxlkJ_Na6A0s-3guPHAUYQ_j2y4JMpO'
-}, window.EK_CONFIG || {});
+// EK (Adresse und öffentlicher Schlüssel der Datenbank) steht in config.js
 
 const sync = { sess: null, groups: [], gs: {}, legacyHid: null, status: 'out', last: 0, err: '', busy: false, again: false, dirty: false, ver: 0, quiet: false, joinCode: null, renderLater: false, ready: false };
 

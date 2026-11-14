@@ -688,8 +688,8 @@ body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-b
 .helpbody ul, .helpbody ol { margin: 0 0 8px; padding-left: 20px; }
 .helpbody li { margin: 0 0 6px; }
 .helpbody svg { width: 1.1em; height: 1.1em; vertical-align: -.2em; color: var(--muted); }
-.helpbody code { font-size: .88em; background: var(--line); border-radius: 6px; padding: 1px 5px; overflow-wrap: anywhere; }
-.helpbody code.sel { display: inline-block; margin: 4px 0; padding: 4px 8px; -webkit-user-select: all; user-select: all; }
+.helpbody code, .siricopy code { font-size: .88em; background: var(--line); border-radius: 6px; padding: 1px 5px; overflow-wrap: anywhere; }
+.helpbody code.sel, .siricopy code.sel { display: inline-block; margin: 4px 0; padding: 4px 8px; -webkit-user-select: all; user-select: all; }
 .siricopy { display: flex; align-items: center; gap: 10px; margin: 4px 0; }
 .siricopy code.sel { flex: 1; min-width: 0; margin: 0; }
 .pwforgot { margin: 14px 4px 0; }
@@ -725,3 +725,12 @@ p.tip[data-act="vertap"] { cursor: default; -webkit-user-select: none; user-sele
 .duex { display: grid; place-items: center; flex: none; width: 40px; padding: 0; border: 0; border-left: 1px solid var(--line); background: none; color: var(--muted); }
 .duex svg { display: block; }
 .srow .duenum { flex: 0 0 64px; width: 64px; border: 0; background: transparent; font-size: 16px; padding: 12px 0; color: var(--ink); text-align: center; }
+
+/* Gast-Ansicht (gast.html): geteilte Liste ohne Konto */
+body.guest .wrap { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)); }
+.ghead { margin: 0 4px 14px; }
+.ghead h1 { margin: 0; font-size: 1.9rem; line-height: 1.15; overflow-wrap: anywhere; }
+.ghead p { margin: 4px 0 0; color: var(--muted); font-size: .95rem; }
+.ghead p b { color: var(--warn); font-weight: 600; }
+body.guest #gName { font-size: 16px; }
+.gfoot { margin: 24px 4px 0; color: var(--muted); font-size: .85rem; text-align: center; line-height: 1.5; }

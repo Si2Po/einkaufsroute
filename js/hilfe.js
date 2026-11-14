@@ -57,6 +57,7 @@ function helpPage() {
         <li><b>Einfache Liste:</b> für Filme, Packlisten, Ideen. Keine Kategorien, du bestimmst die Reihenfolge.
           Unten in der Liste legst du <b>Abschnitte</b> an. Abschnitt antippen: Neues kommt dorthin. Abschnitt gedrückt halten: umbenennen, verschieben, löschen.</li>
         <li>Bei einfachen Listen wählst du auch, ob Abgehaktes nach unten rutscht oder durchgestrichen stehen bleibt (praktisch für Packlisten).</li>
+        <li><b>Mit jemandem ohne Konto teilen:</b> Liste bearbeiten → „Per Link teilen“. Wer den Link hat, sieht nur diese Liste im Browser, kann abhaken und etwas hinzufügen, aber nichts löschen. „Teilen beenden“ macht den Link ungültig.</li>
       </ul>`),
     helpTopic('Geschäfte und Grundriss', `
       <ul>

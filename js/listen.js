@@ -41,6 +41,7 @@ function listEditPage(id) {
       ? 'Eigene Reihenfolge und Abschnitte, z. B. für Filme oder Packlisten. Abschnitt anlegen: unten in der Liste. Sortieren: Eintrag gedrückt halten und ziehen.'
       : 'Sortiert sich nach dem Laufweg im Geschäft und nach Kategorien.'}</p>
     ${groupSelect('leGroup', l.g, 'Gruppe', ` data-id="${l.id}"`)}
+    ${shareBlock(l) /* teilen.js */}
     ${S.lists.length > 1 ? `<div class="actions" style="margin-top:16px"><button type="button" class="btn danger" data-act="dellist" data-id="${l.id}">${ui.confirmList === l.id ? `Wirklich löschen? (${n} Einträge)` : 'Liste löschen'}</button></div>` : ''}`, () => listEditPage(id));
 }
 // Name sofort übernehmen (beim Tippen), nicht erst beim Verlassen des Feldes

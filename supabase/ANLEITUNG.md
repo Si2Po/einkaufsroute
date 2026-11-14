@@ -75,3 +75,9 @@ Die App verschickt keine E-Mails. Damit Registrieren trotzdem klappt:
 2. **Passwort ändern** geht in der App: Einstellungen → Konto und Gruppen → Passwort ändern.
 3. **Passwort vergessen:** `passwort_setzen.sql` öffnen, E-Mail und neues Passwort eintragen und im SQL-Editor ausführen
    (Anleitung steht oben in der Datei). Die Datei danach nicht mit Passwort speichern.
+
+## 11. Listen per Link teilen (einmalig, ab App-Version 0.8.0)
+1. Supabase → **SQL Editor** → „New query“.
+2. Den kompletten Inhalt von `gast.sql` einfügen und **Run** drücken. (Braucht `siri.sql`, das schon ausgeführt ist.)
+3. Erwartet: „Success. No rows returned“. Bei einer Fehlermeldung: Text kopieren und mir schicken.
+Danach in der App: Liste bearbeiten → **Per Link teilen**.
