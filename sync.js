@@ -218,11 +218,47 @@ async function buildDocs() {
 }
 const knownEntry = (d) => ({ h: d.h, lid: d.lid, kind: d.row.kind, l: d.row.list_id, v: d.row.visible_to });
 
+// ---------- Aufräumen (supabase/aufraeumen.sql) ----------
+// Gelöschtes bleibt auf dem Server als leere Markierung. Nach PURGE_DAYS räumt purge_deleted() sie weg.
+// Lokal merkt sich „known“ zu jeder Löschung, wann sie bekannt wurde (t), und vergisst sie nach derselben Frist.
+const PURGE_DAYS = 90; // DAY (ein Tag in ms) kommt aus js/historie.js
+const delMark = (kind) => ({ del: 1, kind, t: Date.now() });
+function tidyKnown(g) {
+  const known = gsOf(g).known, old = Date.now() - (PURGE_DAYS + 10) * DAY;
+  for (const [id, k] of Object.entries(known)) {
+    if (!k.del) continue;
+    if (!k.t) k.t = Date.now(); // Löschungen von vor diesem Update: ab jetzt zählen
+    else if (k.t < old) delete known[id];
+  }
+}
+// Länger als PURGE_DAYS nicht abgeglichen: Die Server-Markierungen für Löschungen aus dieser Zeit können schon weg sein.
+// Dann einmal alle noch vorhandenen IDs holen; was hier bekannt, dort aber verschwunden ist, gilt als gelöscht.
+async function catchUpRows(g) {
+  const st = gsOf(g), last = st.at || (st.cursor ? Date.parse(st.cursor) : Date.now());
+  if (Date.now() - last < (PURGE_DAYS - 7) * DAY) return [];
+  const live = new Set();
+  for (let off = 0; ; off += 1000) {
+    const page = await api(`/rest/v1/docs?select=id&household_id=eq.${g}&deleted=is.false&order=id.asc&limit=1000&offset=${off}`);
+    page.forEach((r) => live.add(r.id));
+    if (page.length < 1000) break;
+  }
+  return Object.entries(st.known).filter(([id, k]) => !k.del && !live.has(id)).map(([id, k]) => ({ id, kind: k.kind, deleted: true, data: {} }));
+}
+// Höchstens einmal am Tag je Gerät die Datenbank aufräumen lassen. Fehlt aufraeumen.sql, passiert einfach nichts.
+async function purgeDaily() {
+  let last = 0;
+  try { last = +localStorage.getItem('ek_purge') || 0; } catch (_) { /* privat */ }
+  if (Date.now() - last < DAY) return;
+  try { localStorage.setItem('ek_purge', String(Date.now())); } catch (_) { /* privat */ }
+  try { await api('/rest/v1/rpc/purge_deleted', { method: 'POST', body: '{}' }); } catch (_) { /* nicht wichtig */ }
+  Object.keys(sync.gs).forEach(tidyKnown);
+}
+
 async function pushChanges(g, cur) {
   const known = gsOf(g).known, rows = [];
   for (const [id, d] of cur) if (!known[id] || known[id].h !== d.h) rows.push({ row: d.row, k: knownEntry(d) });
   for (const [id, k] of Object.entries(known)) {
-    if (!cur.has(id) && !k.del) rows.push({ row: { id, household_id: g, kind: k.kind, list_id: k.l, visible_to: k.v, data: {}, deleted: true }, k: { del: 1, kind: k.kind } });
+    if (!cur.has(id) && !k.del) rows.push({ row: { id, household_id: g, kind: k.kind, list_id: k.l, visible_to: k.v, data: {}, deleted: true }, k: delMark(k.kind) });
   }
   let batch = [], size = 0;
   const flush = async () => {
@@ -281,7 +317,7 @@ async function applyRows(rows, pending, g) {
   for (const r of rows) {
     const k = known[r.id];
     if (!r.deleted && k && k.h === rowHash(r)) continue;     // haben wir schon
-    if (r.deleted && (!k || k.del)) { if (!k) known[r.id] = { del: 1, kind: r.kind }; continue; }
+    if (r.deleted && (!k || k.del)) { if (!k) known[r.id] = delMark(r.kind); continue; }
     if (pending.has(r.id)) continue;                         // lokale Änderung gewinnt, wird gleich hochgeladen
     todo.push(r);
   }
@@ -298,7 +334,7 @@ async function applyRows(rows, pending, g) {
       else if (r.kind === 'list') removeWhere(S.lists, mine);
       else if (r.kind === 'item') S.lists.forEach((l) => { if (l.g === g) removeWhere(l.items, (x) => x.id === kl); });
       else if (r.kind === 'hist') { if (S.hist?.[g]) delete S.hist[g][kl]; }
-      known[r.id] = { del: 1, kind: r.kind }; touched.push({ id: r.id, gone: true, g });
+      known[r.id] = delMark(r.kind); touched.push({ id: r.id, gone: true, g });
       continue;
     }
     const { _o, _list, ...ent } = d;
@@ -368,7 +404,7 @@ async function syncRun() {
         await applyRows(rows, new Set(), g);
         const cur = (await buildDocs()).get(g) || new Map(), known = gsOf(g).known;
         for (const [id, d] of cur) known[id] = knownEntry(d);
-        for (const r of rows) { if (r.deleted) known[r.id] = { del: 1, kind: r.kind }; if (!gsOf(g).cursor || r.updated_at > gsOf(g).cursor) gsOf(g).cursor = r.updated_at; }
+        for (const r of rows) { if (r.deleted) known[r.id] = delMark(r.kind); if (!gsOf(g).cursor || r.updated_at > gsOf(g).cursor) gsOf(g).cursor = r.updated_at; }
         changed = true;
       }
       if (!S.catGroup) { if (S.cats.length) S.catGroup = personalGroup(); else setCatGroup(personalGroup()); } // eigene Kategorien vom Gerät behalten
@@ -386,11 +422,12 @@ async function syncRun() {
     // Holen
     let touched = [];
     for (const g of groups) {
-      const rows = await pullRows(g);
+      const rows = [...await catchUpRows(g), ...await pullRows(g)];
       const pending = new Set();
       if (sync.ver !== v0 || sync.dirty) { const cur = (await buildDocs()).get(g) || new Map(), known = gsOf(g).known; for (const [id, d] of cur) { const k = known[id]; if (!k || k.h !== d.h) pending.add(id); } }
       touched = touched.concat(await applyRows(rows, pending, g));
-      for (const r of rows) if (!gsOf(g).cursor || r.updated_at > gsOf(g).cursor) gsOf(g).cursor = r.updated_at;
+      for (const r of rows) if (r.updated_at && (!gsOf(g).cursor || r.updated_at > gsOf(g).cursor)) gsOf(g).cursor = r.updated_at;
+      gsOf(g).at = Date.now(); // zuletzt vollständig abgeglichen (für catchUpRows)
     }
     if (touched.length) {
       repairState();
@@ -398,6 +435,7 @@ async function syncRun() {
       for (const t of touched) { if (t.gone) continue; const d = cur2.get(t.g)?.get(t.id); if (d) gsOf(t.g).known[t.id] = knownEntry(d); }
       changed = true;
     }
+    purgeDaily(); // läuft nebenher, Ergebnis egal
     if (await siriTake()) changed = true; // Siri-Eingang (siri.js): setzt sync.dirty, der nächste Durchgang lädt die Einträge hoch
     if (changed) { sync.quiet = true; save(); }
     persistSync();

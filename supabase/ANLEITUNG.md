@@ -60,3 +60,10 @@ und wird erst nach dem SQL mit der Gruppe geteilt (nach dem nächsten Start der 
 3. Erwartet: „Success. No rows returned“. Bei einer Fehlermeldung: Text kopieren und mir schicken.
 Danach in der App: Einstellungen → Konto und Gruppen → **Siri**. Ohne diesen Schritt läuft die App normal weiter,
 die Siri-Seite weist dann nur darauf hin, dass das SQL noch fehlt.
+
+## 9. Aufräumen nachrüsten (einmalig, ab App-Version 0.7.9)
+1. Supabase → **SQL Editor** → „New query“.
+2. Den kompletten Inhalt von `aufraeumen.sql` einfügen und **Run** drücken.
+3. Erwartet: „Success. No rows returned“.
+Danach entfernt die App einmal am Tag Löschmarkierungen, die älter als 90 Tage sind, und abgelaufene Einladungen.
+Ohne diesen Schritt läuft alles normal weiter, es wird nur nicht aufgeräumt.
