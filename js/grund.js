@@ -273,39 +273,11 @@ function save() {
   }, 120);
 }
 
-// ---------- Startdaten (Beispiel, damit die App nicht leer startet) ----------
+// ---------- Startdaten ----------
+// Neue Nutzer starten leer: keine Beispiel-Einträge, -Essen oder -Geschäfte. Stattdessen erklären kurze Willkommens-Hinweise
+// (introCard in js/hilfe.js) Liste, Essen und Geschäfte.
 function seed() {
-  const defs = [
-    ['Obst & Gemüse', ['obst'], [40, 40, 300, 190]],
-    ['Brot & Backwaren', ['brot'], [350, 40, 190, 190]],
-    ['Milch & Käse', ['milch'], [550, 40, 410, 120]],
-    ['Fleisch & Fisch', ['fleisch'], [550, 170, 410, 100]],
-    ['Nudeln, Reis & Dosen', ['konserven', 'gewuerze'], [40, 260, 250, 190]],
-    ['Getränke', ['getraenke'], [300, 260, 240, 190]],
-    ['Snacks', ['snacks'], [550, 280, 200, 170]],
-    ['Tiefkühl', ['tk'], [760, 280, 200, 170]],
-    ['Drogerie', ['drogerie'], [40, 470, 500, 130]]
-  ];
-  const zones = defs.map(([name, cats, r]) => ({ id: uid(), name, cats, prods: {}, rect: { x: r[0], y: r[1], w: r[2], h: r[3] } }));
-  const store = { id: uid(), name: 'Beispiel-Markt', bg: null, h: 640, zones };
-  const mk = (text, note = '') => {
-    const p = parseEntry(text);
-    return { id: uid(), name: p.name, qty: p.qty, note, cat: guessCat(p.name), done: false, ts: Date.now() + Math.random() };
-  };
-  return {
-    v: 2, storeId: store.id, stores: [store], recent: [], meals: seedMeals(),
-    items: [mk('Zahnpasta'), mk('2 Hafermilch'), mk('6 Äpfel', 'lieber säuerlich'), mk('Brot', 'Vollkorn'), mk('500g Spaghetti'), mk('2 Tiefkühlpizza'), mk('Bananen'), mk('Joghurt')]
-  };
-}
-
-function seedMeals() {
-  const ing = (t, basic = false) => { const p = parseEntry(t); return { id: uid(), name: p.name, qty: p.qty, basic }; };
-  return [
-    { id: uid(), name: 'Spaghetti Bolognese', tags: ['Nudeln'], base: 2, photo: null, steps: '',
-      ing: [ing('250g Spaghetti'), ing('300g Hackfleisch'), ing('1 Zwiebel'), ing('400g Dosentomaten'), ing('Olivenöl', true), ing('Salz', true)] },
-    { id: uid(), name: 'Gemüsepfanne mit Reis', tags: ['Reis', 'schnell', 'viel Gemüse'], base: 2, photo: null, steps: '',
-      ing: [ing('200g Reis'), ing('2 Paprika'), ing('2 Zucchini'), ing('1 Zwiebel'), ing('Sojasauce', true), ing('Öl', true)] }
-  ];
+  return { v: 2, storeId: null, stores: [], recent: [], meals: [], items: [] };
 }
 
 // ---------- Zustand ----------

@@ -3,7 +3,9 @@
 
 // ---------- Start ----------
 (async function init() {
-  S = (await loadState()) || seed();
+  const saved = await loadState();
+  S = saved || seed();
+  if (saved) introSkipAll(); // wer die App schon benutzt, bekommt die Einführung nicht ungefragt (js/hilfe.js)
   S.cats = S.cats || DEFAULT_CATS.map(cloneCat); // ältere Daten bekommen die Standard-Kategorien
   CATS = S.cats; indexCats();
   S.recent = S.recent || [];

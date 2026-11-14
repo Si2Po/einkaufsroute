@@ -20,7 +20,7 @@
 - [x] Gruppen erklären: Man sieht immer alles aus allen eigenen Gruppen; die Gruppe regelt nur, **wer etwas mitsieht**. „Persönlich“ sieht nur man selbst (nicht teilbar). Das **Personen-Symbol** (zwei Köpfe, z. B. „👥 Einkauf“ bei Listen und Geschäften) zeigt, zu welcher Gruppe etwas gehört. Gruppe ändern: Liste/Geschäft bearbeiten → „Gruppe“; beim Essen ganz unten beim Personen-Symbol. Kategorien und Stichwörter: unter Kategorien „Stichwörter von“ wählen, wer dieselbe Gruppe wählt, lernt gemeinsam. Geschäft aus anderer Gruppe für eine Liste gewählt → App fragt, ob es mit umziehen soll.
 - [x] Wichtiges: Offline-Betrieb, was bei „Abmelden“ passiert, neue Version laden (App einmal schließen und neu öffnen). Versionsnummer anzeigen (steht bisher unten in den Einstellungen)
 - [x] Als eigene Unterseite (Themen zum Aufklappen)
-- [ ] Später vielleicht: beim ersten Start eine kurze Einführung (vorerst nicht gewünscht)
+- [x] Einführung (0.8.0): neue Nutzer starten ohne Beispieldaten, Willkommens-Hinweise in Liste, Essen und Geschäfte (wegklickbar, `ek_intro`), Hilfe → „Einführung nochmal zeigen“; bisherige Nutzer sehen sie nicht ungefragt
 - [x] Schalter „Hinweise anzeigen“: blendet alle kleinen Bedienhinweise (z. B. „Tippen: … · Gedrückt halten: …“ unter Liste und Essen) überall ein oder aus. Heute verschwindet nur der Hinweis in der Liste nach einer Weile von selbst (S.tipSeen).
 
 ## Einkaufsverhalten lernen (0.7.5: `js/historie.js`, braucht `supabase/historie.sql`)

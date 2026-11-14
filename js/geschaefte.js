@@ -7,7 +7,7 @@ function viewStores() {
       <span class="go">›</span></button></li>`).join('');
   return `${pageHead('Einstellungen', 'Geschäfte', 'data-act="tab" data-tab="settings"')}
     <div class="group" style="margin-bottom:10px"><label class="sheetbtn swrow"><span>In der Liste verwenden<small>Sortiert die Einkaufsliste nach dem Laufweg im Geschäft. Gilt nur für dieses Gerät.</small></span><input type="checkbox" switch id="storesSwitch"${storesOn() ? ' checked' : ''}></label></div>
-    <p class="hint">Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.</p>
+    ${introCard('stores') || '<p class="hint">Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.</p>'}
     ${S.stores.length ? `<ul class="cards">${cards}</ul>` : ''}
     <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">+ Neues Geschäft</button>`;
 }

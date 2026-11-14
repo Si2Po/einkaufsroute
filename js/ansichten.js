@@ -64,7 +64,7 @@ function listBody() {
         + g.items.map(rowHtml).join('')).join('')}</ul>${ui.wiggle === 'items' ? wiggleBar(true) : ''}`
     : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
   if (ui.wiggle === 'items' && groups.length) return body;
-  return dueBar() + body + doneBlock(done) + listTip('verschieben'); // dueBar: „Vielleicht fällig“ (historie.js)
+  return introCard('list') + dueBar() + body + doneBlock(done) + listTip('verschieben'); // introCard: Einführung (hilfe.js), dueBar: „Vielleicht fällig“ (historie.js)
 }
 // „Erledigt (n)“ zum Aufklappen, darunter die abgehakten Einträge (Einkaufsliste und einfache Liste)
 function doneBlock(done) {

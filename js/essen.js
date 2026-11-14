@@ -50,7 +50,7 @@ function filterChip(t) {
 }
 function viewMeals() {
   const tags = allTags();
-  return `<div class="edhead"><h2>Essen</h2></div>
+  return `<div class="edhead"><h2>Essen</h2></div>${introCard('meals')}
     ${meals().length ? `<input id="mealQ" type="search" class="notein catsearch" placeholder="Essen oder Zutat suchen" aria-label="Essen suchen" autocomplete="off" value="${esc(ui.mealQ)}">` : ''}
     <div class="chips mtags" role="group" aria-label="Tags">${tags.map(filterChip).join('')}${ui.ovTagInput
       ? '<form id="mOvTagForm" class="tagadd" autocomplete="off"><input id="mOvTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'

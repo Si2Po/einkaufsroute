@@ -279,6 +279,8 @@ document.addEventListener('click', (e) => {
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
     case 'helppage': helpPage(); keep = true; break;
+    case 'introok': introDismiss(el.dataset.key); render(); break;
+    case 'introreset': setIntroSeen({}); toast('Die Einführung erscheint wieder in Liste, Essen und Geschäfte.'); keep = true; break;
     case 'duepage': duePage(); keep = true; break;
     case 'duenew': dueNewSheet(); keep = true; break;
     case 'dueedit': ui.confirmDueDel = false; dueEditSheet(el.dataset.g, el.dataset.key); keep = true; break;

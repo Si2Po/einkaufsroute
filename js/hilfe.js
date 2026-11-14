@@ -20,6 +20,32 @@ document.addEventListener('change', (e) => {
   render();
 });
 
+// ---------- Einführung: Willkommens-Hinweise in Liste, Essen und Geschäfte ----------
+// Jeder Hinweis erscheint, bis man „Verstanden“ tippt. Gemerkt wird das nur auf diesem Gerät (ek_intro).
+// In der Hilfe holt „Einführung nochmal zeigen“ alle zurück.
+const INTRO = {
+  list: ['Willkommen! 👋', 'Schreib oben, was du brauchst, z. B. „Milch, 2 Butter und 500g Pasta“. Die App sortiert alles nach Kategorien. <b>Tippen</b> hakt ab, <b>gedrückt halten</b> bearbeitet. Mehr steht unter Einstellungen → Hilfe.'],
+  meals: ['Eure Essen', 'Sammle hier Gerichte mit ihren Zutaten. Antippen setzt die Zutaten auf die Einkaufsliste, passend zur Personenanzahl. Leg dein erstes Essen mit „+ Neues Essen“ an.'],
+  stores: ['Geschäfte (optional)', 'Leg dein Geschäft an und ordne seine Bereiche in der Reihenfolge deines Laufwegs. Dann sortiert sich die Liste genau so, wie du durch den Laden gehst. Brauchst du das nicht, schalte „In der Liste verwenden“ aus.']
+};
+function introSeen() {
+  try { return JSON.parse(localStorage.getItem('ek_intro') || '{}') || {}; } catch (_) { return {}; }
+}
+function setIntroSeen(v) {
+  try { localStorage.setItem('ek_intro', JSON.stringify(v)); } catch (_) { /* privat: Hinweis kommt beim nächsten Start wieder */ }
+}
+function introCard(key) {
+  if (introSeen()[key] || !INTRO[key]) return '';
+  const [title, text] = INTRO[key];
+  return `<div class="intro" role="note"><strong>${title}</strong><p>${text}</p><button type="button" class="link" data-act="introok" data-key="${key}">Verstanden</button></div>`;
+}
+function introDismiss(key) { setIntroSeen({ ...introSeen(), [key]: 1 }); }
+// Bisherige Nutzer (Daten schon da): alle Hinweise als gesehen markieren, aber nur beim allerersten Mal
+function introSkipAll() {
+  try { if (localStorage.getItem('ek_intro') !== null) return; } catch (_) { return; }
+  setIntroSeen(Object.fromEntries(Object.keys(INTRO).map((k) => [k, 1])));
+}
+
 // ---------- Hilfe-Seite ----------
 // Ein Thema zum Aufklappen. Inhalt: Absätze und Aufzählungen als HTML (feste Texte, keine Nutzerdaten).
 const helpTopic = (title, html, icon = '') => `<details class="helpsec"><summary>${icon}<span>${title}</span></summary><div class="helpbody">${html}</div></details>`;
@@ -110,6 +136,6 @@ function helpPage() {
       <p>Die App aktualisiert sich von selbst, sobald es eine neue Version gibt. Wenn du sofort nachsehen möchtest, öffne die Einstellungen und ziehe die Seite <b>ganz oben nach unten</b>. Welche Version du gerade hast, steht ganz unten in den Einstellungen.</p>`),
   ];
   openPage('help', 'Hilfe', `
-    <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="Kleine Späße">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label></div>
+    <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="Kleine Späße">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label><button type="button" class="sheetbtn" data-act="introreset"><span>Einführung nochmal zeigen<small>Willkommens-Hinweise in Liste, Essen und Geschäfte</small></span></button></div>
     <div class="helplist">${topics.join('')}</div>`); // ohne Neuaufbau beim Abgleich: aufgeklappte Themen bleiben offen
 }
