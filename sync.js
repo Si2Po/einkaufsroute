@@ -78,6 +78,8 @@ const niceError = (e) => {
   if (/password.*(short|least|characters)/i.test(m)) return 'Das Passwort ist zu kurz (mindestens 6 Zeichen).';
   if (/valid email|invalid.*email|unable to validate email/i.test(m)) return 'Bitte eine gültige E-Mail-Adresse eingeben.';
   if (/email not confirmed/i.test(m)) return 'Die E-Mail ist noch nicht bestätigt.';
+  if (/different from the old/i.test(m)) return 'Das neue Passwort muss anders sein als das alte.';
+  if (/reauthenticat|recently signed in/i.test(m)) return 'Bitte einmal ab- und wieder anmelden, dann nochmal versuchen.';
   if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Bitte kurz warten.';
   if (/ungültig oder abgelaufen/i.test(m)) return 'Die Einladung ist ungültig oder abgelaufen.';
   if (e instanceof TypeError || e.name === 'AbortError' || /failed to fetch|network|load failed/i.test(m)) return 'Keine Verbindung zum Server.';
@@ -494,6 +496,9 @@ function accountPage(msg) {
         ${note}
         <div class="actions"><button type="submit" class="btn" style="flex:1" value="login">Anmelden</button><button type="submit" class="btn ghost" style="flex:1" value="signup">Registrieren</button></div>
       </form>
+      <details class="pwforgot"><summary>Passwort vergessen?</summary>
+        <p class="sheetnote">Die App verschickt keine E-Mails. Wende dich an die Person, die die App betreut: Sie kann dir ein neues Passwort setzen. Damit meldest du dich an und änderst es danach unter Konto und Gruppen → Passwort ändern.</p>
+      </details>
       ${dataRow}`, () => accountPage(ui.accMsg));
     return;
   }
@@ -514,6 +519,7 @@ function accountPage(msg) {
     <div class="sheettitle" style="margin-top:16px">Siri</div>
     <div class="group"><button type="button" class="sheetbtn" data-act="siripage"><span>Mit Siri hinzufügen</span><small>auch bei gesperrtem iPhone ›</small></button></div>
     ${dataRow}
+    <div class="group" style="margin-top:16px"><button type="button" class="sheetbtn" data-act="acc_pwpage"><span>Passwort ändern</span><small>›</small></button></div>
     <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>`, () => accountPage(ui.accMsg));
 }
 // Eine Gruppe: Name, Mitglieder, einladen, verlassen
@@ -553,6 +559,17 @@ function joinPage(code, msg) {
       <p class="sheetnote">Die Gruppe kommt zu deinen dazu. Deine eigenen Listen, Geschäfte und Essen bleiben, wie sie sind.</p>
       ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg)}</p>` : ''}
       <button type="submit" class="btn">Beitreten</button>
+    </form>`);
+}
+// Passwort ändern (angemeldet, ohne E-Mail)
+function pwPage(msg) {
+  openPage('pw', 'Passwort ändern', `
+    <form id="pwForm" autocomplete="on" style="display:grid;gap:10px">
+      <input type="email" autocomplete="username" value="${esc(sync.sess?.user.email || '')}" hidden>
+      <label class="field"><span>Neues Passwort</span><input id="pwNew" type="password" autocomplete="new-password" minlength="6" required autofocus></label>
+      <label class="field"><span>Noch einmal</span><input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+      ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg.replace(/^!/, ''))}</p>` : ''}
+      <button type="submit" class="btn">Passwort ändern</button>
     </form>`);
 }
 async function copyText(t) {
@@ -637,6 +654,15 @@ document.addEventListener('submit', async (e) => {
       if (sync.joinCode && sync.sess) { joinPage(sync.joinCode); return; }
       accountPage(sync.status === 'ok' ? 'Angemeldet.' : (sync.err ? '!' + sync.err : ''));
     } catch (err) { accountPage('!' + niceError(err)); }
+  } else if (f.id === 'pwForm') {
+    e.preventDefault(); e.stopImmediatePropagation();
+    const p1 = $('#pwNew').value, p2 = $('#pwNew2').value;
+    if (p1 !== p2) { pwPage('!Die beiden Passwörter sind nicht gleich.'); return; }
+    f.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    try {
+      await api('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password: p1 }) });
+      accountPage('Passwort geändert. Auf anderen Geräten bleibst du angemeldet.');
+    } catch (err) { pwPage('!' + niceError(err)); }
   } else if (f.id === 'joinForm') {
     e.preventDefault(); e.stopImmediatePropagation();
     const code = $('#joinCode').value.trim();
@@ -685,6 +711,7 @@ document.addEventListener('click', async (e) => {
     catch (err) { groupPage(g, '!' + niceError(err)); }
   }
   else if (act === 'acc_joinsheet') joinPage('');
+  else if (act === 'acc_pwpage') pwPage();
   else if (act === 'acc_sync') { sync.dirty = true; sync.ver++; await syncRun(); accountPage(sync.status === 'ok' ? 'Abgeglichen.' : '!' + sync.err); }
   else if (act === 'acc_share') {
     const link = el.dataset.link;

@@ -692,6 +692,9 @@ body:has(.floatbar) #toast { bottom: calc(var(--kb, 0px) + env(safe-area-inset-b
 .helpbody code.sel { display: inline-block; margin: 4px 0; padding: 4px 8px; -webkit-user-select: all; user-select: all; }
 .siricopy { display: flex; align-items: center; gap: 10px; margin: 4px 0; }
 .siricopy code.sel { flex: 1; min-width: 0; margin: 0; }
+.pwforgot { margin: 14px 4px 0; }
+.pwforgot summary { color: var(--accent); cursor: pointer; font-size: .95rem; }
+.pwforgot p { margin: 6px 0 0; }
 .swrow { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .swrow > span { flex: 1; min-width: 0; display: grid; }
 .swrow small { color: var(--muted); font-size: .8rem; }

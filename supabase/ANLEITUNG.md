@@ -67,3 +67,11 @@ die Siri-Seite weist dann nur darauf hin, dass das SQL noch fehlt.
 3. Erwartet: „Success. No rows returned“.
 Danach entfernt die App einmal am Tag Löschmarkierungen, die älter als 90 Tage sind, und abgelaufene Einladungen.
 Ohne diesen Schritt läuft alles normal weiter, es wird nur nicht aufgeräumt.
+
+## 10. Ohne Mailversand (ab App-Version 0.7.9)
+Die App verschickt keine E-Mails. Damit Registrieren trotzdem klappt:
+1. Supabase → **Authentication** → **Sign In / Providers** → **Email** → **„Confirm email“ ausschalten** → Save.
+   Neue Konten sind dann sofort nutzbar, ohne Bestätigungsmail.
+2. **Passwort ändern** geht in der App: Einstellungen → Konto und Gruppen → Passwort ändern.
+3. **Passwort vergessen:** `passwort_setzen.sql` öffnen, E-Mail und neues Passwort eintragen und im SQL-Editor ausführen
+   (Anleitung steht oben in der Datei). Die Datei danach nicht mit Passwort speichern.

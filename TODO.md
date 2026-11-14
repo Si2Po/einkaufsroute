@@ -50,4 +50,4 @@ Erledigt (lokal, noch nicht hochgeladen): „Persönlich“ + weitere Gruppen, a
 - [x] Spracheingabe (0.7.7: Gesprochenes zerlegen; 0.7.8: Siri-Kurzbefehl über `siri.sql`, klappt auch gesperrt)
 - [ ] Optional: eigener Mikrofon-Knopf in der App (Web Speech API) oder KI-Kategorisierung über eine Supabase-Funktion
 - [ ] Laden nach Standort vorschlagen
-- [ ] Eigener Mailversand (SMTP) und Passwort-Reset, wenn andere Nutzer dazukommen
+- [x] Ohne Mailversand gelöst (0.7.9): „Confirm email“ in Supabase aus, Passwort ändern in der App, „Passwort vergessen“ = Besitzer setzt es mit `supabase/passwort_setzen.sql`. Eigener Mailversand (SMTP) nur, falls doch mal nötig.

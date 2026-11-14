@@ -101,6 +101,7 @@ function helpPage() {
         <li>Wenn du angemeldet bist, gleicht die App deine Daten automatisch ab: jedes Mal, wenn du sie öffnest, und danach alle paar Sekunden, solange sie geöffnet ist. Änderungen der anderen in deinen Gruppen siehst du so nach kurzer Zeit auch bei dir.</li>
         <li><b>Ohne Netz</b> kannst du die App ganz normal weiter benutzen, zum Beispiel im Laden ohne Empfang. Deine Änderungen werden abgeglichen, sobald du wieder Netz hast.</li>
         <li>Ändern zwei Personen gleichzeitig denselben Eintrag, bleibt die Änderung erhalten, die zuletzt abgeglichen wurde.</li>
+        <li><b>Passwort ändern:</b> unter Einstellungen → Konto und Gruppen. Hast du es vergessen, frag die Person, die die App betreut. Sie kann dir ein neues setzen.</li>
         <li><b>Abmelden:</b> Wenn du dich abmeldest, bleiben deine Daten auf diesem Gerät erhalten. Sie werden dann nur nicht mehr abgeglichen.</li>
         <li><b>Sicherung:</b> Unter Einstellungen → Konto und Gruppen → Daten sichern und übertragen kannst du alles als Datei oder als Text sichern. So nimmst du deine Daten auch auf ein anderes Gerät mit.</li>
       </ul>`),
