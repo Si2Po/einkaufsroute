@@ -10,6 +10,8 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
   Was beim Laden sofort ausgeführt wird, darf nur Funktionen aus derselben oder einer früheren Datei aufrufen. Neue Dateien in `index.html`, `sw.js` (`FILES`) und `tools/synctest.html` eintragen. Lokaler Ladetest: `tools/errcheck.html` sammelt Fehler beim Laden.
 - `sync.js`: Konto, Haushalt, Abgleich mit Supabase (nur über `fetch`, keine Bibliothek), Sicherung als Datei/Text.
 - `siri.js` (nach `sync.js`): Siri-Eingang. Kurzbefehl ruft `siri_add` mit persönlichem Siri-Schlüssel auf (geht bei gesperrtem iPhone), Text landet in `siri_inbox` der Gruppe; `syncRun` holt ihn mit `siri_take` ab und trägt ihn per `addText(text, liste)` ein. Seite unter Konto und Gruppen → Siri. Ohne `siri.sql` → `siri.noSql`. Zusätzlich nimmt die App `?neu=…&liste=…` in der Adresse an (`addFromLink`).
+- `config.js` (vor `sync.js`): Datenbank-Adresse und öffentlicher Schlüssel `EK`, auch für die Gast-Ansicht.
+- `teilen.js` (nach `siri.js`): Liste per Link teilen (`shareBlock` in Liste bearbeiten, RPC `guest_link`/`guest_link_off`). Der Schlüssel steht als `l.share` in der Liste und wird mit abgeglichen. Gast-Ansicht: `gast.html` + `gast.js` (eigene Seite, nutzt nur `js/grund.js` + `config.js`, fasst lokale App-Daten nicht an; RPC `guest_get`, `guest_check`, `guest_add`, Schlüssel hinter dem `#`). Der Server rechnet Dokument-IDs mit `doc_uuid()` genau wie `docId()` in `sync.js`: beide immer gleich halten.
 - Lokal gespeichert wird in IndexedDB (Schlüssel `state`), Anmeldung und Abgleichstand unter `sync`, eine Sicherung unter `backup`.
 
 ## Gruppen (seit 0.7.0, Details in `PLAN-GRUPPEN.md`)
