@@ -8,17 +8,18 @@ const guestLink = (k) => location.origin + location.pathname.replace(/[^/]*$/, '
 
 // Abschnitt in „Liste bearbeiten“ (js/listen.js)
 function shareBlock(l) {
+  const head = '<div class="sheettitle" style="margin-top:16px">Teilen</div>';
   if (!sync.sess || !l.g) {
-    return `<div class="sheettitle" style="margin-top:16px">Teilen</div><p class="sheetnote" style="margin:0 4px">Zum Teilen per Link musst du angemeldet sein (Einstellungen → Konto und Gruppen).</p>`;
+    return `${head}<p class="sheetnote" style="margin:0 4px">Zum Teilen per Link musst du angemeldet sein (Einstellungen → Konto und Gruppen).</p>`;
   }
-  const msg = ui.shareMsg ? `<p class="sheetnote" role="status" style="color:var(--${ui.shareMsg.startsWith('!') ? 'warn' : 'accent'})">${esc(ui.shareMsg.replace(/^!/, ''))}</p>` : '';
+  const msg = msgNote(ui.shareMsg); // sync.js
   if (!l.share) {
-    return `<div class="sheettitle" style="margin-top:16px">Teilen</div>
+    return `${head}
       <p class="sheetnote" style="margin:0 4px 8px">Schick die Liste per Link an jemanden ohne Konto. Er kann sie im Browser ansehen, abhaken und etwas hinzufügen, aber nichts löschen.</p>
       ${msg}
       <button type="button" class="btn ghost" style="width:100%" data-act="sh_on" data-id="${l.id}">Per Link teilen</button>`;
   }
-  return `<div class="sheettitle" style="margin-top:16px">Teilen</div>
+  return `${head}
     <p class="sheetnote" style="margin:0 4px 8px">Die Liste ist per Link geteilt. Wer den Link hat, kann sie ansehen, abhaken und etwas hinzufügen.</p>
     <div class="siricopy"><code class="sel">${esc(guestLink(l.share))}</code></div>
     ${msg}

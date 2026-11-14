@@ -185,9 +185,10 @@ function addFromInput() {
   input.value = '';
   commit();
   updateSugg();
-  if (r.dups.length) { flashItem(r.dups[0].id); toast(`${r.dups.map((d) => '„' + d.name + '“').join(', ')} steht schon auf der Liste`); }
+  if (r.dups.length) { flashItem(r.dups[0].id); toast(`${quotedNames(r.dups)} steht schon auf der Liste`); }
   else funItemAdded(r.added);
 }
+const quotedNames = (items) => items.map((i) => `„${i.name}“`).join(', ');
 // Text (getippt, gesprochen oder per Kurzbefehl/Siri) in eine Liste übernehmen, ohne Angabe in die offene. Speichert noch nicht.
 // Gibt null zurück, wenn nichts drinstand, sonst { added: [Namen], dups: [schon vorhandene Einträge] }.
 function addText(text, l = curList()) {
@@ -224,7 +225,7 @@ function addFromLink() {
   if (!r) return;
   commit();
   const where = S.lists.length > 1 ? ` (${curList().name})` : '';
-  const had = r.dups.map((d) => '„' + d.name + '“').join(', ');
+  const had = quotedNames(r.dups);
   if (!r.added.length) toast(`${had} steht schon auf der Liste${where}`);
   else toast(`Hinzugefügt${where}: ${r.added.join(', ')}${had ? ` (${had} stand schon drauf)` : ''}`);
 }

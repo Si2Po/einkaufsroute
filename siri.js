@@ -55,7 +55,7 @@ async function siriSetList(lid, quiet) {
 const siriCopy = (v, label) => `<div class="siricopy"><code class="sel">${esc(v)}</code><button type="button" class="link" data-act="siri_copy" data-v="${esc(v)}" aria-label="${label} kopieren">Kopieren</button></div>`;
 
 function siriPage(msg) {
-  const note = msg ? `<p class="sheetnote" role="status" style="color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : '';
+  const note = msgNote(msg); // sync.js
   const intro = '<p class="sheetnote" style="margin:0 4px 12px">Sag „Hey Siri, Einkauf“ und dann, was fehlt. Das klappt auch bei gesperrtem iPhone. Die Einträge erscheinen auf der Liste, sobald jemand aus der Gruppe die App offen hat.</p>';
   let body;
   if (!sync.sess) body = '<p class="sheetnote">Für Siri musst du angemeldet sein.</p>';

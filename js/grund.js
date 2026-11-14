@@ -193,6 +193,8 @@ const NUM_WORDS = { zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6, sieben: 7, ac
 const HALF = /^(?:ein(?:e|en)?\s+halbe[snr]?|halbe[snr]?)\s+/i;
 const LEAD_FILLER = /^(?:und|also|ähm|äh|dann|außerdem|ich\s+brauche|wir\s+brauchen|brauche|brauchen|bitte|noch|auch|mal|kauf(?:e|t|en)?|hol(?:e|t|en)?|wir\s+haben\s+(?:keine?n?|kein|nichts)|es\s+fehl(?:t|en))\b[,\s]*/i;
 const TAIL_FILLER = /[,\s]*\b(?:bitte|noch|mehr|auch|mitbringen|kaufen|holen)$/i;
+// Gesprochene Einheit nach einer Zahl -> Kurzform: „2 Kilo“ -> „2kg“, „3 Packungen“ -> „3 Pck“
+const SPOKEN_UNITS = [['kilogramm|kilo', 'kg'], ['gramm', 'g'], ['milliliter', 'ml'], ['liter', 'l'], ['packungen|packung', ' Pck'], ['stück', ' Stk']];
 function spokenPart(p) {
   let s = p.trim().replace(/[.!?]+$/, '').trim();
   for (let i = 0; i < 4; i++) { const t = s.replace(LEAD_FILLER, ''); if (t === s) break; s = t; }
@@ -201,7 +203,6 @@ function spokenPart(p) {
   const half = s.match(HALF);
   if (half) s = '0,5 ' + s.slice(half[0].length);
   s = s.replace(/^(?:anderthalb|eineinhalb)\s+/i, '1,5 ');
-  s = s.replace(/^eins+paars+/i, ''); // „ein paar Äpfel“ -> „Äpfel“
   s = s.replace(/^ein\s+paar\s+/i, ''); // „ein paar Äpfel“ -> „Äpfel“
   // Zahlwörter -> Ziffern; „ein/eine“ nur vor einer Einheit („ein Kilo Mehl“), sonst ist es nur der Artikel („eine Gurke“)
   const first = s.split(/\s+/)[0].toLowerCase();
@@ -210,11 +211,8 @@ function spokenPart(p) {
     const rest = s.slice(first.length).trim();
     s = /^(?:kilo|kilogramm|gramm|liter|milliliter|packung|stück|flasche|dose|becher|bund|kiste|glas|tüte|rolle|paket|beutel|päckchen|tafel|netz|schale)\b/i.test(rest) ? '1 ' + rest : rest;
   }
-  s = s.replace(/^ein\s+paar\s+/i, '');
   // Mengenwörter vereinheitlichen: „2 Kilo“ -> „2kg“, „0,5 kg“ -> „500g“
-  s = s.replace(/^(\d+(?:[.,]\d+)?)\s*(?:kilogramm|kilo)\b/i, '$1kg').replace(/^(\d+(?:[.,]\d+)?)\s*gramm\b/i, '$1g')
-    .replace(/^(\d+(?:[.,]\d+)?)\s*milliliter\b/i, '$1ml').replace(/^(\d+(?:[.,]\d+)?)\s*liter\b/i, '$1l')
-    .replace(/^(\d+(?:[.,]\d+)?)\s*(?:packungen|packung)\b/i, '$1 Pck').replace(/^(\d+(?:[.,]\d+)?)\s*stück\b/i, '$1 Stk');
+  for (const [words, short] of SPOKEN_UNITS) s = s.replace(new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(?:${words})\\b`, 'i'), '$1' + short);
   s = s.replace(/^0[.,]5kg\b/i, '500g').replace(/^0[.,]25kg\b/i, '250g');
   s = s.replace(/^(\d+)\s+x\s+/i, '$1x ');
   return s.charAt(0).toUpperCase() + s.slice(1);

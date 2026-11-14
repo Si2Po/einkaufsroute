@@ -477,9 +477,16 @@ function paintStatus() {
 }
 const ago = (t) => { const s = Math.round((Date.now() - t) / 1000); return s < 10 ? 'gerade eben' : s < 90 ? `vor ${s} s` : `vor ${Math.round(s / 60)} min`; };
 
+// Meldung auf einer Seite: Text mit „!“ vorne = Fehler (rot), sonst Erfolg (grün). Auch in siri.js und teilen.js.
+function msgNote(msg) {
+  if (!msg) return '';
+  const color = msg.startsWith('!') ? 'warn' : 'accent';
+  return `<p class="sheetnote" role="status" style="color:var(--${color})">${esc(msg.replace(/^!/, ''))}</p>`;
+}
+
 function accountPage(msg) {
   ui.accMsg = msg;
-  const note = msg ? `<p class="sheetnote" role="status" style="color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : '';
+  const note = msgNote(msg);
   const dataRow = `<div class="sheettitle" style="margin-top:16px">Daten</div>
     <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>Daten sichern und übertragen</span><small>›</small></button></div>`;
   if (!sync.sess) {
@@ -531,7 +538,7 @@ function groupPage(id, msg) {
   openPage('group:' + id, g.name, `
     ${personal ? '' : `<label class="field"><span>Name</span><input id="grpName" data-id="${id}" value="${esc(g.name)}" autocomplete="off"></label>`}
     <p class="sheetnote" style="margin:4px">${personal ? 'Nur für dich. Diese Gruppe kann nicht geteilt oder verlassen werden.' : 'Alle Mitglieder sehen, was in dieser Gruppe liegt.'} Darin: ${what}.</p>
-    ${msg ? `<p class="sheetnote" role="status" style="color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : ''}
+    ${msgNote(msg)}
     <div class="sheettitle" style="margin-top:12px">Mitglieder</div>
     <div class="group">${(g.members || []).map((m) => `<div class="sheetbtn"><span style="overflow-wrap:anywhere">${esc(m)}</span>${m === me ? '<small>du</small>' : ''}</div>`).join('') || '<p class="sheetnote">–</p>'}</div>
     ${personal ? '' : `<div class="actions" style="margin-top:12px">
@@ -567,7 +574,7 @@ function pwPage(msg) {
       <input type="email" autocomplete="username" value="${esc(sync.sess?.user.email || '')}" hidden>
       <label class="field"><span>Neues Passwort</span><input id="pwNew" type="password" autocomplete="new-password" minlength="6" required autofocus></label>
       <label class="field"><span>Noch einmal</span><input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
-      ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg.replace(/^!/, ''))}</p>` : ''}
+      ${msgNote(msg)}
       <button type="submit" class="btn">Passwort ändern</button>
     </form>`);
 }
@@ -719,6 +726,7 @@ document.addEventListener('click', async (e) => {
   } else if (act === 'acc_logout') {
     await signOutHere();
     accountPage('Abgemeldet. Deine Daten bleiben auf diesem Gerät.');
+    render();
   } else if (act === 'acc_delpage') {
     ui.confirmDelAcc = false; delAccountPage();
   } else if (act === 'acc_delete') {
@@ -729,17 +737,17 @@ document.addEventListener('click', async (e) => {
       try { localStorage.removeItem('ek_siri_key'); } catch (_) { /* egal */ }
       await signOutHere();
       accountPage('Dein Konto ist gelöscht. Was noch auf diesem Gerät liegt, bleibt hier, bis du die App löschst.');
+      render();
     } catch (err) {
       delAccountPage('!' + (err.status === 404 ? 'Die Datenbank kennt das Löschen noch nicht (konto_loeschen.sql fehlt).' : niceError(err)));
     }
   }
 }, true);
-// Abmelden auf diesem Gerät: Daten bleiben, werden aber nicht mehr abgeglichen
+// Abmelden auf diesem Gerät: Daten bleiben, werden aber nicht mehr abgeglichen. Danach Kontoseite und render() aufrufen.
 async function signOutHere() {
   sync.sess = null; forgetGroups(); sync.status = 'out'; sync.err = '';
   save();
   await persistSync();
-  render();
 }
 function delAccountPage(msg) {
   openPage('delacc', 'Konto löschen', `
@@ -750,7 +758,7 @@ function delAccountPage(msg) {
       <li>deinen Siri-Schlüssel und deine Teilen-Links.</li>
     </ul>
     <p class="sheetnote" style="margin:0 4px 10px">Gemeinsame Gruppen bleiben für die anderen Mitglieder bestehen. Bist du das letzte Mitglied, wird die Gruppe mit gelöscht. Tipp: Vorher eine Sicherung speichern.</p>
-    ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg.replace(/^!/, ''))}</p>` : ''}
+    ${msgNote(msg)}
     <button type="button" class="btn danger" style="width:100%;margin-top:8px" data-act="acc_delete">${ui.confirmDelAcc ? 'Wirklich endgültig löschen?' : 'Konto löschen'}</button>`);
 }
 
