@@ -48,6 +48,7 @@ const rowHash = (r) => h53(stable([r.kind, r.list_id, r.visible_to, r.data]));
 
 // ---------- Netzwerk ----------
 async function api(path, opt = {}, noRefresh = false) {
+  if (EK.off) throw new Error('Für diese Adresse ist keine Datenbank eingerichtet.'); // config.js
   const go = async () => {
     const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 20000);
     try {
@@ -492,6 +493,13 @@ function accountPage(msg) {
   const note = msgNote(msg);
   const dataRow = `<div class="sheettitle" style="margin-top:16px">Daten</div>
     <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>Daten sichern und übertragen</span><small>›</small></button></div>`;
+  if (EK.off) { // Kopie der App auf einer anderen Adresse (config.js): keine Datenbank, alles bleibt auf dem Gerät
+    openPage('account', 'Konto und Gruppen', `
+      <p class="sheetnote">Für diese Adresse ist keine Datenbank eingerichtet. Die App funktioniert hier nur auf diesem Gerät, ohne Konto und Abgleich.</p>
+      <p class="sheetnote">Wer die App selbst betreibt, trägt in <code>config.js</code> die eigene Supabase-Datenbank und Adresse ein (siehe README).</p>
+      ${dataRow}`);
+    return;
+  }
   if (!sync.sess) {
     const mail = $('#accMail')?.value || '', pass = $('#accPass')?.value || ''; // beim Neuzeichnen nichts Getipptes verlieren
     openPage('account', 'Konto und Gruppen', `

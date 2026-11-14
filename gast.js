@@ -15,7 +15,7 @@ async function rpc(fn, args) {
 }
 
 async function load() {
-  if (!G.t) { G.gone = true; draw(); return; }
+  if (!G.t || EK.off) { G.gone = true; draw(); return; } // EK.off: Kopie auf fremder Adresse, keine Datenbank (config.js)
   try {
     const d = await rpc('guest_get', {});
     G.offline = false;

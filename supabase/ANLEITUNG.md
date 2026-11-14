@@ -30,7 +30,7 @@ Fehlt ein Schritt, läuft die App trotzdem; nur die jeweilige Funktion geht dann
    Region **Central EU (Frankfurt)**, Plan Free. Ein paar Minuten warten.
 2. **SQL Editor** → „New query“ → den kompletten Inhalt von **`komplett.sql`** einfügen → **Run**. Erwartet: „Success. No rows returned“.
 3. **Authentication → Sign In / Providers → Email**: „Email“ an, **„Confirm email“ aus** → Save. (Die App verschickt keine Mails.)
-4. **Project Settings → API Keys**: **Project URL** und **Publishable key** (`sb_publishable_…`) in `config.js` eintragen.
+4. **Project Settings → API Keys**: **Project URL** und **Publishable key** (`sb_publishable_…`) in `config.js` bei `url` und `key` eintragen, bei `hosts` die Web-Adresse der App (z. B. `name.github.io`).
    Beide Werte sind dafür gedacht, in der App zu stehen.
    **Niemals** den `secret`-/`service_role`-Key oder das Datenbank-Passwort irgendwo eintragen oder weitergeben.
 5. In der App neu registrieren. Daten zurückholen: Einstellungen → Konto und Gruppen → Daten sichern und übertragen → Sicherung laden.

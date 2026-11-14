@@ -16,7 +16,7 @@ Reines HTML/CSS/JavaScript ohne Build-Schritt. Kostenlos betreibbar mit **GitHub
 
 1. Dieses Repository kopieren (Fork) und GitHub Pages für den Branch `main` einschalten.
 2. Ein Supabase-Projekt anlegen und `supabase/komplett.sql` im SQL-Editor ausführen. Schritt für Schritt: [`supabase/ANLEITUNG.md`](supabase/ANLEITUNG.md), Teil B.
-3. Adresse und Publishable-Key des Supabase-Projekts in `config.js` eintragen.
+3. In `config.js` die Adresse (`url`) und den Publishable-Key (`key`) des eigenen Supabase-Projekts eintragen und unter `hosts` die eigene Web-Adresse (z. B. `name.github.io`). Läuft die App unter einer Adresse, die dort nicht steht, arbeitet sie nur auf dem Gerät.
 4. Bei Änderungen die Versionsnummer in `sw.js` (`CACHE`) erhöhen, damit installierte Apps die neue Version laden.
 
 Ohne Supabase läuft die App auch nur lokal auf dem Gerät (ohne Konto, Gruppen und Abgleich).
