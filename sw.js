@@ -1,7 +1,7 @@
 // Service Worker: legt die App-Dateien beim ersten Besuch im Cache,
 // damit die App danach auch ohne Netz startet.
 const CACHE = 'einkaufsroute-v0.8.0';
-const FILES = ['./', 'index.html', 'style.css', 'js/grund.js', 'js/ansichten.js', 'js/oberflaeche.js', 'js/listen.js', 'js/kategorien.js', 'js/geschaefte.js', 'js/gesten.js', 'js/ereignisse.js', 'js/essen.js', 'js/bedienung.js', 'js/listentypen.js', 'js/gruppen.js', 'js/hilfe.js', 'js/spass.js', 'js/historie.js', 'js/start.js', 'config.js', 'sync.js', 'siri.js', 'teilen.js', 'gast.html', 'gast.js', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const FILES = ['./', 'index.html', 'style.css', 'js/grund.js', 'js/ansichten.js', 'js/oberflaeche.js', 'js/listen.js', 'js/kategorien.js', 'js/geschaefte.js', 'js/gesten.js', 'js/ereignisse.js', 'js/essen.js', 'js/bedienung.js', 'js/listentypen.js', 'js/gruppen.js', 'js/hilfe.js', 'js/spass.js', 'js/historie.js', 'js/start.js', 'config.js', 'sync.js', 'siri.js', 'teilen.js', 'gast.html', 'gast.js', 'ueber.html', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
   // cache: 'reload' = immer frisch vom Server, nicht aus dem kurzen Browser-Zwischenspeicher (sonst landen alte Dateien in der neuen Version)

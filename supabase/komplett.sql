@@ -1,4 +1,4 @@
--- Einkaufsroute – komplette Datenbank (Stand App-Version 0.8.0)
+-- Einkaufsroute – komplette Datenbank (Stand App-Version 0.8.0, mit konto_loeschen.sql)
 --
 -- NUR FÜR EIN NEUES, LEERES Supabase-Projekt (z. B. Notfall oder Test-Projekt).
 -- Für die bestehende Datenbank NICHT nötig: die ist über die einzelnen Schritte in supabase/schritte/ schon auf diesem Stand.
@@ -224,6 +224,21 @@ begin
   end if;
 end $$;
 
+-- Eigenes Konto löschen: „Persönlich“ samt Inhalt, Mitgliedschaften (letztes Mitglied: Gruppe weg), Siri-Schlüssel, Teilen-Links
+create function public.delete_account() returns void
+language plpgsql security definer set search_path = public as $$
+declare u uuid := auth.uid(); g record;
+begin
+  if u is null then raise exception 'Nicht angemeldet'; end if;
+  for g in select h.id, h.kind from public.households h join public.household_members m on m.household_id = h.id and m.user_id = u loop
+    delete from public.household_members where household_id = g.id and user_id = u;
+    if g.kind = 'personal' or not exists (select 1 from public.household_members where household_id = g.id) then
+      delete from public.households where id = g.id;
+    end if;
+  end loop;
+  delete from auth.users where id = u;
+end $$;
+
 -- ═════════ Aufräumen ═════════
 -- Löschmarkierungen nach 90 Tagen und abgelaufene Einladungen entfernen. Die App ruft das einmal am Tag auf.
 create function public.purge_deleted() returns integer
@@ -407,7 +422,7 @@ revoke execute on all functions in schema public from public, anon, authenticate
 grant execute on function public.is_member(uuid) to authenticated;   -- wird in den Zugriffsregeln gebraucht
 grant execute on function
   public.my_groups(), public.create_group(text), public.rename_group(uuid, text), public.create_invite(uuid),
-  public.accept_invite(text), public.leave_group(uuid), public.purge_deleted(),
+  public.accept_invite(text), public.leave_group(uuid), public.delete_account(), public.purge_deleted(),
   public.siri_new_key(uuid, text), public.siri_set_list(uuid, text), public.siri_info(), public.siri_off(), public.siri_take(),
   public.guest_link(uuid, text), public.guest_link_off(text)
   to authenticated;

@@ -279,6 +279,7 @@ document.addEventListener('click', (e) => {
     case 'wiggleoff': endWiggle(); keep = true; break;
     case 'themepage': themePage(); keep = true; break;
     case 'helppage': helpPage(); keep = true; break;
+    case 'aboutpage': location.href = 'ueber.html'; break;
     case 'introok': introDismiss(el.dataset.key); render(); break;
     case 'introreset': setIntroSeen({}); toast('Die Einführung erscheint wieder in Liste, Essen und Geschäfte.'); keep = true; break;
     case 'duepage': duePage(); keep = true; break;

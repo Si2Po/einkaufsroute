@@ -74,7 +74,7 @@ function draw() {
       </form></div>
       <p class="ghint">Mehreres auf einmal mit Komma oder „und“ trennen. Eine Zahl am Anfang wird zur Menge, z. B. „500g Pasta, 2 Gurken und Milch“.</p>
       <div id="gList"></div>
-      <p class="gfoot">Geteilt mit der App <a href="./">Einkaufsroute</a></p>`;
+      <p class="gfoot">Geteilt mit der App <a href="./">Einkaufsroute</a> · <a href="ueber.html">Über diese App</a></p>`;
   }
   document.getElementById('gTitle').textContent = G.list.name || 'Liste';
   document.getElementById('gSub').innerHTML = `Geteilte Liste${G.offline ? ' · <b>keine Verbindung</b>' : ''}`;

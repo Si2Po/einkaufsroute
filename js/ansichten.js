@@ -133,6 +133,7 @@ function viewSettings() {
       ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
       ${row('duepage', 'Vorschläge', dueSub())}
       ${row('helppage', 'Hilfe', 'So funktioniert die App · Hinweise')}
+      ${row('aboutpage', 'Über diese App', 'Hobbyprojekt · Datenschutz · Kontakt')}
     </ul>
     ${appVersion ? `<p class="tip" data-act="vertap">Version ${esc(appVersion)}</p>` : ''}`;
 }

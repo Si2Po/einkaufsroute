@@ -496,6 +496,7 @@ function accountPage(msg) {
       <details class="pwforgot"><summary>Passwort vergessen?</summary>
         <p class="sheetnote">Die App verschickt keine E-Mails. Wende dich an die Person, die die App betreut: Sie kann dir ein neues Passwort setzen. Damit meldest du dich an und änderst es danach unter Konto und Gruppen → Passwort ändern.</p>
       </details>
+      <p class="sheetnote" style="margin:12px 4px 0"><a href="ueber.html" class="link">Über diese App und Datenschutz</a></p>
       ${dataRow}`, () => accountPage(ui.accMsg));
     return;
   }
@@ -517,7 +518,8 @@ function accountPage(msg) {
     <div class="sheettitle" style="margin-top:16px">Siri</div>
     <div class="group"><button type="button" class="sheetbtn" data-act="siripage"><span>Mit Siri hinzufügen</span><small>›</small></button></div>
     ${dataRow}
-    <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>`, () => accountPage(ui.accMsg));
+    <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>
+    <div class="group" style="margin-top:24px"><button type="button" class="sheetbtn danger" data-act="acc_delpage"><span>Konto löschen</span><small>›</small></button></div>`, () => accountPage(ui.accMsg));
 }
 // Eine Gruppe: Name, Mitglieder, einladen, verlassen
 function groupPage(id, msg) {
@@ -715,13 +717,42 @@ document.addEventListener('click', async (e) => {
     if (navigator.share) { try { await navigator.share({ title: 'Einkaufsroute', text: 'Komm in meinen Haushalt bei Einkaufsroute:', url: link }); } catch (_) { /* abgebrochen */ } }
     else { const ok = await copyText(link); const i = $('#invLink'); if (i) { i.select(); } toast(ok ? 'Link kopiert' : 'Link markiert – bitte kopieren'); }
   } else if (act === 'acc_logout') {
-    sync.sess = null; forgetGroups(); sync.status = 'out'; sync.err = '';
-    save();
-    await persistSync();
+    await signOutHere();
     accountPage('Abgemeldet. Deine Daten bleiben auf diesem Gerät.');
-    render();
+  } else if (act === 'acc_delpage') {
+    ui.confirmDelAcc = false; delAccountPage();
+  } else if (act === 'acc_delete') {
+    if (!ui.confirmDelAcc) { ui.confirmDelAcc = true; delAccountPage(); return; }
+    ui.confirmDelAcc = false;
+    try {
+      await api('/rest/v1/rpc/delete_account', { method: 'POST', body: '{}' });
+      try { localStorage.removeItem('ek_siri_key'); } catch (_) { /* egal */ }
+      await signOutHere();
+      accountPage('Dein Konto ist gelöscht. Was noch auf diesem Gerät liegt, bleibt hier, bis du die App löschst.');
+    } catch (err) {
+      delAccountPage('!' + (err.status === 404 ? 'Die Datenbank kennt das Löschen noch nicht (konto_loeschen.sql fehlt).' : niceError(err)));
+    }
   }
 }, true);
+// Abmelden auf diesem Gerät: Daten bleiben, werden aber nicht mehr abgeglichen
+async function signOutHere() {
+  sync.sess = null; forgetGroups(); sync.status = 'out'; sync.err = '';
+  save();
+  await persistSync();
+  render();
+}
+function delAccountPage(msg) {
+  openPage('delacc', 'Konto löschen', `
+    <p class="sheetnote" style="margin:0 4px 10px">Das löscht dein Konto <b>${esc(sync.sess?.user.email || '')}</b> endgültig:</p>
+    <ul class="sheetnote delinfo">
+      <li>deine E-Mail-Adresse und dein Passwort,</li>
+      <li>alles in „Persönlich“ (Listen, Essen, Geschäfte, Kategorien),</li>
+      <li>deinen Siri-Schlüssel und deine Teilen-Links.</li>
+    </ul>
+    <p class="sheetnote" style="margin:0 4px 10px">Gemeinsame Gruppen bleiben für die anderen Mitglieder bestehen. Bist du das letzte Mitglied, wird die Gruppe mit gelöscht. Tipp: Vorher eine Sicherung speichern.</p>
+    ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg.replace(/^!/, ''))}</p>` : ''}
+    <button type="button" class="btn danger" style="width:100%;margin-top:8px" data-act="acc_delete">${ui.confirmDelAcc ? 'Wirklich endgültig löschen?' : 'Konto löschen'}</button>`);
+}
 
 // ---------- Start ----------
 (async function syncInit() {

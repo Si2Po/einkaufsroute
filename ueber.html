@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Über diese App · Einkaufsroute</title>
+<meta name="theme-color" content="#F2F4F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D110F" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script>/* gleiche Darstellung (Hell/Dunkel, Farbe) wie in der App */ try { var t = localStorage.getItem("ek_theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; var a = localStorage.getItem("ek_accent"); if (a && a !== "custom") document.documentElement.dataset.accent = a; } catch (e) {}</script>
+</head>
+<body class="guest about">
+<!-- Über diese App: Hobbyprojekt, Daten, Datenschutz, Kontakt. Feste Seite ohne App-Code, von App, Anmeldung und Gast-Ansicht verlinkt. -->
+<div class="wrap"><main>
+  <p class="aback"><a href="./">‹ Zur App</a></p>
+  <div class="ghead"><h1>Über diese App</h1><p>Einkaufsroute · Stand November 2026</p></div>
+
+  <div class="helpbody group abox">
+    <h2>Ein Hobbyprojekt</h2>
+    <p>Einkaufsroute ist ein privates Hobbyprojekt. Die App ist kostenlos, ohne Werbung und wird nebenbei weiterentwickelt.</p>
+    <p>Die Nutzung geschieht <b>auf eigene Verantwortung und ohne Gewähr</b>: Es kann Fehler geben, und es kann sein, dass es die App irgendwann nicht mehr gibt.
+      Speichere deshalb ab und zu eine Sicherung (Einstellungen → Konto und Gruppen → Daten sichern und übertragen).
+      Gesetzlich vorgeschriebene Haftung, etwa bei Vorsatz oder grober Fahrlässigkeit, bleibt davon unberührt.</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Wo deine Daten liegen</h2>
+    <ul>
+      <li><b>Auf deinem Gerät:</b> Die App speichert alles im Browser-Speicher deines Geräts, damit sie auch ohne Netz funktioniert.</li>
+      <li><b>Bei Supabase</b> (Datenbank, Server in der EU, Frankfurt), nur wenn du ein Konto hast: deine E-Mail-Adresse, dein Passwort (nur verschlüsselt),
+        deine Listen, Essen, Geschäfte, Kategorien und die Kaufhistorie für die Vorschläge.</li>
+      <li><b>Bei GitHub Pages</b> (GitHub, USA) liegt die App selbst. Beim Laden sieht GitHub technisch deine IP-Adresse, wie bei jeder Webseite.</li>
+    </ul>
+    <p>Es gibt <b>kein Tracking, keine Werbung, keine Analyse-Werkzeuge</b> und keine Weitergabe an Dritte.</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Wer was sieht</h2>
+    <ul>
+      <li>Was in deiner Gruppe „Persönlich“ liegt, siehst nur du.</li>
+      <li>Was in einer gemeinsamen Gruppe liegt, sehen alle Mitglieder dieser Gruppe.</li>
+      <li>Wer einen Teilen-Link zu einer Liste hat, sieht genau diese eine Liste, bis der Link beendet wird.</li>
+      <li>Der Betreiber dieser App könnte technisch in die Datenbank schauen. Das passiert nur, wenn du um Hilfe bittest, z. B. bei einem vergessenen Passwort.</li>
+    </ul>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Konto löschen</h2>
+    <p>Unter Einstellungen → Konto und Gruppen → <b>Konto löschen</b> löschst du dein Konto selbst. Dabei werden deine E-Mail-Adresse, dein Passwort und alles in „Persönlich“ entfernt.
+      Gemeinsame Gruppen bleiben für die anderen Mitglieder bestehen; bist du das letzte Mitglied, wird die Gruppe mit gelöscht.</p>
+    <p>Du hast außerdem das Recht auf Auskunft, Berichtigung und Löschung deiner Daten. Schreib dazu einfach an die Adresse unten.</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Selbst betreiben</h2>
+    <p>Der Code ist offen: <a href="https://github.com/Si2Po/einkaufsroute">github.com/Si2Po/einkaufsroute</a>.
+      Mit der Anleitung im Ordner <code>supabase</code> kann sich jeder kostenlos eine eigene Kopie einrichten (GitHub Pages + Supabase, beides im kostenlosen Tarif).
+      Dann liegen die Daten nur bei dir.</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Kontakt und Verantwortlich</h2>
+    <p>[NAME]<br><a href="mailto:[E-MAIL]">[E-MAIL]</a></p>
+  </div>
+</main></div>
+</body>
+</html>

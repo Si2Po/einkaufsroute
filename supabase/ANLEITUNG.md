@@ -20,6 +20,7 @@ Alle Schritte sind ausgeführt. Kommt eine neue Änderung dazu, steht sie unten 
 | 5 | `schritte/siri.sql` (Siri) | 0.7.8 | ja |
 | 6 | `schritte/aufraeumen.sql` (Aufräumen) | 0.7.9 | ja |
 | 7 | `schritte/gast.sql` (Liste per Link teilen) | 0.8.0 | noch offen |
+| 8 | `schritte/konto_loeschen.sql` (Konto löschen) | 0.8.0 | noch offen |
 
 Fehlt ein Schritt, läuft die App trotzdem; nur die jeweilige Funktion geht dann nicht und die App weist darauf hin.
 

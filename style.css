@@ -742,3 +742,11 @@ body.guest #gName { font-size: 16px; }
 .intro strong { display: block; font-size: 1.05rem; margin-bottom: 4px; }
 .intro p { margin: 0 0 6px; line-height: 1.45; color: var(--ink); }
 .intro .link { color: var(--accent); font-weight: 600; padding: 6px 0; }
+
+/* Seite „Über diese App“ (ueber.html) */
+.about .abox { padding-top: 12px; margin-bottom: 12px; }
+.about .abox h2 { font-size: 1.05rem; margin: 0 0 6px; }
+.about a { color: var(--accent); }
+.aback { margin: 0 4px 10px; }
+.aback a { text-decoration: none; font-weight: 600; }
+.delinfo { margin: 0 4px 10px; padding-left: 20px; }
