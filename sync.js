@@ -484,7 +484,7 @@ function accountPage(msg) {
   ui.accMsg = msg;
   const note = msg ? `<p class="sheetnote" role="status" style="color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : '';
   const dataRow = `<div class="sheettitle" style="margin-top:16px">Daten</div>
-    <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>Daten sichern und übertragen</span><small>Datei oder Text ›</small></button></div>`;
+    <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>Daten sichern und übertragen</span><small>›</small></button></div>`;
   if (!sync.sess) {
     const mail = $('#accMail')?.value || '', pass = $('#accPass')?.value || ''; // beim Neuzeichnen nichts Getipptes verlieren
     openPage('account', 'Konto und Gruppen', `
@@ -508,6 +508,7 @@ function accountPage(msg) {
       <strong style="overflow-wrap:anywhere">${esc(sync.sess.user.email)}</strong>
       <p class="sheetnote" style="margin:2px 0 0">${STATUS_TXT[sync.status] || ''}${sync.status === 'ok' && sync.last ? ' · ' + ago(sync.last) : ''}${sync.err && sync.status !== 'ok' ? '<br>' + esc(sync.err) : ''}</p>
     </div>
+    <div class="group" style="margin-top:8px"><button type="button" class="sheetbtn" data-act="acc_pwpage"><span>Passwort ändern</span><small>›</small></button></div>
     ${note}
     <div class="sheettitle" style="margin-top:16px">Gruppen</div>
     <p class="sheetnote" style="margin:0 4px 8px">Was in einer Gruppe liegt, sehen alle ihre Mitglieder. Du selbst siehst immer alles aus allen deinen Gruppen.</p>
@@ -517,9 +518,8 @@ function accountPage(msg) {
       <button type="button" class="btn ghost" data-act="acc_joinsheet">Einladung annehmen</button>
     </div>
     <div class="sheettitle" style="margin-top:16px">Siri</div>
-    <div class="group"><button type="button" class="sheetbtn" data-act="siripage"><span>Mit Siri hinzufügen</span><small>auch bei gesperrtem iPhone ›</small></button></div>
+    <div class="group"><button type="button" class="sheetbtn" data-act="siripage"><span>Mit Siri hinzufügen</span><small>›</small></button></div>
     ${dataRow}
-    <div class="group" style="margin-top:16px"><button type="button" class="sheetbtn" data-act="acc_pwpage"><span>Passwort ändern</span><small>›</small></button></div>
     <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>`, () => accountPage(ui.accMsg));
 }
 // Eine Gruppe: Name, Mitglieder, einladen, verlassen
