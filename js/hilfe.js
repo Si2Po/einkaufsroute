@@ -26,7 +26,7 @@ document.addEventListener('change', (e) => {
 const INTRO = {
   list: ['Willkommen! 👋', 'Schreib oben, was du brauchst, z. B. „Milch, 2 Butter und 500g Pasta“. Die App sortiert alles nach Kategorien. <b>Tippen</b> hakt ab, <b>gedrückt halten</b> bearbeitet.</p><p>Unter Einstellungen → <b>Geschäfte</b> kannst du dein Geschäft anlegen. Dann sortiert sich die Liste nach deinem Weg durch den Laden. Mehr steht unter Einstellungen → Hilfe.'],
   meals: ['Eure Essen', 'Sammle hier Gerichte mit ihren Zutaten. Antippen setzt die Zutaten auf die Einkaufsliste, passend zur Personenanzahl. Leg dein erstes Essen mit „+ Neues Essen“ an.'],
-  stores: ['Geschäfte (optional)', 'Leg dein Geschäft an und teile es in <b>Bereiche</b> ein, in der Reihenfolge deines Laufwegs (z. B. Obst, Brot, Kühlregal). Jedem Bereich ordnest du <b>Kategorien</b> zu. Dann sortiert sich die Liste genau so, wie du durch den Laden gehst.</p><p>Liegt ein einzelnes <b>Produkt</b> woanders als seine Kategorie, zieh es in der Liste in den richtigen Bereich. Das merkt sich die App für dieses Geschäft.</p><p>Brauchst du keine Geschäfte, schalte „In der Liste verwenden“ aus.']
+  stores: ['Geschäfte (optional)', 'Leg dein Geschäft an und teile es in <b>Bereiche</b> ein, in der Reihenfolge deines Laufwegs (z. B. Obst, Brot, Kühlregal). Jedem Bereich ordnest du <b>Kategorien</b> zu. Dann sortiert sich die Liste genau so, wie du durch den Laden gehst.</p><p>Liegt ein einzelnes <b>Produkt</b> woanders als seine Kategorie, zieh es in der Liste in den richtigen Bereich oder trag es hier beim Bereich unter „Produkte“ ein. Das gilt dann nur für dieses Geschäft.</p><p>Brauchst du keine Geschäfte, schalte „In der Liste verwenden“ aus.']
 };
 function introSeen() {
   try { return JSON.parse(localStorage.getItem('ek_intro') || '{}') || {}; } catch (_) { return {}; }
@@ -104,7 +104,7 @@ function helpPage() {
         <li>Brauchst du keine Geschäfte, schalte sie unter Einstellungen → Geschäfte → <b>„In der Liste verwenden“</b> aus. Die Liste sortiert dann nur nach Kategorien. Das gilt nur für dein Gerät, die anderen in der Gruppe sehen weiter ihr Geschäft.</li>
         <li>Lege für jedes Geschäft seine <b>Bereiche</b> in der Reihenfolge deines Laufwegs an und wähle, welche Kategorien dort liegen. Die Liste sortiert sich dann genau so.</li>
         <li>Der <b>Grundriss</b> ist optional: Bereiche einzeichnen hilft beim Wiederfinden, für die Sortierung reicht die Reihenfolge.</li>
-        <li>Liegt ein Produkt woanders als seine Kategorie, ziehe es in der Liste in den richtigen Bereich (oder wähle im Eintrag den „Bereich“). Das gilt dann nur für dieses Geschäft.</li>
+        <li>Liegt ein Produkt woanders als seine Kategorie, ziehe es in der Liste in den richtigen Bereich, wähle im Eintrag den „Bereich“ oder trag es beim Geschäft im Bereich unter „Produkte“ ein. Das gilt dann nur für dieses Geschäft.</li>
         <li>Liegt eine Kategorie in mehreren Bereichen, markiert der <b>★</b>, welcher Bereich hauptsächlich für diese Kategorie verwendet werden soll.</li>
       </ul>`),
     helpTopic('Kategorien und Stichwörter', `
