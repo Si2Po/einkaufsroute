@@ -54,7 +54,7 @@ function rowHtml(i) {
 function listBody() {
   if (isSimple()) return simpleBody();
   const groups = buildGroups(listStore());
-  const done = S.items.filter((i) => i.done);
+  const done = S.items.filter((i) => i.done).sort(byDone);
   // Eine einzige Reihe (Köpfe + Einträge, Optik wie Karten je Gruppe), damit Einträge per Halten und Ziehen
   // umsortiert und in eine andere Kategorie / einen anderen Bereich gezogen werden können (WIGGLE.items).
   const body = groups.length

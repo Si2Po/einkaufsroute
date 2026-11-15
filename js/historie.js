@@ -31,24 +31,30 @@ const lastTime = (e) => (e.t?.length ? e.t[e.t.length - 1] : e.since || 0);
 // Rhythmus in ms: von Hand gesetzt, sonst aus den Käufen (ab 3 Käufen), sonst 0 = noch unbekannt
 const rhythmOf = (e) => e.every || (e.t?.length >= 3 ? usualGap(e.t) : 0);
 
-// Einträge wurden abgehakt (nur Einkaufslisten): Kauf merken. Zweimal am selben Tag zählt einmal.
-function histChecked(items) {
-  if (!items.length || isSimple()) return;
-  const g = curList()?.g || '', now = Date.now();
+// Einen Kauf merken: Produkt name in Gruppe g, abgehakt zum Zeitpunkt t. Zweimal am selben Tag zählt einmal.
+// t ist der Zeitpunkt am Eintrag (it.dt): Sehen mehrere Geräte denselben Haken, tragen alle denselben Wert ein, nichts zählt doppelt.
+// Rückgabe: true, wenn ein neuer Zeitpunkt dazukam.
+function histAdd(g, name, t) {
+  const key = dupKey(name);
+  if (!key) return false;
   S.hist = S.hist || {};
   const h = (S.hist[g] = S.hist[g] || {});
-  for (const it of items) {
-    const key = dupKey(it.name);
-    if (!key) continue;
-    const e = h[key] || { id: key, name: it.name.trim(), t: [] };
-    if (!e.t.length || now - e.t[e.t.length - 1] > 12 * 3600e3) e.t = [...e.t, now].slice(-HIST_KEEP);
-    e.name = it.name.trim();
-    h[key] = e;
-    if (S.snooze) delete S.snooze[key];
-  }
+  const e = h[key] || { id: key, name: name.trim(), t: [] };
+  const fresh = !e.t.some((x) => Math.abs(x - t) <= 12 * 3600e3);
+  if (fresh) e.t = [...e.t, t].sort((a, b) => a - b).slice(-HIST_KEEP);
+  if (t >= lastTime(e)) e.name = name.trim();
+  h[key] = e;
+  if (S.snooze) delete S.snooze[key];
   // nicht endlos wachsen: höchstens 400 Produkte je Gruppe, die am längsten nicht gekauften fliegen raus
   const keys = Object.keys(h);
   if (keys.length > 400) keys.filter((k) => !h[k].every).sort((a, b) => lastTime(h[a]) - lastTime(h[b])).slice(0, keys.length - 400).forEach((k) => delete h[k]);
+  return fresh;
+}
+// Einträge wurden hier abgehakt (nur Einkaufslisten)
+function histChecked(items) {
+  if (!items.length || isSimple()) return;
+  const g = curList()?.g || '';
+  for (const it of items) histAdd(g, it.name, it.dt || Date.now());
   save();
 }
 

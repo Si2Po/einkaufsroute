@@ -408,7 +408,7 @@ begin
                from public.docs d where d.household_id = g.hh and d.kind = 'cat' and not d.deleted),
     'items', (select coalesce(jsonb_agg(jsonb_build_object('id', d.data->>'id', 'name', d.data->>'name', 'qty', d.data->>'qty',
                       'note', d.data->>'note', 'cat', d.data->>'cat', 'done', coalesce((d.data->>'done')::boolean, false),
-                      'sec', d.data->>'sec', 'ord', d.data->'ord', 'ts', d.data->'ts')), '[]'::jsonb)
+                      'sec', d.data->>'sec', 'ord', d.data->'ord', 'ts', d.data->'ts', 'dt', d.data->'dt')), '[]'::jsonb)
                from public.docs d where d.list_id = g.list_doc and d.kind = 'item' and not d.deleted));
 end $$;
 
@@ -418,7 +418,12 @@ declare g record;
 begin
   select * into g from public.guest_resolve(t);
   if g.hh is null then return false; end if;
-  update public.docs set data = jsonb_set(data, '{done}', to_jsonb(coalesce(done, false)))
+  -- Abhaken merkt sich den Zeitpunkt (dt, Millisekunden wie ts), Haken entfernen löscht ihn; schon abgehakt = keine Änderung
+  update public.docs set data = case
+      when not coalesce(done, false) then jsonb_set(data, '{done}', 'false'::jsonb) - 'dt'::text
+      when coalesce((data->>'done')::boolean, false) and data ? 'dt' then data
+      else jsonb_set(jsonb_set(data, '{done}', 'true'::jsonb), '{dt}', to_jsonb((extract(epoch from clock_timestamp()) * 1000)::bigint))
+    end
    where id = public.doc_uuid(g.hh, 'item', iid) and list_id = g.list_doc and kind = 'item' and not deleted;
   return found;
 end $$;

@@ -354,6 +354,13 @@ async function applyRows(rows, pending, g) {
       const l = S.lists.find((x) => x.id === _list);
       if (!l) continue;
       S.lists.forEach((o) => { if (o !== l) removeWhere(o.items, (x) => x.id === ent.id); });   // Eintrag in andere Liste verschoben
+      // Woanders abgehakt (anderes Gerät, Uhr, Gast-Ansicht): Kauf für die Vorschläge nachtragen. Der Zeitpunkt dt ist überall
+      // derselbe, deshalb zählt nichts doppelt (js/historie.js, histAdd). Neues geht beim nächsten Durchgang hoch (sync.dirty).
+      const was = l.items.find((x) => x.id === ent.id);
+      const sameCheck = was && was.done && was.dt === ent.dt; // diesen Haken haben wir schon (z. B. selbst gesetzt)
+      if (ent.done && ent.dt && l.type !== 'simple' && !sameCheck) {
+        if (histAdd(g, ent.name || '', ent.dt)) sync.dirty = true;
+      }
       upsertIn(l.items, ent);
     } else if (r.kind === 'hist') {
       // Zusammenführen statt ersetzen: haben zwei Geräte gleichzeitig gekauft, zählen beide Zeitpunkte

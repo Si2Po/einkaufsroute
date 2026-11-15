@@ -29,6 +29,7 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 - Pro Liste: `l.type = 'simple'` = einfache Liste (fehlt = Einkaufsliste). Einfache Liste: kein Geschäft, keine Kategorien/Vorschläge, Abschnitte `l.secs = [{id, name}]` (Eintrag: `it.sec`), eigene Reihenfolge `it.ord` (sonst `ts`), `l.keepDone` = Abgehakte bleiben stehen.
 - Beide Listenarten zeigen ihre Einträge als eine Reihe `#listRows` (Köpfe `.secli` mit `data-key="§…"` + Zeilen), damit Halten-und-Ziehen (`holdDrag`, `WIGGLE.items`) ohne Umbau klappt. Einkaufsliste: `shopDrop()` lernt Kategorie bzw. festen Bereich. Essen-Favoriten = Tag `★` (`FAV`).
 - Code in `js/listentypen.js` (`isSimple()`, `simpleBody()`). Abgleich braucht nichts Extra: neue Felder reisen im Listen-/Eintrag-Dokument mit.
+- Abhaken immer über `markDone(it, done)` (`js/grund.js`): setzt `it.dt` = Zeitpunkt des Abhakens (ms), Haken weg löscht ihn. „Erledigt“ ist danach sortiert (`byDone`, zuletzt abgehakt oben; ältere Einträge ohne `dt` darunter), auch in der Gast-Ansicht. Für Gäste und die Uhr setzt der Server `dt` (`guest_check`, `supabase/schritte/abgehakt_zeit.sql`).
 
 ## Abgleich (Kurzfassung)
 - Jeder Laden, jede Kategorie, Liste, jeder Eintrag und jedes Essen ist ein Dokument in der Tabelle `docs` (Art `kind`), abgelegt in der Gruppe (`household_id`), zu der es gehört.
@@ -37,9 +38,10 @@ Einkaufsliste als iOS-taugliche PWA, die sich nach dem Laufweg durch einen Super
 - Aufräumen: `purge_deleted()` entfernt Löschmarkierungen nach 90 Tagen (App ruft es höchstens einmal am Tag auf), `known` vergisst Löschungen nach 100 Tagen, Geräte nach über 83 Tagen ohne Abgleich holen per `catchUpRows` einmal alle noch vorhandenen IDs.
 - Der Server-Zeitstempel `updated_at` kommt von der Datenbank (Trigger). Abfrage mit `gte` auf den letzten Stand.
 - Abfrage alle 10 s bei geöffneter App, beim Öffnen, bei Online. Kein Live-Push.
+- Kaufhistorie: Hakt man hier ab, trägt `histChecked` den Kauf mit `it.dt` ein. Kommt ein abgehakter Eintrag über den Abgleich (anderes Gerät, Uhr, Gast-Ansicht), trägt `applyRows` ihn mit demselben `dt` nach (`histAdd`, nur Einkaufslisten) und setzt `sync.dirty`. Gleicher Zeitpunkt auf allen Geräten = nichts zählt doppelt.
 - Erster Abgleich einer Gruppe: Hat der Server dort schon Daten, werden sie übernommen. Neues Gerät/neue Anmeldung: noch keiner Gruppe zugeordnete Daten werden durch die vom Server ersetzt, falls der Server etwas hat (Sicherung unter `backup`), sonst landen sie in „Persönlich“.
 - Stand von vor den Gruppen (`sync` mit `hid`, ohne `gs`): wird beim Start einmalig übernommen, alles gehört dann zur bisherigen Gruppe (`sync.legacyHid`).
-- Lokal testen ohne echte Datenbank: `tools/synctest.html` (nachgebaute Datenbank, mehrere Geräte nachspielbar) mit `tools/shot.ps1` (unsichtbares Chrome, Bildschirmfotos). Beides nur lokal.
+- Lokal testen ohne echte Datenbank: `tools/synctest.html` (nachgebaute Datenbank, mehrere Geräte nachspielbar) mit `tools/shot.ps1` (unsichtbares Chrome, Bildschirmfotos). Ohne Browser: `node tools/abhaken-test.js` lädt die echten App-Dateien und prüft Abhaken, „Erledigt“-Reihenfolge, Kaufhistorie und `applyRows`. Alles nur lokal (`tools/` wird nicht hochgeladen, liegt also nicht auf jedem Rechner).
 
 ## Datenbank (Supabase)
 - `supabase/komplett.sql` = ganze Datenbank auf aktuellem Stand (nur für neue, leere Projekte). `supabase/schritte/` = Änderungen an der bestehenden Datenbank in Ausführungsreihenfolge (Tabelle in `supabase/ANLEITUNG.md`). **Jede Schema-Änderung in beide:** neue kleine Schritt-Datei mit `create or replace`/`if not exists` UND dieselbe Änderung in `komplett.sql`; Zeile in der Tabelle der ANLEITUNG ergänzen.

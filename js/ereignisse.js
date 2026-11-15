@@ -10,8 +10,9 @@ let pendT;
 function finishAll() {
   clearTimeout(pendT);
   if (!ui.pending.size) return;
-  const checked = [];
-  ui.pending.forEach((_, id) => { const it = S.items.find((i) => i.id === id); if (it && !it.done) { it.done = true; checked.push(it); } });
+  const checked = [], now = Date.now();
+  // in der Reihenfolge des Antippens: das zuletzt Angetippte bekommt den spätesten Zeitpunkt
+  ui.pending.forEach((_, id) => { const it = S.items.find((i) => i.id === id); if (it && !it.done) { markDone(it, true, now + checked.length); checked.push(it); } });
   ui.pending.clear();
   commit();
   funChecked(checked);
@@ -22,11 +23,11 @@ function toggleItem(id) {
   const it = S.items.find((i) => i.id === id);
   if (!it) return;
   if (isSimple() && curList().keepDone) { // bleibt an seinem Platz stehen
-    it.done = !it.done; commit();
+    markDone(it, !it.done); commit();
     if (it.done) funChecked([it]);
     return;
   }
-  if (it.done) { it.done = false; commit(); armPending(); return; }
+  if (it.done) { markDone(it, false); commit(); armPending(); return; }
   if (ui.pending.has(id)) ui.pending.delete(id); else ui.pending.set(id, true);
   armPending();
   render();
@@ -325,7 +326,7 @@ document.addEventListener('click', (e) => {
     case 'closedlg': break;
     case 'showdone': ui.showDone = !ui.showDone; render(); break;
     case 'cleardone': S.items = S.items.filter((i) => !i.done); commit(); break;
-    case 'resetdone': S.items.forEach((i) => { i.done = false; }); commit(); break;
+    case 'resetdone': S.items.forEach((i) => markDone(i, false)); commit(); break;
     case 'secpick': { // Abschnitt antippen: Neues landet dort (nochmal antippen: wieder oben ohne Abschnitt)
       if (lpFired) { lpFired = false; break; }
       ui.addSec = ui.addSec === el.dataset.sec ? null : el.dataset.sec; render();

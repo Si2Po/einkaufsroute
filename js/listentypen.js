@@ -24,7 +24,7 @@ function simpleBody() {
   const known = new Set(secs.map((s) => s.id));
   const shown = S.items.filter((i) => keep || !i.done).sort(byOrder);
   const of = (sid) => shown.filter((i) => (known.has(i.sec) ? i.sec : '') === sid);
-  const done = S.items.filter((i) => i.done);
+  const done = S.items.filter((i) => i.done).sort(byDone);
   const wig = ui.wiggle === 'items';
   // Immer eine einzige Reihe (Einträge + Abschnitts-Köpfe), damit beim Ziehen nichts umgebaut werden muss und Einträge
   // in andere Abschnitte wandern können. Die Optik (Karten je Abschnitt) kommt aus dem CSS (.srows).

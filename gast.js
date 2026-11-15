@@ -23,7 +23,7 @@ async function load() {
     G.list = d;
     CATS = d.cats && d.cats.length ? d.cats.map(cloneCat) : DEFAULT_CATS.map(cloneCat); // Kategorien der Gruppe zum Sortieren und Einordnen
     indexCats();
-    for (const [id, done] of G.pending) { const it = d.items.find((i) => i.id === id); if (it) it.done = done; } // eigene Klicks, die noch unterwegs sind
+    for (const [id, done] of G.pending) { const it = d.items.find((i) => i.id === id); if (it && it.done !== done) markDone(it, done); } // eigene Klicks, die noch unterwegs sind
   } catch (_) { G.offline = true; }
   draw();
 }
@@ -38,7 +38,7 @@ const head = (name, n) => `<li class="grp secli"><span class="gname">${esc(name)
 function body() {
   const l = G.list, simple = l.type === 'simple', keep = simple && l.keepDone;
   const items = [...l.items].sort(byOrder);
-  const shown = items.filter((i) => keep || !i.done), done = items.filter((i) => i.done);
+  const shown = items.filter((i) => keep || !i.done), done = items.filter((i) => i.done).sort(byDone); // zuletzt abgehakt oben
   let rows = '';
   if (simple) {
     const secs = Array.isArray(l.secs) ? l.secs : [], known = new Set(secs.map((s) => s.id));
@@ -105,7 +105,7 @@ function flushMarked() {
   setDone(ids, true);
 }
 async function setDone(ids, done) {
-  ids.forEach((id) => { const it = findItem(id); if (it) { it.done = done; G.pending.set(id, done); } });
+  ids.forEach((id) => { const it = findItem(id); if (it) { markDone(it, done); G.pending.set(id, done); } }); // den Zeitpunkt setzt der Server (guest_check), hier nur für die Anzeige
   draw();
   await Promise.all(ids.map((id) => rpc('guest_check', { iid: id, done }).catch(() => { G.offline = true; })));
   ids.forEach((id) => G.pending.delete(id));

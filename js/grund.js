@@ -9,7 +9,7 @@
    Zone  = { id, name, cats: [Kategorie-IDs], prods: { produktname: Anzeigename }, rect: {x,y,w,h} oder null }
    Regel: ein festgelegtes Produkt (prods) gewinnt vor der Kategorie. Eine Kategorie darf in mehreren Zonen stehen;
    dann zählt die erste Zone in der Laufreihenfolge, solange kein Produkt festgelegt ist.   <- Reihenfolge im Array = Laufweg
-   Item  = { id, name, qty, note, photo (Data-URL oder fehlt), cat, done, ts, sec?, ord? }
+   Item  = { id, name, qty, note, photo (Data-URL oder fehlt), cat, done, ts, dt? (wann abgehakt), sec?, ord? }
    List  = { id, name, items, storeId, g (Gruppe), type? ('simple' = einfache Liste), secs? [{ id, name }], keepDone? }
            Einfache Liste: ohne Geschäft/Kategorien, Reihenfolge nach it.ord (sonst ts), Abschnitt it.sec (siehe „Listen-Typen“ unten)
 */
@@ -294,4 +294,8 @@ const listItems = (l) => (l.id === S.listId ? S.items : l.items || []);
 const openCount = (l) => listItems(l).filter((i) => !i.done).length;
 // Reihenfolge innerhalb einer Gruppe/eines Abschnitts: von Hand sortiert (it.ord), sonst wie hinzugefügt (it.ts)
 const byOrder = (a, b) => (a.ord ?? a.ts) - (b.ord ?? b.ts);
+// Abhaken merkt sich den Zeitpunkt (it.dt, ms). Damit steht in „Erledigt“ das zuletzt Abgehakte oben (byDone), und ein Gerät,
+// das den Haken erst über den Abgleich sieht (Uhr, Gast-Ansicht, anderes Handy), trägt den Kauf in die Historie nach (sync.js).
+function markDone(it, done, t) { it.done = done; if (done) it.dt = t || Date.now(); else delete it.dt; }
+const byDone = (a, b) => (b.dt || 0) - (a.dt || 0); // ältere Einträge ohne dt bleiben darunter in ihrer Reihenfolge
 
