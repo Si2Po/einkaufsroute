@@ -17,7 +17,7 @@ function viewPhoto(src) {
     v.addEventListener('pointerup', (e) => { if (y0 !== null && e.clientY - y0 > 80) { ui.sheetDragT = Date.now(); v.close(); } y0 = null; });
     v.addEventListener('close', () => { v.innerHTML = ''; });
   }
-  v.innerHTML = `<img src="${src}" alt="Foto"><button type="button" class="vx" aria-label="Schließen">×</button>`;
+  v.innerHTML = `<img src="${src}" alt="${T('Foto')}"><button type="button" class="vx" aria-label="${T('Schließen')}">×</button>`;
   v.showModal();
 }
 function bindSheetGestures() {
@@ -244,7 +244,7 @@ const WIGGLE = {
     },
   },
 };
-function wiggleBar(float) { return '<div class="wigglebar' + (float ? ' floatbar' : '') + '"><span>Ziehen zum Sortieren</span><button type="button" class="btn small" data-act="wiggleoff">Fertig</button></div>'; }
+function wiggleBar(float) { return '<div class="wigglebar' + (float ? ' floatbar' : '') + `"><span>${T('Ziehen zum Sortieren')}</span><button type="button" class="btn small" data-act="wiggleoff">${T('Fertig')}</button></div>`; }
 function dragRow(e, kind, row) {
   const w = WIGGLE[kind], list = row.closest(w.list), sel = w.slots || w.row;
   const before = slotKeys(list, sel).join();

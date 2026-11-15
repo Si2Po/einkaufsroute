@@ -48,7 +48,7 @@ const rowHash = (r) => h53(stable([r.kind, r.list_id, r.visible_to, r.data]));
 
 // ---------- Netzwerk ----------
 async function api(path, opt = {}, noRefresh = false) {
-  if (EK.off) throw new Error('Für diese Adresse ist keine Datenbank eingerichtet.'); // config.js
+  if (EK.off) throw new Error(T('Für diese Adresse ist keine Datenbank eingerichtet.')); // config.js
   const go = async () => {
     const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 20000);
     try {
@@ -71,17 +71,17 @@ async function api(path, opt = {}, noRefresh = false) {
 }
 const niceError = (e) => {
   const m = String(e && e.message || e);
-  if (/invalid login/i.test(m)) return 'E-Mail oder Passwort stimmt nicht.';
-  if (/already registered|already been registered/i.test(m)) return 'Diese E-Mail ist schon registriert – bitte anmelden.';
-  if (/password.*(short|least|characters)/i.test(m)) return 'Das Passwort ist zu kurz (mindestens 6 Zeichen).';
-  if (/valid email|invalid.*email|unable to validate email/i.test(m)) return 'Bitte eine gültige E-Mail-Adresse eingeben.';
-  if (/email not confirmed/i.test(m)) return 'Die E-Mail ist noch nicht bestätigt.';
-  if (/different from the old/i.test(m)) return 'Das neue Passwort muss anders sein als das alte.';
-  if (/reauthenticat|recently signed in/i.test(m)) return 'Bitte einmal ab- und wieder anmelden, dann nochmal versuchen.';
-  if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Bitte kurz warten.';
-  if (/ungültig oder abgelaufen/i.test(m)) return 'Die Einladung ist ungültig oder abgelaufen.';
-  if (e instanceof TypeError || e.name === 'AbortError' || /failed to fetch|network|load failed/i.test(m)) return 'Keine Verbindung zum Server.';
-  return m;
+  if (/invalid login/i.test(m)) return T('E-Mail oder Passwort stimmt nicht.');
+  if (/already registered|already been registered/i.test(m)) return T('Diese E-Mail ist schon registriert – bitte anmelden.');
+  if (/password.*(short|least|characters)/i.test(m)) return T('Das Passwort ist zu kurz (mindestens 6 Zeichen).');
+  if (/valid email|invalid.*email|unable to validate email/i.test(m)) return T('Bitte eine gültige E-Mail-Adresse eingeben.');
+  if (/email not confirmed/i.test(m)) return T('Die E-Mail ist noch nicht bestätigt.');
+  if (/different from the old/i.test(m)) return T('Das neue Passwort muss anders sein als das alte.');
+  if (/reauthenticat|recently signed in/i.test(m)) return T('Bitte einmal ab- und wieder anmelden, dann nochmal versuchen.');
+  if (/rate limit|too many/i.test(m)) return T('Zu viele Versuche. Bitte kurz warten.');
+  if (/ungültig oder abgelaufen/i.test(m)) return T('Die Einladung ist ungültig oder abgelaufen.');
+  if (e instanceof TypeError || e.name === 'AbortError' || /failed to fetch|network|load failed/i.test(m)) return T('Keine Verbindung zum Server.');
+  return T(m); // Meldungen aus der Datenbank (raise exception) sind deutsch; englisch stehen sie in js/en.js
 };
 const isOffline = (e) => e instanceof TypeError || e.name === 'AbortError';
 
@@ -102,7 +102,7 @@ function refreshSession() {
       const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 20000);
       const res = await fetch(EK.url + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: EK.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: rt }), signal: ctl.signal });
       clearTimeout(to);
-      if (res.status === 400 || res.status === 401 || res.status === 403) { sync.sess = null; sync.status = 'out'; sync.err = 'Bitte neu anmelden.'; persistSync(); return false; }
+      if (res.status === 400 || res.status === 401 || res.status === 403) { sync.sess = null; sync.status = 'out'; sync.err = T('Bitte neu anmelden.'); persistSync(); return false; }
       if (!res.ok) return false;
       takeSession(await res.json()); persistSync(); return true;
     } catch (_) { return false; } finally { refreshing = null; }
@@ -143,7 +143,10 @@ async function refreshGroups(force) {
   if (!force && sync.groups.length && groupsRun++ % 6) return true; // nicht bei jedem Durchgang
   try {
     const list = await api('/rest/v1/rpc/my_groups', { method: 'POST', body: '{}' });
-    if (Array.isArray(list) && list.length) { sync.groups = list; return true; }
+    if (Array.isArray(list) && list.length) {
+      list.forEach((x) => { if (x.kind === 'personal' && x.name === 'Persönlich') x.name = T('Persönlich'); }); // heißt in der Datenbank immer so, hier nur die Anzeige
+      sync.groups = list; return true;
+    }
   } catch (e) {
     // Nur wenn die Funktion in der Datenbank fehlt (404), auf den alten Weg ausweichen. Bei anderen Fehlern lieber abbrechen,
     // sonst würden Gruppen kurz „verschwinden“ und ihre Daten hier ausgeblendet.
@@ -151,9 +154,9 @@ async function refreshGroups(force) {
     // Datenbank noch ohne Gruppen-Ergänzung: wie früher mit dem einen aktiven Haushalt weiterarbeiten
     const p = await api(`/rest/v1/profiles?select=household_id&user_id=eq.${sync.sess.user.id}`);
     const hid = p && p[0] && p[0].household_id;
-    if (hid) { sync.groups = [{ id: hid, name: 'Haushalt', kind: 'shopping', members: [] }]; return true; }
+    if (hid) { sync.groups = [{ id: hid, name: T('Haushalt'), kind: 'shopping', members: [] }]; return true; }
   }
-  throw new Error('Keine Gruppe gefunden');
+  throw new Error(T('Keine Gruppe gefunden'));
 }
 // Gruppe der Stichwortliste wechseln (Einstellungen → Kategorien)
 function setCatGroup(g) {
@@ -376,7 +379,7 @@ async function applyRows(rows, pending, g) {
 }
 // Nach dem Anwenden: aktive Liste/Geschäft/Kategorien wieder zusammenbringen
 function repairState() {
-  if (!S.lists.length) S.lists = [{ id: uid(), name: 'Einkaufsliste', items: [], g: personalGroup() || undefined }];
+  if (!S.lists.length) S.lists = [{ id: uid(), name: T('Einkaufsliste'), items: [], g: personalGroup() || undefined }];
   if (!S.lists.some((l) => l.id === S.listId)) S.listId = S.lists[0].id;
   const l = curList();
   S.items = l.items;
@@ -392,7 +395,7 @@ async function syncRun() {
   if (sync.busy) { sync.again = true; return; }
   sync.busy = true; sync.status = 'busy'; paintStatus();
   try {
-    if (sync.sess.expires_at - Date.now() / 1000 < 90 && !(await refreshSession())) { if (!sync.sess) throw new Error('Bitte neu anmelden.'); }
+    if (sync.sess.expires_at - Date.now() / 1000 < 90 && !(await refreshSession())) { if (!sync.sess) throw new Error(T('Bitte neu anmelden.')); }
     await refreshGroups(false);
     let changed = dropGone();
     const groups = sync.groups.map((x) => x.id);
@@ -480,13 +483,13 @@ window.syncHook = () => {
 };
 
 // ---------- Oberfläche ----------
-const STATUS_TXT = { ok: 'Synchronisiert', busy: 'Synchronisiere …', offline: 'Offline – wird nachgeholt', err: 'Fehler beim Abgleich', out: 'Nicht angemeldet' };
-const accountSub = () => (sync.sess ? `${esc(sync.sess.user.email)} · ${STATUS_TXT[sync.status] || ''}` : 'Nicht angemeldet – Daten nur auf diesem Gerät');
+const STATUS_TXT = { ok: T('Synchronisiert'), busy: T('Synchronisiere …'), offline: T('Offline – wird nachgeholt'), err: T('Fehler beim Abgleich'), out: T('Nicht angemeldet') };
+const accountSub = () => (sync.sess ? `${esc(sync.sess.user.email)} · ${STATUS_TXT[sync.status] || ''}` : T('Nicht angemeldet – Daten nur auf diesem Gerät'));
 function paintStatus() {
   if (ui.tab === 'settings' && !dlg().open) { const el = document.querySelector('[data-act="accountsheet"] small'); if (el) el.innerHTML = accountSub(); }
   if (pageTop() === 'account' && sync.sess && !document.activeElement?.matches?.('.page input')) accountPage(ui.accMsg);
 }
-const ago = (t) => { const s = Math.round((Date.now() - t) / 1000); return s < 10 ? 'gerade eben' : s < 90 ? `vor ${s} s` : `vor ${Math.round(s / 60)} min`; };
+const ago = (t) => { const s = Math.round((Date.now() - t) / 1000); return s < 10 ? T('gerade eben') : s < 90 ? T('vor {n} s', { n: s }) : T('vor {n} min', { n: Math.round(s / 60) }); };
 
 // Meldung auf einer Seite: Text mit „!“ vorne = Fehler (rot), sonst Erfolg (grün). Auch in siri.js und teilen.js.
 function msgNote(msg) {
@@ -498,55 +501,55 @@ function msgNote(msg) {
 function accountPage(msg) {
   ui.accMsg = msg;
   const note = msgNote(msg);
-  const dataRow = `<div class="sheettitle" style="margin-top:16px">Daten</div>
-    <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>Daten sichern und übertragen</span><small>›</small></button></div>`;
+  const dataRow = `<div class="sheettitle" style="margin-top:16px">${T('Daten')}</div>
+    <div class="group"><button type="button" class="sheetbtn" data-act="datasheet"><span>${T('Daten sichern und übertragen')}</span><small>›</small></button></div>`;
   if (EK.off) { // Kopie der App auf einer anderen Adresse (config.js): keine Datenbank, alles bleibt auf dem Gerät
-    openPage('account', 'Konto und Gruppen', `
-      <p class="sheetnote">Für diese Adresse ist keine Datenbank eingerichtet. Die App funktioniert hier nur auf diesem Gerät, ohne Konto und Abgleich.</p>
-      <p class="sheetnote">Wer die App selbst betreibt, trägt in <code>config.js</code> die eigene Supabase-Datenbank und Adresse ein (siehe README).</p>
+    openPage('account', T('Konto und Gruppen'), `
+      <p class="sheetnote">${T('Für diese Adresse ist keine Datenbank eingerichtet. Die App funktioniert hier nur auf diesem Gerät, ohne Konto und Abgleich.')}</p>
+      <p class="sheetnote">${T('Wer die App selbst betreibt, trägt in <code>config.js</code> die eigene Supabase-Datenbank und Adresse ein (siehe README).')}</p>
       ${dataRow}`);
     return;
   }
   if (!sync.sess) {
     const mail = $('#accMail')?.value || '', pass = $('#accPass')?.value || ''; // beim Neuzeichnen nichts Getipptes verlieren
-    openPage('account', 'Konto und Gruppen', `
-      <p class="sheetnote">Mit einem Konto liegen deine Daten sicher online, laufen auf mehreren Geräten und lassen sich mit anderen teilen. Ohne Konto bleibt alles wie bisher nur auf diesem Gerät.</p>
-      ${sync.joinCode ? '<p class="sheetnote" style="color:var(--accent)">Du hast eine Einladung bekommen. Melde dich an oder registriere dich, danach kannst du sie annehmen.</p>' : ''}
+    openPage('account', T('Konto und Gruppen'), `
+      <p class="sheetnote">${T('Mit einem Konto liegen deine Daten sicher online, laufen auf mehreren Geräten und lassen sich mit anderen teilen. Ohne Konto bleibt alles wie bisher nur auf diesem Gerät.')}</p>
+      ${sync.joinCode ? `<p class="sheetnote" style="color:var(--accent)">${T('Du hast eine Einladung bekommen. Melde dich an oder registriere dich, danach kannst du sie annehmen.')}</p>` : ''}
       <form id="accForm" autocomplete="on" style="display:grid;gap:10px;margin-top:8px">
-        <label class="field"><span>E-Mail</span><input id="accMail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" value="${esc(mail)}" required></label>
-        <label class="field"><span>Passwort</span><input id="accPass" type="password" autocomplete="current-password" minlength="6" value="${esc(pass)}" required></label>
+        <label class="field"><span>${T('E-Mail')}</span><input id="accMail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" value="${esc(mail)}" required></label>
+        <label class="field"><span>${T('Passwort')}</span><input id="accPass" type="password" autocomplete="current-password" minlength="6" value="${esc(pass)}" required></label>
         ${note}
-        <div class="actions"><button type="submit" class="btn" style="flex:1" value="login">Anmelden</button><button type="submit" class="btn ghost" style="flex:1" value="signup">Registrieren</button></div>
+        <div class="actions"><button type="submit" class="btn" style="flex:1" value="login">${T('Anmelden')}</button><button type="submit" class="btn ghost" style="flex:1" value="signup">${T('Registrieren')}</button></div>
       </form>
-      <details class="pwforgot"><summary>Passwort vergessen?</summary>
-        <p class="sheetnote">Die App verschickt keine E-Mails. Wende dich an die Person, die die App betreut: Sie kann dir ein neues Passwort setzen. Damit meldest du dich an und änderst es danach unter Konto und Gruppen → Passwort ändern.</p>
+      <details class="pwforgot"><summary>${T('Passwort vergessen?')}</summary>
+        <p class="sheetnote">${T('Die App verschickt keine E-Mails. Wende dich an die Person, die die App betreut: Sie kann dir ein neues Passwort setzen. Damit meldest du dich an und änderst es danach unter Konto und Gruppen → Passwort ändern.')}</p>
       </details>
-      <p class="sheetnote" style="margin:12px 4px 0"><button type="button" class="link" data-act="aboutpage">Über diese App und Datenschutz</button></p>
+      <p class="sheetnote" style="margin:12px 4px 0"><button type="button" class="link" data-act="aboutpage">${T('Über diese App und Datenschutz')}</button></p>
       ${dataRow}`, () => accountPage(ui.accMsg));
     return;
   }
-  const gRows = sync.groups.map((g) => `<button type="button" class="sheetbtn" data-act="acc_group" data-id="${g.id}"><span class="gname">${ICON_GROUP}${esc(g.name)}</span><small>${g.kind === 'personal' ? 'nur du' : `${(g.members || []).length} ${(g.members || []).length === 1 ? 'Mitglied' : 'Mitglieder'}`} ›</small></button>`).join('');
-  openPage('account', 'Konto und Gruppen', `
+  const gRows = sync.groups.map((g) => `<button type="button" class="sheetbtn" data-act="acc_group" data-id="${g.id}"><span class="gname">${ICON_GROUP}${esc(g.name)}</span><small>${g.kind === 'personal' ? T('nur du') : T((g.members || []).length === 1 ? '{n} Mitglied' : '{n} Mitglieder', { n: (g.members || []).length })} ›</small></button>`).join('');
+  openPage('account', T('Konto und Gruppen'), `
     <div class="group acct" style="padding:12px 14px">
       <strong style="overflow-wrap:anywhere">${esc(sync.sess.user.email)}</strong>
       <p class="sheetnote" style="margin:2px 0 0">${STATUS_TXT[sync.status] || ''}${sync.status === 'ok' && sync.last ? ' · ' + ago(sync.last) : ''}${sync.err && sync.status !== 'ok' ? '<br>' + esc(sync.err) : ''}</p>
     </div>
-    <label class="field" style="margin-top:12px"><span>Benutzername (optional)</span><input id="accName" value="${esc(sync.sess.user.name || '')}" placeholder="${esc(shortMail(sync.sess.user.email))}" maxlength="30" autocomplete="nickname" enterkeyhint="done"></label>
-    <p class="sheetnote" style="margin:4px 4px 0">So sehen dich die anderen in deinen Gruppen, statt deiner E-Mail-Adresse.</p>
-    <div class="group" style="margin-top:12px"><button type="button" class="sheetbtn" data-act="acc_pwpage"><span>Passwort ändern</span><small>›</small></button></div>
+    <label class="field" style="margin-top:12px"><span>${T('Benutzername (optional)')}</span><input id="accName" value="${esc(sync.sess.user.name || '')}" placeholder="${esc(shortMail(sync.sess.user.email))}" maxlength="30" autocomplete="nickname" enterkeyhint="done"></label>
+    <p class="sheetnote" style="margin:4px 4px 0">${T('So sehen dich die anderen in deinen Gruppen, statt deiner E-Mail-Adresse.')}</p>
+    <div class="group" style="margin-top:12px"><button type="button" class="sheetbtn" data-act="acc_pwpage"><span>${T('Passwort ändern')}</span><small>›</small></button></div>
     ${note}
-    <div class="sheettitle" style="margin-top:16px">Gruppen</div>
-    <p class="sheetnote" style="margin:0 4px 8px">Was in einer Gruppe liegt, sehen alle ihre Mitglieder. Du selbst siehst immer alles aus allen deinen Gruppen.</p>
-    ${gRows ? `<div class="group">${gRows}</div>` : '<p class="sheetnote">Gruppen werden geladen …</p>'}
+    <div class="sheettitle" style="margin-top:16px">${T('Gruppen')}</div>
+    <p class="sheetnote" style="margin:0 4px 8px">${T('Was in einer Gruppe liegt, sehen alle ihre Mitglieder. Du selbst siehst immer alles aus allen deinen Gruppen.')}</p>
+    ${gRows ? `<div class="group">${gRows}</div>` : `<p class="sheetnote">${T('Gruppen werden geladen …')}</p>`}
     <div class="actions" style="margin-top:8px">
-      <button type="button" class="btn ghost" data-act="acc_newgroup">+ Neue Gruppe</button>
-      <button type="button" class="btn ghost" data-act="acc_joinsheet">Einladung annehmen</button>
+      <button type="button" class="btn ghost" data-act="acc_newgroup">${T('+ Neue Gruppe')}</button>
+      <button type="button" class="btn ghost" data-act="acc_joinsheet">${T('Einladung annehmen')}</button>
     </div>
     <div class="sheettitle" style="margin-top:16px">Siri</div>
-    <div class="group"><button type="button" class="sheetbtn" data-act="siripage"><span>Mit Siri hinzufügen</span><small>›</small></button></div>
+    <div class="group"><button type="button" class="sheetbtn" data-act="siripage"><span>${T('Mit Siri hinzufügen')}</span><small>›</small></button></div>
     ${dataRow}
-    <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="acc_logout">Abmelden</button></div>
-    <div class="group" style="margin-top:24px"><button type="button" class="sheetbtn danger" data-act="acc_delpage"><span>Konto löschen</span><small>›</small></button></div>`, () => accountPage(ui.accMsg));
+    <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="acc_sync">${T('Jetzt abgleichen')}</button><button type="button" class="btn danger" data-act="acc_logout">${T('Abmelden')}</button></div>
+    <div class="group" style="margin-top:24px"><button type="button" class="sheetbtn danger" data-act="acc_delpage"><span>${T('Konto löschen')}</span><small>›</small></button></div>`, () => accountPage(ui.accMsg));
 }
 // Eine Gruppe: Name, Mitglieder, einladen, verlassen
 function groupPage(id, msg) {
@@ -554,62 +557,62 @@ function groupPage(id, msg) {
   if (!g) { backTo('account', () => accountPage()); return; }
   const personal = g.kind === 'personal', me = sync.sess?.user.email;
   const count = (arr) => arr.filter((x) => x.g === id).length;
-  const what = [`${count(S.lists)} ${count(S.lists) === 1 ? 'Liste' : 'Listen'}`, `${count(S.stores)} ${count(S.stores) === 1 ? 'Geschäft' : 'Geschäfte'}`, `${count(S.meals || [])} Essen`].join(' · ');
+  const what = [T(count(S.lists) === 1 ? '{n} Liste' : '{n} Listen', { n: count(S.lists) }), T(count(S.stores) === 1 ? '{n} Geschäft' : '{n} Geschäfte', { n: count(S.stores) }), T(count(S.meals || []) === 1 ? '1 Essen' : '{n} Essen', { n: count(S.meals || []) })].join(' · ');
   openPage('group:' + id, g.name, `
     ${personal ? '' : `<label class="field"><span>Name</span><input id="grpName" data-id="${id}" value="${esc(g.name)}" autocomplete="off"></label>`}
-    <p class="sheetnote" style="margin:4px">${personal ? 'Nur für dich. Diese Gruppe kann nicht geteilt oder verlassen werden.' : 'Alle Mitglieder sehen, was in dieser Gruppe liegt.'} Darin: ${what}.</p>
+    <p class="sheetnote" style="margin:4px">${T(personal ? 'Nur für dich. Diese Gruppe kann nicht geteilt oder verlassen werden.' : 'Alle Mitglieder sehen, was in dieser Gruppe liegt.')} ${T('Darin: {what}.', { what })}</p>
     ${msgNote(msg)}
-    <div class="sheettitle" style="margin-top:12px">Mitglieder</div>
+    <div class="sheettitle" style="margin-top:12px">${T('Mitglieder')}</div>
     <div class="group">${(g.members || []).map((m) => memberRow(g, m, me)).join('') || '<p class="sheetnote">–</p>'}</div>
-    ${personal || canManage(g) ? '' : `<p class="sheetnote" style="margin:8px 4px 0">Einladen und Mitglieder entfernen kann nur ${esc(g.owner ? memberName(g, g.owner) : 'wer die Gruppe verwaltet')}.</p>`}
+    ${personal || canManage(g) ? '' : `<p class="sheetnote" style="margin:8px 4px 0">${T('Einladen und Mitglieder entfernen kann nur {who}.', { who: esc(g.owner ? memberName(g, g.owner) : T('wer die Gruppe verwaltet')) })}</p>`}
     ${personal ? '' : `<div class="actions" style="margin-top:12px">
-      ${canManage(g) ? `<button type="button" class="btn" data-act="acc_invite" data-id="${id}">Person einladen</button>` : ''}
-      <button type="button" class="btn danger" data-act="acc_leave" data-id="${id}">${ui.confirmLeave === id ? 'Wirklich verlassen?' : 'Gruppe verlassen'}</button>
+      ${canManage(g) ? `<button type="button" class="btn" data-act="acc_invite" data-id="${id}">${T('Person einladen')}</button>` : ''}
+      <button type="button" class="btn danger" data-act="acc_leave" data-id="${id}">${T(ui.confirmLeave === id ? 'Wirklich verlassen?' : 'Gruppe verlassen')}</button>
     </div>
-    ${ui.confirmLeave === id ? `<p class="sheetnote" style="color:var(--warn);margin:6px 4px">Danach siehst du die Listen, Geschäfte und Essen dieser Gruppe nicht mehr.${(g.members || []).length <= 1 ? ' Du bist das letzte Mitglied: die Gruppe wird mit allem gelöscht.' : ''}</p>` : ''}`}`, () => groupPage(id));
+    ${ui.confirmLeave === id ? `<p class="sheetnote" style="color:var(--warn);margin:6px 4px">${T('Danach siehst du die Listen, Geschäfte und Essen dieser Gruppe nicht mehr.')}${(g.members || []).length <= 1 ? ' ' + T('Du bist das letzte Mitglied: die Gruppe wird mit allem gelöscht.') : ''}</p>` : ''}`}`, () => groupPage(id));
 }
 // Einladen und Mitglieder entfernen darf nur, wer die Gruppe verwaltet (gruppen_rechte.sql).
 // Kennt die Datenbank das noch nicht (kein „mine“ in my_groups), bleibt es wie früher: alle dürfen einladen.
 const canManage = (g) => g.mine !== false;
 function memberRow(g, m, me) {
   let right = '';
-  if (m === me) right = `<small>du${m === g.owner ? ' · verwaltet' : ''}</small>`;
-  else if (m === g.owner) right = '<small>verwaltet</small>';
+  if (m === me) right = `<small>${T('du')}${m === g.owner ? ' · ' + T('verwaltet') : ''}</small>`;
+  else if (m === g.owner) right = `<small>${T('verwaltet')}</small>`;
   else if (g.mine) {
     const sure = ui.confirmRm === g.id + '|' + m;
-    right = `<button type="button" class="link${sure ? ' danger' : ''}" data-act="acc_rmmember" data-id="${g.id}" data-mail="${esc(m)}">${sure ? 'Wirklich entfernen?' : 'Entfernen'}</button>`;
+    right = `<button type="button" class="link${sure ? ' danger' : ''}" data-act="acc_rmmember" data-id="${g.id}" data-mail="${esc(m)}">${T(sure ? 'Wirklich entfernen?' : 'Entfernen')}</button>`;
   }
   return `<div class="sheetbtn"><span style="overflow-wrap:anywhere">${esc(memberName(g, m))}</span>${right}</div>`;
 }
 function newGroupSheet(msg) {
-  openSheet(`<div class="sheettitle">Neue Gruppe</div>
+  openSheet(`<div class="sheettitle">${T('Neue Gruppe')}</div>
     <form id="newGroupForm" autocomplete="off">
-      <input id="newGroupName" autofocus class="notein" placeholder="Name, z. B. Einkauf oder Familie" aria-label="Name der Gruppe" required>
+      <input id="newGroupName" autofocus class="notein" placeholder="${T('Name, z. B. Einkauf oder Familie')}" aria-label="${T('Name der Gruppe')}" required>
       ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg)}</p>` : ''}
-      <button type="submit" class="btn">Anlegen</button>
+      <button type="submit" class="btn">${T('Anlegen')}</button>
     </form>`);
 }
 function joinPage(code, msg) {
   // Einladung aus einem Link nur einmal anzeigen, auch wenn sie nicht angenommen wird (z. B. schon in der Gruppe).
   // Sonst erschiene sie bei jedem Start wieder. Der Code steht ja im Feld und lässt sich jederzeit von Hand eingeben.
   if (sync.sess && sync.joinCode) { sync.joinCode = null; try { localStorage.removeItem('ek_join'); } catch (_) { /* egal */ } }
-  openPage('join', 'Einladung annehmen', `
+  openPage('join', T('Einladung annehmen'), `
     <form id="joinForm" autocomplete="off" style="display:grid;gap:10px">
-      <label class="field"><span>Einladungscode</span><input id="joinCode" value="${esc(code || '')}" autocapitalize="characters" autocomplete="off" ${code ? '' : 'autofocus'} required></label>
-      <p class="sheetnote">Die Gruppe kommt zu deinen dazu. Deine eigenen Listen, Geschäfte und Essen bleiben, wie sie sind.</p>
+      <label class="field"><span>${T('Einladungscode')}</span><input id="joinCode" value="${esc(code || '')}" autocapitalize="characters" autocomplete="off" ${code ? '' : 'autofocus'} required></label>
+      <p class="sheetnote">${T('Die Gruppe kommt zu deinen dazu. Deine eigenen Listen, Geschäfte und Essen bleiben, wie sie sind.')}</p>
       ${msg ? `<p class="sheetnote" style="color:var(--warn)">${esc(msg)}</p>` : ''}
-      <button type="submit" class="btn">Beitreten</button>
+      <button type="submit" class="btn">${T('Beitreten')}</button>
     </form>`);
 }
 // Passwort ändern (angemeldet, ohne E-Mail)
 function pwPage(msg) {
-  openPage('pw', 'Passwort ändern', `
+  openPage('pw', T('Passwort ändern'), `
     <form id="pwForm" autocomplete="on" style="display:grid;gap:10px">
       <input type="email" autocomplete="username" value="${esc(sync.sess?.user.email || '')}" hidden>
-      <label class="field"><span>Neues Passwort</span><input id="pwNew" type="password" autocomplete="new-password" minlength="6" required autofocus></label>
-      <label class="field"><span>Noch einmal</span><input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+      <label class="field"><span>${T('Neues Passwort')}</span><input id="pwNew" type="password" autocomplete="new-password" minlength="6" required autofocus></label>
+      <label class="field"><span>${T('Noch einmal')}</span><input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
       ${msgNote(msg)}
-      <button type="submit" class="btn">Passwort ändern</button>
+      <button type="submit" class="btn">${T('Passwort ändern')}</button>
     </form>`);
 }
 async function copyText(t) {
@@ -619,11 +622,11 @@ async function createInvite(g) {
   try {
     const code = await api('/rest/v1/rpc/create_invite', { method: 'POST', body: JSON.stringify({ g }) });
     const link = location.origin + location.pathname + '#join=' + code;
-    openPage('invite', 'Person einladen', `
-      <p class="sheetnote" style="margin:0 4px 8px">Schick diesen Link an die Person. Er gilt 7 Tage. Sie öffnet ihn auf ihrem Handy, meldet sich an und ist danach in der Gruppe „${esc(groupName(g))}“.</p>
-      <input class="notein" id="invLink" readonly value="${esc(link)}" aria-label="Einladungslink">
-      <p class="sheetnote" style="margin:8px 4px">Oder der Code zum Eintippen: <strong>${esc(code)}</strong></p>
-      <button type="button" class="btn" data-act="acc_share" data-link="${esc(link)}">${navigator.share ? 'Teilen' : 'Link kopieren'}</button>`);
+    openPage('invite', T('Person einladen'), `
+      <p class="sheetnote" style="margin:0 4px 8px">${T('Schick diesen Link an die Person. Er gilt 7 Tage. Sie öffnet ihn auf ihrem Handy, meldet sich an und ist danach in der Gruppe „{name}“.', { name: esc(groupName(g)) })}</p>
+      <input class="notein" id="invLink" readonly value="${esc(link)}" aria-label="${T('Einladungslink')}">
+      <p class="sheetnote" style="margin:8px 4px">${T('Oder der Code zum Eintippen:')} <strong>${esc(code)}</strong></p>
+      <button type="button" class="btn" data-act="acc_share" data-link="${esc(link)}">${T(navigator.share ? 'Teilen' : 'Link kopieren')}</button>`);
   } catch (e) { accountPage('!' + niceError(e)); }
 }
 async function acceptInvite(code) {
@@ -634,35 +637,35 @@ async function acceptInvite(code) {
     await refreshGroups(true);
     await syncRun();
     render();
-    accountPage(sync.status === 'ok' ? `Du bist jetzt in der Gruppe „${groupName(hid) || 'Neue Gruppe'}“.` : '!' + (sync.err || 'Abgleich später'));
+    accountPage(sync.status === 'ok' ? T('Du bist jetzt in der Gruppe „{name}“.', { name: groupName(hid) || T('Neue Gruppe') }) : '!' + (sync.err || T('Abgleich später')));
   } catch (e) { joinPage(code, niceError(e)); }
 }
 
 // ---------- Sichern und übertragen (Datei oder Text) ----------
 const exportJson = () => JSON.stringify({ app: 'einkaufsroute', v: 1, state: snapshot() });
 function dataPage(msg) {
-  openPage('data', 'Daten sichern', `
-    <p class="sheetnote" style="margin:0 4px 8px">Alles (Listen, Geschäfte, Stichwörter, Essen, Fotos) als Sicherung. So nimmst du deine Daten auch auf ein anderes Gerät oder in eine neue Installation mit.</p>
+  openPage('data', T('Daten sichern'), `
+    <p class="sheetnote" style="margin:0 4px 8px">${T('Alles (Listen, Geschäfte, Stichwörter, Essen, Fotos) als Sicherung. So nimmst du deine Daten auch auf ein anderes Gerät oder in eine neue Installation mit.')}</p>
     <div class="group">
-      <button type="button" class="sheetbtn" data-act="acc_dlfile"><span>Als Datei speichern</span><small>.json</small></button>
-      <button type="button" class="sheetbtn" data-act="acc_copydata"><span>Als Text kopieren</span><small>Zwischenablage</small></button>
-      <button type="button" class="sheetbtn" data-act="acc_importsheet"><span>Sicherung laden</span><small>ersetzt die Daten hier ›</small></button>
+      <button type="button" class="sheetbtn" data-act="acc_dlfile"><span>${T('Als Datei speichern')}</span><small>.json</small></button>
+      <button type="button" class="sheetbtn" data-act="acc_copydata"><span>${T('Als Text kopieren')}</span><small>${T('Zwischenablage')}</small></button>
+      <button type="button" class="sheetbtn" data-act="acc_importsheet"><span>${T('Sicherung laden')}</span><small>${T('ersetzt die Daten hier ›')}</small></button>
     </div>
     ${msg ? `<p class="sheetnote" role="status" style="margin:8px 4px;color:var(--${msg.startsWith('!') ? 'warn' : 'accent'})">${esc(msg.replace(/^!/, ''))}</p>` : ''}
     <div id="dataTextBox"></div>`);
 }
 function importPage(msg) {
-  openPage('import', 'Sicherung laden', `
-    <p class="sheetnote" style="color:var(--warn);margin:0 4px 8px">Achtung: Die Daten auf diesem Gerät werden durch die Sicherung ersetzt. Eine Kopie der bisherigen Daten bleibt auf dem Gerät.</p>
-    <label class="field"><span>Datei wählen</span><input id="impFile" type="file" accept=".json,application/json,text/plain"></label>
-    <label class="field" style="margin-top:8px"><span>Oder Text einfügen</span><textarea id="impText" rows="4" class="notein" placeholder="Sicherung hier einfügen" style="width:100%;font-size:16px"></textarea></label>
+  openPage('import', T('Sicherung laden'), `
+    <p class="sheetnote" style="color:var(--warn);margin:0 4px 8px">${T('Achtung: Die Daten auf diesem Gerät werden durch die Sicherung ersetzt. Eine Kopie der bisherigen Daten bleibt auf dem Gerät.')}</p>
+    <label class="field"><span>${T('Datei wählen')}</span><input id="impFile" type="file" accept=".json,application/json,text/plain"></label>
+    <label class="field" style="margin-top:8px"><span>${T('Oder Text einfügen')}</span><textarea id="impText" rows="4" class="notein" placeholder="${T('Sicherung hier einfügen')}" style="width:100%;font-size:16px"></textarea></label>
     ${msg ? `<p class="sheetnote" role="status" style="margin:8px 4px;color:var(--warn)">${esc(msg)}</p>` : ''}
-    <button type="button" class="btn" style="margin-top:10px" data-act="acc_doimport">Laden</button>`);
+    <button type="button" class="btn" style="margin-top:10px" data-act="acc_doimport">${T('Laden')}</button>`);
 }
 function importJson(txt) {
-  let o; try { o = JSON.parse(txt); } catch (_) { throw new Error('Das ist keine gültige Sicherung.'); }
+  let o; try { o = JSON.parse(txt); } catch (_) { throw new Error(T('Das ist keine gültige Sicherung.')); }
   const st = o && o.app === 'einkaufsroute' ? o.state : null;
-  if (!st || !Array.isArray(st.stores) || !Array.isArray(st.lists)) throw new Error('Das ist keine Sicherung von Einkaufsroute.');
+  if (!st || !Array.isArray(st.stores) || !Array.isArray(st.lists)) throw new Error(T('Das ist keine Sicherung von Einkaufsroute.'));
   kvSet('backup', { t: Date.now(), state: snapshot() });
   const keepListId = st.listId;
   S = { ...st, items: [], listId: keepListId };
@@ -687,21 +690,21 @@ document.addEventListener('submit', async (e) => {
     const btns = f.querySelectorAll('button'); btns.forEach((b) => { b.disabled = true; });
     try {
       const r = await authCall(kind, $('#accMail').value.trim(), $('#accPass').value);
-      if (r.needsConfirm) { accountPage('Bestätigungsmail verschickt. Bitte bestätige die E-Mail und melde dich dann an.'); return; }
+      if (r.needsConfirm) { accountPage(T('Bestätigungsmail verschickt. Bitte bestätige die E-Mail und melde dich dann an.')); return; }
       sync.status = 'busy';
       await syncRun();
       render();
       if (sync.joinCode && sync.sess) { joinPage(sync.joinCode); return; }
-      accountPage(sync.status === 'ok' ? 'Angemeldet.' : (sync.err ? '!' + sync.err : ''));
+      accountPage(sync.status === 'ok' ? T('Angemeldet.') : (sync.err ? '!' + sync.err : ''));
     } catch (err) { accountPage('!' + niceError(err)); }
   } else if (f.id === 'pwForm') {
     e.preventDefault(); e.stopImmediatePropagation();
     const p1 = $('#pwNew').value, p2 = $('#pwNew2').value;
-    if (p1 !== p2) { pwPage('!Die beiden Passwörter sind nicht gleich.'); return; }
+    if (p1 !== p2) { pwPage('!' + T('Die beiden Passwörter sind nicht gleich.')); return; }
     f.querySelectorAll('button').forEach((b) => { b.disabled = true; });
     try {
       await api('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password: p1 }) });
-      accountPage('Passwort geändert. Auf anderen Geräten bleibst du angemeldet.');
+      accountPage(T('Passwort geändert. Auf anderen Geräten bleibst du angemeldet.'));
     } catch (err) { pwPage('!' + niceError(err)); }
   } else if (f.id === 'joinForm') {
     e.preventDefault(); e.stopImmediatePropagation();
@@ -719,7 +722,7 @@ document.addEventListener('click', async (e) => {
   if (act === 'datasheet' || act === 'acc_databack') { dataPage(); return; }
   if (act === 'acc_importsheet') { importPage(); return; }
   if (act === 'acc_doimport') {
-    try { importJson($('#impText').value.trim()); dataPage('Sicherung geladen.'); } catch (err) { importPage(err.message); }
+    try { importJson($('#impText').value.trim()); dataPage(T('Sicherung geladen.')); } catch (err) { importPage(err.message); }
     return;
   }
   if (act === 'acc_dlfile') {
@@ -727,14 +730,14 @@ document.addEventListener('click', async (e) => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([exportJson()], { type: 'application/json' }));
       a.download = 'einkaufsroute-sicherung.json'; document.body.appendChild(a); a.click(); a.remove();
-      dataPage('Datei wird gespeichert. Falls nichts passiert, nimm „Als Text kopieren“.');
-    } catch (_) { dataPage('!Speichern nicht möglich. Nimm „Als Text kopieren“.'); }
+      dataPage(T('Datei wird gespeichert. Falls nichts passiert, nimm „Als Text kopieren“.'));
+    } catch (_) { dataPage('!' + T('Speichern nicht möglich. Nimm „Als Text kopieren“.')); }
     return;
   }
   if (act === 'acc_copydata') {
     const txt = exportJson();
-    if (await copyText(txt)) { dataPage('In die Zwischenablage kopiert.'); return; }
-    dataPage('!Kopieren wurde blockiert. Markiere den Text unten und kopiere ihn von Hand.');
+    if (await copyText(txt)) { dataPage(T('In die Zwischenablage kopiert.')); return; }
+    dataPage('!' + T('Kopieren wurde blockiert. Markiere den Text unten und kopiere ihn von Hand.'));
     $('#dataTextBox').innerHTML = '<textarea id="dataText" readonly rows="5" class="notein" style="width:100%;font-size:16px;margin-top:8px"></textarea>';
     const t = $('#dataText'); t.value = txt; t.focus(); t.select();
     return;
@@ -747,7 +750,7 @@ document.addEventListener('click', async (e) => {
     const g = el.dataset.id;
     if (ui.confirmLeave !== g) { ui.confirmLeave = g; groupPage(g); return; }
     ui.confirmLeave = null;
-    try { await api('/rest/v1/rpc/leave_group', { method: 'POST', body: JSON.stringify({ g }) }); await refreshGroups(true); await syncRun(); render(); accountPage('Gruppe verlassen.'); }
+    try { await api('/rest/v1/rpc/leave_group', { method: 'POST', body: JSON.stringify({ g }) }); await refreshGroups(true); await syncRun(); render(); accountPage(T('Gruppe verlassen.')); }
     catch (err) { groupPage(g, '!' + niceError(err)); }
   }
   else if (act === 'acc_rmmember') {
@@ -755,19 +758,19 @@ document.addEventListener('click', async (e) => {
     if (ui.confirmRm !== key) { ui.confirmRm = key; groupPage(g); return; }
     ui.confirmRm = null;
     const who = memberName(sync.groups.find((x) => x.id === g) || {}, mail);
-    try { await api('/rest/v1/rpc/remove_member', { method: 'POST', body: JSON.stringify({ g, mail }) }); await refreshGroups(true); groupPage(g, `${who} ist nicht mehr in der Gruppe.`); }
+    try { await api('/rest/v1/rpc/remove_member', { method: 'POST', body: JSON.stringify({ g, mail }) }); await refreshGroups(true); groupPage(g, T('{who} ist nicht mehr in der Gruppe.', { who })); }
     catch (err) { groupPage(g, '!' + niceError(err)); }
   }
   else if (act === 'acc_joinsheet') joinPage('');
   else if (act === 'acc_pwpage') pwPage();
-  else if (act === 'acc_sync') { sync.dirty = true; sync.ver++; await syncRun(); accountPage(sync.status === 'ok' ? 'Abgeglichen.' : '!' + sync.err); }
+  else if (act === 'acc_sync') { sync.dirty = true; sync.ver++; await syncRun(); accountPage(sync.status === 'ok' ? T('Abgeglichen.') : '!' + sync.err); }
   else if (act === 'acc_share') {
     const link = el.dataset.link;
-    if (navigator.share) { try { await navigator.share({ title: 'Einkaufsroute', text: 'Komm in meinen Haushalt bei Einkaufsroute:', url: link }); } catch (_) { /* abgebrochen */ } }
-    else { const ok = await copyText(link); const i = $('#invLink'); if (i) { i.select(); } toast(ok ? 'Link kopiert' : 'Link markiert – bitte kopieren'); }
+    if (navigator.share) { try { await navigator.share({ title: 'Einkaufsroute', text: T('Komm in meinen Haushalt bei Einkaufsroute:'), url: link }); } catch (_) { /* abgebrochen */ } }
+    else { const ok = await copyText(link); const i = $('#invLink'); if (i) { i.select(); } toast(T(ok ? 'Link kopiert' : 'Link markiert – bitte kopieren')); }
   } else if (act === 'acc_logout') {
     await signOutHere();
-    accountPage('Abgemeldet. Deine Daten bleiben auf diesem Gerät.');
+    accountPage(T('Abgemeldet. Deine Daten bleiben auf diesem Gerät.'));
     render();
   } else if (act === 'acc_delpage') {
     ui.confirmDelAcc = false; delAccountPage();
@@ -778,10 +781,10 @@ document.addEventListener('click', async (e) => {
       await api('/rest/v1/rpc/delete_account', { method: 'POST', body: '{}' });
       try { localStorage.removeItem('ek_siri_key'); } catch (_) { /* egal */ }
       await signOutHere();
-      accountPage('Dein Konto ist gelöscht. Was noch auf diesem Gerät liegt, bleibt hier, bis du die App löschst.');
+      accountPage(T('Dein Konto ist gelöscht. Was noch auf diesem Gerät liegt, bleibt hier, bis du die App löschst.'));
       render();
     } catch (err) {
-      delAccountPage('!' + (err.status === 404 ? 'Die Datenbank kennt das Löschen noch nicht (konto_loeschen.sql fehlt).' : niceError(err)));
+      delAccountPage('!' + (err.status === 404 ? T('Die Datenbank kennt das Löschen noch nicht (konto_loeschen.sql fehlt).') : niceError(err)));
     }
   }
 }, true);
@@ -795,7 +798,7 @@ document.addEventListener('change', async (e) => {
     sync.sess.user.name = r?.user_metadata?.name ?? name;
     persistSync();
     await refreshGroups(true);
-    accountPage(name ? 'Benutzername gespeichert.' : 'Benutzername entfernt.');
+    accountPage(T(name ? 'Benutzername gespeichert.' : 'Benutzername entfernt.'));
   } catch (err) { accountPage('!' + niceError(err)); }
 });
 // Abmelden auf diesem Gerät: Daten bleiben, werden aber nicht mehr abgeglichen. Danach Kontoseite und render() aufrufen.
@@ -805,16 +808,16 @@ async function signOutHere() {
   await persistSync();
 }
 function delAccountPage(msg) {
-  openPage('delacc', 'Konto löschen', `
-    <p class="sheetnote" style="margin:0 4px 10px">Das löscht dein Konto <b>${esc(sync.sess?.user.email || '')}</b> endgültig:</p>
+  openPage('delacc', T('Konto löschen'), `
+    <p class="sheetnote" style="margin:0 4px 10px">${T('Das löscht dein Konto <b>{mail}</b> endgültig:', { mail: esc(sync.sess?.user.email || '') })}</p>
     <ul class="sheetnote delinfo">
-      <li>deine E-Mail-Adresse und dein Passwort,</li>
-      <li>alles in „Persönlich“ (Listen, Essen, Geschäfte, Kategorien),</li>
-      <li>deinen Siri-Schlüssel und deine Teilen-Links.</li>
+      <li>${T('deine E-Mail-Adresse und dein Passwort,')}</li>
+      <li>${T('alles in „Persönlich“ (Listen, Essen, Geschäfte, Kategorien),')}</li>
+      <li>${T('deinen Siri-Schlüssel und deine Teilen-Links.')}</li>
     </ul>
-    <p class="sheetnote" style="margin:0 4px 10px">Gemeinsame Gruppen bleiben für die anderen Mitglieder bestehen. Bist du das letzte Mitglied, wird die Gruppe mit gelöscht. Tipp: Vorher eine Sicherung speichern.</p>
+    <p class="sheetnote" style="margin:0 4px 10px">${T('Gemeinsame Gruppen bleiben für die anderen Mitglieder bestehen. Bist du das letzte Mitglied, wird die Gruppe mit gelöscht. Tipp: Vorher eine Sicherung speichern.')}</p>
     ${msgNote(msg)}
-    <button type="button" class="btn danger" style="width:100%;margin-top:8px" data-act="acc_delete">${ui.confirmDelAcc ? 'Wirklich endgültig löschen?' : 'Konto löschen'}</button>`);
+    <button type="button" class="btn danger" style="width:100%;margin-top:8px" data-act="acc_delete">${T(ui.confirmDelAcc ? 'Wirklich endgültig löschen?' : 'Konto löschen')}</button>`);
 }
 
 // ---------- Start ----------
@@ -857,7 +860,7 @@ document.addEventListener('submit', async (e) => {
     closeSheet();
     await refreshGroups(true);
     await syncRun();
-    accountPage(); groupPage(g, `Gruppe „${n}“ angelegt. Lade jetzt jemanden ein, oder verschiebe Listen hierher.`);
+    accountPage(); groupPage(g, T('Gruppe „{name}“ angelegt. Lade jetzt jemanden ein, oder verschiebe Listen hierher.', { name: n }));
   } catch (err) { newGroupSheet(niceError(err)); }
 }, true);
 document.addEventListener('change', async (e) => {
@@ -867,6 +870,6 @@ document.addEventListener('change', async (e) => {
   try {
     await api('/rest/v1/rpc/rename_group', { method: 'POST', body: JSON.stringify({ g, n }) });
     await refreshGroups(true);
-    render(); groupPage(g, 'Umbenannt.');
+    render(); groupPage(g, T('Umbenannt.'));
   } catch (err) { e.target.value = old; groupPage(g, '!' + niceError(err)); }
 });

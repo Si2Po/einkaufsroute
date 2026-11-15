@@ -22,10 +22,10 @@ function buildGroups(store) {
       const zi = zoneIndexFor(store, it);
       g = zi >= 0
         ? { key: 'z' + zi, order: zi, label: store.zones[zi].name, num: zi + 1 }
-        : { key: 'n' + it.cat, order: 999 + (CAT_INDEX[it.cat] ?? 99), label: CAT_BY_ID[it.cat]?.name || 'Sonstiges', num: null, free: it.cat };
+        : { key: 'n' + it.cat, order: 999 + (CAT_INDEX[it.cat] ?? 99), label: CAT_BY_ID[it.cat]?.name || T('Sonstiges'), num: null, free: it.cat };
     } else {
       const ci = CAT_INDEX[it.cat] ?? CAT_INDEX.sonst;
-      g = { key: 'c' + ci, order: ci, label: CAT_BY_ID[it.cat]?.name || 'Sonstiges', num: null };
+      g = { key: 'c' + ci, order: ci, label: CAT_BY_ID[it.cat]?.name || T('Sonstiges'), num: null };
     }
     if (!groups.has(g.key)) groups.set(g.key, { ...g, items: [] });
     groups.get(g.key).items.push(it);
@@ -59,33 +59,33 @@ function listBody() {
   // umsortiert und in eine andere Kategorie / einen anderen Bereich gezogen werden können (WIGGLE.items).
   const body = groups.length
     ? `<ul class="srows${ui.wiggle === 'items' ? ' wiggle' : ''}" id="listRows">${groups.map((g) => (g.free
-        ? `<li class="grp secli grpbtn" role="button" tabindex="0" data-act="assigncat" data-cat="${g.free}" data-key="§${g.key}"><span class="gname">${esc(g.label)}</span><span class="nozone">Bereich wählen ›</span><span class="cnt">${g.items.length}</span></li>`
+        ? `<li class="grp secli grpbtn" role="button" tabindex="0" data-act="assigncat" data-cat="${g.free}" data-key="§${g.key}"><span class="gname">${esc(g.label)}</span><span class="nozone">${T('Bereich wählen ›')}</span><span class="cnt">${g.items.length}</span></li>`
         : `<li class="grp secli" data-key="§${g.key}"><span class="gname">${esc(g.label)}</span><span class="cnt">${g.items.length}</span></li>`)
         + g.items.map(rowHtml).join('')).join('')}</ul>${ui.wiggle === 'items' ? wiggleBar(true) : ''}`
-    : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
+    : `<p class="empty">${S.items.length ? T('Alles erledigt.') : T('Die Liste ist leer.')}</p>`;
   if (ui.wiggle === 'items' && groups.length) return body;
   return introCard('list') + dueBar() + body + doneBlock(done) + listTip('verschieben'); // introCard: Einführung (hilfe.js), dueBar: „Vielleicht fällig“ (historie.js)
 }
 // „Erledigt (n)“ zum Aufklappen, darunter die abgehakten Einträge (Einkaufsliste und einfache Liste)
 function doneBlock(done) {
   if (!done.length) return '';
-  return `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">Erledigt (${done.length}) ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? '<button type="button" class="link clearbtn" data-act="cleardone">Erledigte entfernen</button>' : ''}</div>
+  return `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${ui.showDone}">${T('Erledigt ({n})', { n: done.length })} ${ui.showDone ? '▴' : '▾'}</button>${ui.showDone ? `<button type="button" class="link clearbtn" data-act="cleardone">${T('Erledigte entfernen')}</button>` : ''}</div>
        ${ui.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
 }
 // Bedienhinweis unter der Liste, bis zum ersten Bearbeiten (S.tipSeen)
-const listTip = (dragWord) => (S.items.length && !S.tipSeen ? `<p class="tip bedien">Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: ${dragWord}</p>` : '');
-const pillName = () => curStore()?.name || 'Kein Geschäft';
+const listTip = (dragWord) => (S.items.length && !S.tipSeen ? `<p class="tip bedien">${T('Tippen: abhaken · Gedrückt halten: bearbeiten · Halten und ziehen: {w}', { w: T(dragWord) })}</p>` : '');
+const pillName = () => curStore()?.name || T('Kein Geschäft');
 
 const barHtml = () => `
-      <button type="button" class="pill" data-act="storesheet" aria-haspopup="dialog" aria-label="Geschäft wählen"><span id="pillName">${esc(pillName())}</span></button>`;
+      <button type="button" class="pill" data-act="storesheet" aria-haspopup="dialog" aria-label="${T('Geschäft wählen')}"><span id="pillName">${esc(pillName())}</span></button>`;
 function viewList() {
   return `<div class="bar"${isSimple() || !storesOn() ? ' hidden' : ''}>${barHtml()}    </div>
     <div class="addwrap">
       <form id="addForm" class="add" autocomplete="off">
-        <input id="addName" placeholder="${esc(addPlaceholder())}" aria-label="Neuer Eintrag" enterkeyhint="done">
-        <button type="submit" class="plus" aria-label="Hinzufügen">${ICON_PLUS}</button>
+        <input id="addName" placeholder="${esc(addPlaceholder())}" aria-label="${T('Neuer Eintrag')}" enterkeyhint="done">
+        <button type="submit" class="plus" aria-label="${T('Hinzufügen')}">${ICON_PLUS}</button>
       </form>
-      <div id="sugg" class="sugg" role="listbox" aria-label="Vorschläge" hidden></div>
+      <div id="sugg" class="sugg" role="listbox" aria-label="${T('Vorschläge')}" hidden></div>
     </div>
     <div id="listBody">${listBody()}</div>`;
 }
@@ -116,24 +116,24 @@ function renderTabs() {
   const nav = $('#tabbar');
   if (!nav) return;
   const cur = ui.tab === 'stores' ? 'settings' : ui.tab;
-  const listLabel = (S.lists.length > 1 ? curList().name : 'Liste') + (cur === 'list' ? ' ▾' : ''); // Name der aktiven Liste; zweiter Tipp öffnet die Auswahl
-  nav.innerHTML = [['list', listLabel], ['meals', 'Essen'], ['settings', 'Einstellungen']].map(([t, label]) =>
+  const listLabel = (S.lists.length > 1 ? curList().name : T('Liste')) + (cur === 'list' ? ' ▾' : ''); // Name der aktiven Liste; zweiter Tipp öffnet die Auswahl
+  nav.innerHTML = [['list', listLabel], ['meals', T('Essen')], ['settings', T('Einstellungen')]].map(([t, label]) =>
     `<button type="button" data-act="tab" data-tab="${t}"${cur === t ? ' aria-current="page"' : ''}${t === 'list' ? ' aria-haspopup="dialog"' : ''}>${TAB_ICONS[t]}<span>${esc(label)}</span></button>`).join('');
 }
 function viewSettings() {
   if (!appVersion && !IS_LOCAL) setTimeout(loadVersion, 0); // Nummer noch leer: nochmal nachfragen
   const row = (act, title, sub, extra = '') => `<li><button type="button" class="card" data-act="${act}"${extra}><span><strong>${title}</strong><small>${sub}</small></span><span class="go">›</span></button></li>`;
-  return `<div class="edhead"><h2>Einstellungen</h2></div>
+  return `<div class="edhead"><h2>${T('Einstellungen')}</h2></div>
     <ul class="cards">
-      ${row('accountsheet', 'Konto und Gruppen', typeof accountSub === 'function' ? accountSub() : 'Nicht angemeldet')}
-      ${row('listspage', 'Listen', esc(S.lists.map((l) => l.name).join(', ')))}
-      ${row('tab', 'Geschäfte und Grundrisse', storesOn() ? `${S.stores.length} ${S.stores.length === 1 ? 'Geschäft' : 'Geschäfte'}` : 'Aus – Liste nur nach Kategorien', ' data-tab="stores"')}
-      ${row('swipesheet', 'Wischen', 'Aktionen für Einträge und Essen')}
-      ${row('themepage', 'Darstellung', `${THEME_LABEL[themePref()]} · ${accentName()}`)}
-      ${row('catlist', 'Kategorien und Stichwörter', `${CATS.length} Kategorien`)}
-      ${row('duepage', 'Vorschläge', dueSub())}
-      ${row('helppage', 'Hilfe', 'So funktioniert die App · Hinweise')}
-      ${row('aboutpage', 'Über diese App', 'Hobbyprojekt · Datenschutz · Kontakt')}
+      ${row('accountsheet', T('Konto und Gruppen'), typeof accountSub === 'function' ? accountSub() : T('Nicht angemeldet'))}
+      ${row('listspage', T('Listen'), esc(S.lists.map((l) => l.name).join(', ')))}
+      ${row('tab', T('Geschäfte und Grundrisse'), storesOn() ? T(S.stores.length === 1 ? '{n} Geschäft' : '{n} Geschäfte', { n: S.stores.length }) : T('Aus – Liste nur nach Kategorien'), ' data-tab="stores"')}
+      ${row('swipesheet', T('Wischen'), T('Aktionen für Einträge und Essen'))}
+      ${row('themepage', T('Darstellung und Sprache'), `${THEME_LABEL[themePref()]} · ${accentName()} · ${LANG === 'en' ? 'English' : 'Deutsch'}`)}
+      ${row('catlist', T('Kategorien und Stichwörter'), T('{n} Kategorien', { n: CATS.length }))}
+      ${row('duepage', T('Vorschläge'), dueSub())}
+      ${row('helppage', T('Hilfe'), T('So funktioniert die App · Hinweise'))}
+      ${row('aboutpage', T('Über diese App'), T('Hobbyprojekt · Datenschutz · Kontakt'))}
     </ul>
     ${appVersion ? `<p class="tip" data-act="vertap">Version ${esc(appVersion)}</p>` : ''}`;
 }
@@ -146,13 +146,13 @@ if (IS_LOCAL) {
   fetch('sw.js').then((r) => r.text()).then((t) => {
     const m = t.match(/einkaufsroute-v([\w.]+)/);
     if (!m) return;
-    appVersion = `${m[1]} · lokal`;
+    appVersion = `${m[1]} · ${T('lokal')}`;
     // Uhrzeit der zuletzt gespeicherten Datei anhängen: so sieht man, ob das Neuladen schon den neuesten Stand hat
     // alle Skripte, die index.html tatsächlich lädt (so bleibt die Liste von selbst aktuell)
     const scripts = [...document.scripts].map((s) => s.getAttribute('src')).filter(Boolean);
     const files = ['index.html', 'style.css', 'sw.js', ...scripts];
     return Promise.all(files.map((f) => fetch(f, { cache: 'no-store' }).then((r) => Date.parse(r.headers.get('Last-Modified')) || 0, () => 0)))
-      .then((ts) => { const t = Math.max(...ts); if (t) appVersion += `, Stand ${new Date(t).toLocaleTimeString('de-DE')}`; });
+      .then((ts) => { const t = Math.max(...ts); if (t) appVersion += `, ${T('Stand')} ${new Date(t).toLocaleTimeString(LOCALE)}`; });
   }).then(() => { if (ui.tab === 'settings') render(); }).catch(() => {});
 } else {
   loadVersion();

@@ -69,7 +69,7 @@ document.addEventListener('pointermove', (e) => {
 ['pointerup', 'pointercancel'].forEach((ev) => document.addEventListener(ev, () => { if (lp) { clearTimeout(lp.t); lp = null; } }));
 
 // ---------- Wischen auf Einträgen: Aktion pro Richtung in den Einstellungen ----------
-const SW_ACTIONS = { delete: 'Löschen', details: 'Details', check: 'Abhaken', open: 'Öffnen', edit: 'Bearbeiten', tolist: 'Zur Liste', none: 'Keine Aktion' };
+const SW_ACTIONS = { delete: T('Löschen'), details: T('Details'), check: T('Abhaken'), open: T('Öffnen'), edit: T('Bearbeiten'), tolist: T('Zur Liste'), none: T('Keine Aktion') };
 const SW_CHOICES = { item: ['delete', 'details', 'check', 'none'], meal: ['delete', 'open', 'edit', 'tolist', 'none'] };
 // left = von rechts nach links wischen
 const swipeCfg = (kind = 'item') => (kind === 'meal' ? { left: 'delete', right: 'tolist', ...(S.swipeM || {}) } : { left: 'delete', right: 'details', ...(S.swipe || {}) });
@@ -78,14 +78,14 @@ function deleteItemUndo(id) {
   if (idx < 0) return;
   const [it] = S.items.splice(idx, 1);
   ui.pending.delete(id); commit();
-  toast(`„${it.name}“ gelöscht`, () => { if (S.listId !== lid) return; S.items.splice(Math.min(idx, S.items.length), 0, it); commit(); });
+  toast(T('„{name}“ gelöscht', { name: it.name }), () => { if (S.listId !== lid) return; S.items.splice(Math.min(idx, S.items.length), 0, it); commit(); });
 }
 function deleteMealUndo(id) {
   const idx = meals().findIndex((m) => m.id === id);
   if (idx < 0) return;
   const [m] = S.meals.splice(idx, 1);
   commit();
-  toast(`„${m.name}“ gelöscht`, () => { S.meals.splice(Math.min(idx, S.meals.length), 0, m); commit(); });
+  toast(T('„{name}“ gelöscht', { name: m.name }), () => { S.meals.splice(Math.min(idx, S.meals.length), 0, m); commit(); });
 }
 function mealSwipeToList(id) {
   const m = mealById(id);
@@ -150,12 +150,12 @@ function swipePage() {
     const v = swipeCfg(kind)[side];
     return `<label class="srow"><span class="pl">${label}</span><select id="${id}" aria-label="${label}">${SW_CHOICES[kind].map((k) => `<option value="${k}"${k === v ? ' selected' : ''}>${SW_ACTIONS[k]}</option>`).join('')}</select></label>`;
   };
-  openPage('swipe', 'Wischen', `
-    <div class="label" style="margin:0 0 4px">Einträge in der Liste</div>
-    ${sel('swLeft', 'item', 'left', '← Nach links')}${sel('swRight', 'item', 'right', 'Nach rechts →')}
-    <div class="label" style="margin:12px 0 4px">Essen</div>
-    ${sel('swmLeft', 'meal', 'left', '← Nach links')}${sel('swmRight', 'meal', 'right', 'Nach rechts →')}
-    <p class="sheetnote">„Zur Liste“ setzt die Zutaten (ohne Basis) für die Standard-Personenzahl auf die aktive Liste. Gelöscht oder hinzugefügt kannst du es kurz danach rückgängig machen.</p>`, swipePage);
+  openPage('swipe', T('Wischen'), `
+    <div class="label" style="margin:0 0 4px">${T('Einträge in der Liste')}</div>
+    ${sel('swLeft', 'item', 'left', T('← Nach links'))}${sel('swRight', 'item', 'right', T('Nach rechts →'))}
+    <div class="label" style="margin:12px 0 4px">${T('Essen')}</div>
+    ${sel('swmLeft', 'meal', 'left', T('← Nach links'))}${sel('swmRight', 'meal', 'right', T('Nach rechts →'))}
+    <p class="sheetnote">${T('„Zur Liste“ setzt die Zutaten (ohne Basis) für die Standard-Personenzahl auf die aktive Liste. Gelöscht oder hinzugefügt kannst du es kurz danach rückgängig machen.')}</p>`, swipePage);
 }
 document.addEventListener('change', (e) => {
   const t = e.target;
@@ -186,10 +186,10 @@ function addFromInput() {
   input.value = '';
   commit();
   updateSugg();
-  if (r.dups.length) { flashItem(r.dups[0].id); toast(`${quotedNames(r.dups)} steht schon auf der Liste`); }
+  if (r.dups.length) { flashItem(r.dups[0].id); toast(T('{names} steht schon auf der Liste', { names: quotedNames(r.dups) })); }
   else funItemAdded(r.added);
 }
-const quotedNames = (items) => items.map((i) => `„${i.name}“`).join(', ');
+const quotedNames = (items) => items.map((i) => T('„{x}“', { x: i.name })).join(', ');
 // Text (getippt, gesprochen oder per Kurzbefehl/Siri) in eine Liste übernehmen, ohne Angabe in die offene. Speichert noch nicht.
 // Gibt null zurück, wenn nichts drinstand, sonst { added: [Namen], dups: [schon vorhandene Einträge] }.
 function addText(text, l = curList()) {
@@ -210,16 +210,16 @@ function addText(text, l = curList()) {
   });
   return { added, dups };
 }
-// Kurzbefehl / Siri: Die App wird mit ?neu=Milch und zwei Butter (optional &liste=Name) geöffnet.
+// Kurzbefehl / Siri: Die App wird mit ?neu=Milch und zwei Butter (optional &liste=Name) geöffnet (englisch: ?new=…&list=…).
 // Einträge kommen in diese Liste (sonst die zuletzt geöffnete). Danach wird die Adresse bereinigt,
 // damit Neuladen nichts doppelt hinzufügt.
 function addFromLink() {
   let p;
   try { p = new URLSearchParams(location.search); } catch (_) { return; }
-  const text = p.get('neu');
+  const text = p.get('neu') ?? p.get('new'); // englische Kurzbefehle: ?new=…&list=…
   if (text === null) return;
   try { history.replaceState(null, '', location.pathname + location.hash); } catch (_) { /* egal */ }
-  const want = (p.get('liste') || '').trim().toLowerCase();
+  const want = (p.get('liste') || p.get('list') || '').trim().toLowerCase();
   const l = want && S.lists.find((x) => x.name.trim().toLowerCase() === want);
   if (l) switchList(l.id);
   const r = addText(text);
@@ -227,8 +227,8 @@ function addFromLink() {
   commit();
   const where = S.lists.length > 1 ? ` (${curList().name})` : '';
   const had = quotedNames(r.dups);
-  if (!r.added.length) toast(`${had} steht schon auf der Liste${where}`);
-  else toast(`Hinzugefügt${where}: ${r.added.join(', ')}${had ? ` (${had} stand schon drauf)` : ''}`);
+  if (!r.added.length) toast(T('{names} steht schon auf der Liste', { names: had }) + where);
+  else toast(T('Hinzugefügt{where}: {names}', { where, names: r.added.join(', ') }) + (had ? T(' ({names} stand schon drauf)', { names: had }) : ''));
 }
 function flashItem(id) {
   const row = $(`.row[data-id="${id}"]`);
@@ -244,7 +244,7 @@ function updateSugg() {
   const qf = fold(q.trim());
   box.innerHTML = list.map((m) => {
     const hit = fold(m.name).startsWith(qf) ? `<b>${esc(m.name.slice(0, qf.length))}</b>${esc(m.name.slice(qf.length))}` : esc(m.name);
-    const tag = m.listed ? '<span class="sgtag on">auf der Liste</span>' : `<span class="sgtag">${esc(CAT_BY_ID[m.cat]?.name || 'Sonstiges')}</span>`;
+    const tag = m.listed ? `<span class="sgtag on">${T('auf der Liste')}</span>` : `<span class="sgtag">${esc(CAT_BY_ID[m.cat]?.name || T('Sonstiges'))}</span>`;
     return `<button type="button" class="sg" role="option" data-act="sugg" data-name="${esc(m.name)}" data-listed="${m.listed}"><span class="sgn">${hit}</span>${tag}</button>`;
   }).join('');
   box.hidden = false;
@@ -283,7 +283,7 @@ document.addEventListener('click', (e) => {
     case 'helppage': helpPage(); keep = true; break;
     case 'aboutpage': aboutPage(); keep = true; break;
     case 'introok': introDismiss(el.dataset.key); render(); break;
-    case 'introreset': setIntroSeen({}); toast('Die Einführung erscheint wieder in Liste, Essen und Geschäfte.'); keep = true; break;
+    case 'introreset': setIntroSeen({}); toast(T('Die Einführung erscheint wieder in Liste, Essen und Geschäfte.')); keep = true; break;
     case 'duepage': duePage(); keep = true; break;
     case 'duenew': dueNewSheet(); keep = true; break;
     case 'dueedit': ui.confirmDueDel = false; dueEditSheet(el.dataset.g, el.dataset.key); keep = true; break;
@@ -292,6 +292,7 @@ document.addEventListener('click', (e) => {
     case 'catimp': keep = catImport(el.dataset.mode); break;
     case 'vertap': funVersionTap(); keep = true; break; // Versionsnummer: 7× tippen = Statistik
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
+    case 'setlang': setLang(id); keep = true; break; // lädt die App in der gewählten Sprache neu (js/sprache.js)
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;
     case 'pageback': popPages(1); keep = true; break;
@@ -317,10 +318,10 @@ document.addEventListener('click', (e) => {
     }
     case 'newzonefor': {
       const s2 = curStore(), c = el.dataset.cat;
-      s2.zones.push({ id: uid(), name: CAT_BY_ID[c]?.name || 'Bereich', cats: [c], prods: {}, rect: null }); commit(); break;
+      s2.zones.push({ id: uid(), name: CAT_BY_ID[c]?.name || T('Bereich'), cats: [c], prods: {}, rect: null }); commit(); break;
     }
     case 'pickstore': S.storeId = id || null; commit(); if (offerStoreMove()) keep = true; break; // ggf. fragen, ob das Geschäft in die Gruppe der Liste umzieht
-    case 'movestore': { const st = S.stores.find((x) => x.id === id); if (st) { st.g = el.dataset.g; commit(); toast(`„${st.name}“ ist jetzt in „${gName(st.g)}“`); } break; }
+    case 'movestore': { const st = S.stores.find((x) => x.id === id); if (st) { st.g = el.dataset.g; commit(); toast(T('„{name}“ ist jetzt in „{group}“', { name: st.name, group: gName(st.g) })); } break; }
     case 'gostores': { const gh = wrapGhost(); ui.tab = 'stores'; ui.editStoreId = null; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
     case 'delitem': clearTimeout(ui.pending.get(id)); ui.pending.delete(id); S.items = S.items.filter((i) => i.id !== id); commit(); break;
     case 'closedlg': break;
@@ -404,7 +405,7 @@ document.addEventListener('click', (e) => {
     case 'togplan': S.showPlan = !S.showPlan; ui.drawing = false; ui.view = fitView(st); commit(); break;
     case 'clearbg': st.bg = null; ui.view = fitView(st); commit(); break;
     case 'addzone': {
-      const z = { id: uid(), name: 'Bereich ' + (st.zones.length + 1), cats: [], prods: {}, rect: null };
+      const z = { id: uid(), name: T('Bereich {n}', { n: st.zones.length + 1 }), cats: [], prods: {}, rect: null };
       st.zones.push(z); ui.selZone = z.id; ui.drawing = !!S.showPlan; commit(); break;
     }
     case 'selzone':

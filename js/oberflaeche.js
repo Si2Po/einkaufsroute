@@ -10,7 +10,7 @@ function openSheet(html) {
   const title = d.querySelector(':scope > .sheettitle'), head = document.createElement('div');
   head.className = 'sheethead';
   const isNew = !!d.querySelector('form[id^="new"]');
-  head.innerHTML = `<button type="button" class="sheetdone" data-act="closedlg" aria-label="${isNew ? 'Abbrechen' : 'Schließen'}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
+  head.innerHTML = `<button type="button" class="sheetdone" data-act="closedlg" aria-label="${T(isNew ? 'Abbrechen' : 'Schließen')}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>`;
   if (title) head.prepend(title); else head.prepend(Object.assign(document.createElement('div'), { className: 'sheettitle' }));
   d.prepend(head);
   if (!d.open) d.classList.remove('tall'); // neues Sheet startet in normaler Höhe
@@ -37,9 +37,9 @@ const pageTop = () => (pages.length ? pages[pages.length - 1].key : null);
 const PAGE_EASE = 'cubic-bezier(.25, .8, .25, 1)';
 const ICON_BACK = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const pageHead = (back, title, attrs = 'data-act="pageback"') => `<header class="pagehead">
-    <button type="button" class="pageback" ${attrs} aria-label="Zurück zu ${esc(back)}">${ICON_BACK}<span>${esc(back)}</span></button>
+    <button type="button" class="pageback" ${attrs} aria-label="${esc(T('Zurück zu {name}', { name: back }))}">${ICON_BACK}<span>${esc(back)}</span></button>
     <h2 class="pagetitle">${esc(title)}</h2></header>`;
-const rootTitle = () => ({ list: S.lists.length > 1 ? curList().name : 'Liste', meals: 'Essen', stores: 'Geschäfte' }[ui.tab] || 'Einstellungen');
+const rootTitle = () => ({ list: S.lists.length > 1 ? curList().name : T('Liste'), meals: T('Essen'), stores: T('Geschäfte') }[ui.tab] || T('Einstellungen'));
 function setPagesInert() {
   const n = pages.length;
   $('.wrap').inert = n > 0;
@@ -239,7 +239,7 @@ function toast(msg, undoFn) {
   t.textContent = msg;
   if (undoFn) {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'toastbtn'; b.textContent = 'Rückgängig';
+    b.type = 'button'; b.className = 'toastbtn'; b.textContent = T('Rückgängig');
     b.onclick = () => { clearTimeout(toastT); try { t.hidePopover(); } catch (e) {} undoFn(); };
     t.appendChild(b);
   }

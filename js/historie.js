@@ -81,19 +81,19 @@ function dueItems() {
 }
 function agoText(ms) {
   const d = Math.round(ms / DAY);
-  if (d < 1) return 'heute';
-  if (d === 1) return 'vor 1 Tag';
-  if (d < 14) return `vor ${d} Tagen`;
-  if (d < 60) return `vor ${Math.round(d / 7)} Wochen`;
-  return `vor ${Math.round(d / 30)} Monaten`;
+  if (d < 1) return T('heute');
+  if (d === 1) return T('vor 1 Tag');
+  if (d < 14) return T('vor {n} Tagen', { n: d });
+  if (d < 60) return T('vor {n} Wochen', { n: Math.round(d / 7) });
+  return T('vor {n} Monaten', { n: Math.round(d / 30) });
 }
 // Leiste über der Einkaufsliste: antippen = auf die Liste, × = nicht jetzt
 function dueBar() {
   if (ui.wiggle) return '';
   const due = dueItems();
   if (!due.length) return '';
-  return `<div class="duebar"><span class="duelabel">Vielleicht fällig</span><div class="duechips">${due.map(({ e, since }) =>
-    `<span class="duechip"><button type="button" class="dueadd" data-act="dueadd" data-key="${esc(e.id)}"><span>${esc(e.name)}</span><small>${agoText(since)}</small></button><button type="button" class="duex" data-act="duesnooze" data-key="${esc(e.id)}" aria-label="${esc(e.name)}: nicht jetzt"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button></span>`).join('')}</div></div>`;
+  return `<div class="duebar"><span class="duelabel">${T('Vielleicht fällig')}</span><div class="duechips">${due.map(({ e, since }) =>
+    `<span class="duechip"><button type="button" class="dueadd" data-act="dueadd" data-key="${esc(e.id)}"><span>${esc(e.name)}</span><small>${agoText(since)}</small></button><button type="button" class="duex" data-act="duesnooze" data-key="${esc(e.id)}" aria-label="${esc(T('{name}: nicht jetzt', { name: e.name }))}"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button></span>`).join('')}</div></div>`;
 }
 document.addEventListener('click', (e) => {
   const el = e.target.closest?.('[data-act="dueadd"], [data-act="duesnooze"]');
@@ -131,12 +131,12 @@ if (IS_LOCAL) {
 }
 
 // ---------- Einstellungen → Vorschläge: Schalter, erkannte Produkte, Rhythmus bearbeiten, eigene Vorschläge ----------
-const UNITS = { d: ['Tage', DAY], w: ['Wochen', 7 * DAY], m: ['Monate', 30 * DAY] };
+const UNITS = { d: [T('Tage'), DAY], w: [T('Wochen'), 7 * DAY], m: [T('Monate'), 30 * DAY] };
 function rhythmText(ms) {
   const d = Math.round(ms / DAY);
-  if (d < 14) return `alle ${d} ${d === 1 ? 'Tag' : 'Tage'}`;
-  if (d < 60) return `alle ${Math.round(d / 7)} Wochen`;
-  return `alle ${Math.round(d / 30)} ${Math.round(d / 30) === 1 ? 'Monat' : 'Monate'}`;
+  if (d < 14) return T(d === 1 ? 'alle {n} Tag' : 'alle {n} Tage', { n: d });
+  if (d < 60) return T('alle {n} Wochen', { n: Math.round(d / 7) });
+  return T(Math.round(d / 30) === 1 ? 'alle {n} Monat' : 'alle {n} Monate', { n: Math.round(d / 30) });
 }
 // Rhythmus in Zahl + Einheit zerlegen (für die Eingabe)
 function rhythmParts(ms) {
@@ -151,20 +151,20 @@ function knownRhythms() {
   for (const [g, h] of Object.entries(S.hist || {})) {
     for (const e of Object.values(h)) if (rhythmOf(e) >= DAY) out.push({ g, e });
   }
-  return out.sort((a, b) => a.e.name.localeCompare(b.e.name, 'de'));
+  return out.sort((a, b) => a.e.name.localeCompare(b.e.name, LOCALE));
 }
 const learningCount = () => Object.values(S.hist || {}).reduce((n, h) => n + Object.values(h).filter((e) => rhythmOf(e) < DAY).length, 0);
-const dueSub = () => (dueOn() ? `${knownRhythms().length} erkannt` : 'Aus');
+const dueSub = () => (dueOn() ? T('{n} erkannt', { n: knownRhythms().length }) : T('Aus'));
 
 function duePage() {
-  const rows = knownRhythms().map(({ g, e }) => `<button type="button" class="sheetbtn" data-act="dueedit" data-g="${esc(g)}" data-key="${esc(e.id)}"><span>${esc(e.name)}</span><small>${g ? groupTag(g) : ''}${rhythmText(rhythmOf(e))}${e.every ? ' (von dir)' : ''} ›</small></button>`).join('');
+  const rows = knownRhythms().map(({ g, e }) => `<button type="button" class="sheetbtn" data-act="dueedit" data-g="${esc(g)}" data-key="${esc(e.id)}"><span>${esc(e.name)}</span><small>${g ? groupTag(g) : ''}${rhythmText(rhythmOf(e))}${e.every ? ' ' + T('(von dir)') : ''} ›</small></button>`).join('');
   const learning = learningCount();
-  openPage('due', 'Vorschläge', `
-    <div class="group"><label class="sheetbtn swrow"><span>„Vielleicht fällig“ anzeigen<small>Über der Einkaufsliste. Gilt nur für dieses Gerät.</small></span><input type="checkbox" switch id="dueSwitch"${dueOn() ? ' checked' : ''}></label></div>
-    <div class="sheettitle" style="margin-top:14px">Erkannt</div>
-    ${rows ? `<div class="group">${rows}</div>` : '<p class="sheetnote" style="margin:0 4px">Noch nichts. Ab drei Käufen eines Produkts erkennt die App den Rhythmus von selbst.</p>'}
-    ${learning ? `<p class="sheetnote" style="margin:6px 4px 0">${learning} weitere ${learning === 1 ? 'Produkt wird' : 'Produkte werden'} noch gelernt.</p>` : ''}
-    <button type="button" class="btn ghost" style="margin-top:12px" data-act="duenew">+ Eigener Vorschlag</button>`, duePage);
+  openPage('due', T('Vorschläge'), `
+    <div class="group"><label class="sheetbtn swrow"><span>${T('„Vielleicht fällig“ anzeigen')}<small>${T('Über der Einkaufsliste. Gilt nur für dieses Gerät.')}</small></span><input type="checkbox" switch id="dueSwitch"${dueOn() ? ' checked' : ''}></label></div>
+    <div class="sheettitle" style="margin-top:14px">${T('Erkannt')}</div>
+    ${rows ? `<div class="group">${rows}</div>` : `<p class="sheetnote" style="margin:0 4px">${T('Noch nichts. Ab drei Käufen eines Produkts erkennt die App den Rhythmus von selbst.')}</p>`}
+    ${learning ? `<p class="sheetnote" style="margin:6px 4px 0">${T(learning === 1 ? '{n} weiteres Produkt wird noch gelernt.' : '{n} weitere Produkte werden noch gelernt.', { n: learning })}</p>` : ''}
+    <button type="button" class="btn ghost" style="margin-top:12px" data-act="duenew">${T('+ Eigener Vorschlag')}</button>`, duePage);
 }
 // Rhythmus eines Produkts bearbeiten: Zahl + Einheit, „automatisch“ (wenn genug Käufe), entfernen
 function dueEditSheet(g, key) {
@@ -174,22 +174,22 @@ function dueEditSheet(g, key) {
   const auto = e.t?.length >= 3 ? usualGap(e.t) : 0;
   openSheet(`<div class="sheettitle">${esc(e.name)}</div>
     <form id="dueEditForm" data-g="${esc(g)}" data-key="${esc(key)}" autocomplete="off">
-      <label class="srow"><span class="pl">Alle</span><input id="dueNum" type="number" inputmode="numeric" min="1" max="365" value="${num}" class="duenum" aria-label="Anzahl"><select id="dueUnit" aria-label="Einheit">${Object.entries(UNITS).map(([k, [name]]) => `<option value="${k}"${k === unit ? ' selected' : ''}>${name}</option>`).join('')}</select></label>
-      <p class="sheetnote" style="margin:6px 4px">${e.t?.length ? `Zuletzt gekauft ${agoText(Date.now() - lastTime(e))}, insgesamt ${e.t.length}×.` : 'Noch nie abgehakt, zählt ab dem Anlegen.'}${auto ? ` Aus den Käufen erkannt: ${rhythmText(auto)}.` : ''}</p>
+      <label class="srow"><span class="pl">${T('Alle')}</span><input id="dueNum" type="number" inputmode="numeric" min="1" max="365" value="${num}" class="duenum" aria-label="${T('Anzahl')}"><select id="dueUnit" aria-label="${T('Einheit')}">${Object.entries(UNITS).map(([k, [name]]) => `<option value="${k}"${k === unit ? ' selected' : ''}>${name}</option>`).join('')}</select></label>
+      <p class="sheetnote" style="margin:6px 4px">${e.t?.length ? T('Zuletzt gekauft {ago}, insgesamt {n}×.', { ago: agoText(Date.now() - lastTime(e)), n: e.t.length }) : T('Noch nie abgehakt, zählt ab dem Anlegen.')}${auto ? ' ' + T('Aus den Käufen erkannt: {r}.', { r: rhythmText(auto) }) : ''}</p>
       <div class="actions" style="margin-top:8px">
-        ${e.every && auto ? '<button type="button" class="btn ghost" data-act="dueauto">Automatisch</button>' : ''}
-        <button type="button" class="btn danger" data-act="duedel">${ui.confirmDueDel ? 'Wirklich entfernen?' : 'Entfernen'}</button>
+        ${e.every && auto ? `<button type="button" class="btn ghost" data-act="dueauto">${T('Automatisch')}</button>` : ''}
+        <button type="button" class="btn danger" data-act="duedel">${T(ui.confirmDueDel ? 'Wirklich entfernen?' : 'Entfernen')}</button>
       </div>
     </form>`);
 }
 // Eigenen Vorschlag anlegen: Name, Rhythmus, Gruppe
 function dueNewSheet() {
-  openSheet(`<div class="sheettitle">Eigener Vorschlag</div>
+  openSheet(`<div class="sheettitle">${T('Eigener Vorschlag')}</div>
     <form id="dueNewForm" autocomplete="off">
-      <input id="dueNewName" autofocus class="notein" placeholder="Was, z. B. Klopapier" aria-label="Produkt" required>
-      <label class="srow"><span class="pl">Alle</span><input id="dueNewNum" type="number" inputmode="numeric" min="1" max="365" value="2" class="duenum" aria-label="Anzahl"><select id="dueNewUnit" aria-label="Einheit">${Object.entries(UNITS).map(([k, [name]]) => `<option value="${k}"${k === 'w' ? ' selected' : ''}>${name}</option>`).join('')}</select></label>
+      <input id="dueNewName" autofocus class="notein" placeholder="${T('Was, z. B. Klopapier')}" aria-label="${T('Produkt')}" required>
+      <label class="srow"><span class="pl">${T('Alle')}</span><input id="dueNewNum" type="number" inputmode="numeric" min="1" max="365" value="2" class="duenum" aria-label="${T('Anzahl')}"><select id="dueNewUnit" aria-label="${T('Einheit')}">${Object.entries(UNITS).map(([k, [name]]) => `<option value="${k}"${k === 'w' ? ' selected' : ''}>${name}</option>`).join('')}</select></label>
       ${groupSelect('dueNewGroup', curList()?.g || defaultGroup())}
-      <button type="submit" class="btn">Anlegen</button>
+      <button type="submit" class="btn">${T('Anlegen')}</button>
     </form>`);
 }
 const readRhythm = (numId, unitId) => Math.max(1, Math.min(365, parseInt($(numId)?.value, 10) || 1)) * UNITS[$(unitId)?.value || 'd'][1];
@@ -212,7 +212,7 @@ document.addEventListener('submit', (e) => {
   S.hist = S.hist || {}; const h = (S.hist[g] = S.hist[g] || {});
   h[key] = { ...(h[key] || { id: key, t: [], since: Date.now() }), name, every: readRhythm('#dueNewNum', '#dueNewUnit') };
   closeSheet(); save(); duePage(); render();
-  toast(`„${name}“: ${rhythmText(h[key].every)}`);
+  toast(`${T('„{x}“', { x: name })}: ${rhythmText(h[key].every)}`);
 });
 // Knöpfe im Rhythmus-Sheet (Rückgabe true = Sheet bleibt offen)
 function dueAction(act) {
@@ -224,7 +224,7 @@ function dueAction(act) {
     ui.confirmDueDel = false;
     delete S.hist[g][key];
     save(); duePage(); render();
-    toast(`„${ent.name}“ entfernt`);
+    toast(T('„{name}“ entfernt', { name: ent.name }));
   }
   return false;
 }

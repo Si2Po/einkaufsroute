@@ -13,7 +13,7 @@ const defaultGroup = () => {
 };
 const groupOptions = (cur) => sync.groups.map((x) => `<option value="${x.id}"${x.id === cur ? ' selected' : ''}>${esc(x.name)}</option>`).join('');
 // Gruppen-Auswahl als beschriftete Zeile (Listen, Geschäfte, Stichwörter)
-function groupSelect(id, cur, label = 'Gruppe', attrs = '') {
+function groupSelect(id, cur, label = T('Gruppe'), attrs = '') {
   if (!groupsOn()) return '';
   return `<label class="srow"><span class="pl gpl">${ICON_GROUP}${label}</span><select id="${id}" aria-label="${label}"${attrs}>${groupOptions(cur)}</select></label>`;
 }
@@ -24,7 +24,7 @@ const groupTag = (g, sep = ' · ') => (groupsOn() && g ? `<span class="gtag">${I
 // Unauffällige Gruppen-Auswahl (Essen): nur Symbol + Auswahl, ohne Kasten
 function groupLine(id, cur, attrs = '') {
   if (!groupsOn()) return '';
-  return `<label class="gline">${ICON_GROUP}<select id="${id}" aria-label="Gruppe"${attrs}>${groupOptions(cur)}</select></label>`;
+  return `<label class="gline">${ICON_GROUP}<select id="${id}" aria-label="${T('Gruppe')}"${attrs}>${groupOptions(cur)}</select></label>`;
 }
 // Gruppe wechseln (Liste, Geschäft, Essen, Stichwörter)
 document.addEventListener('change', (e) => {
@@ -32,23 +32,23 @@ document.addEventListener('change', (e) => {
   if (!v) return;
   if (t.id === 'leGroup') {
     const l = S.lists.find((x) => x.id === t.dataset.id);
-    if (l && l.g !== v) { l.g = v; S.lastGroup = v; commit(); toast(`„${l.name}“ ist jetzt in „${gName(v)}“`); }
+    if (l && l.g !== v) { l.g = v; S.lastGroup = v; commit(); toast(T('„{name}“ ist jetzt in „{group}“', { name: l.name, group: gName(v) })); }
   } else if (t.id === 'stGroup') {
     const st = S.stores.find((x) => x.id === t.dataset.id);
-    if (st && st.g !== v) { st.g = v; commit(); closeSheet(); toast(`„${st.name}“ ist jetzt in „${gName(v)}“`); }
+    if (st && st.g !== v) { st.g = v; commit(); closeSheet(); toast(T('„{name}“ ist jetzt in „{group}“', { name: st.name, group: gName(v) })); }
   } else if (t.id === 'meGroup') {
     const m = mealById(t.dataset.id);
-    if (m && m.g !== v) { m.g = v; S.lastGroup = v; save(); render(); toast(`„${m.name}“ ist jetzt in „${gName(v)}“`); }
+    if (m && m.g !== v) { m.g = v; S.lastGroup = v; save(); render(); toast(T('„{name}“ ist jetzt in „{group}“', { name: m.name, group: gName(v) })); }
   } else if (t.id === 'catGroupSel') {
-    if (typeof setCatGroup === 'function') { setCatGroup(v); commit(); catListPage(); toast(`Kategorien und Stichwörter von „${gName(v)}“`); }
+    if (typeof setCatGroup === 'function') { setCatGroup(v); commit(); catListPage(); toast(T('Kategorien und Stichwörter von „{name}“', { name: gName(v) })); }
   }
 });
 // Geschäft für eine Liste gewählt, das in einer anderen Gruppe liegt: einmal fragen, ob es mitkommt
 function offerStoreMove() {
   const l = curList(), st = curStore();
   if (!groupsOn() || !l || !st || !l.g || !st.g || l.g === st.g) return false;
-  openSheet(`<div class="sheettitle">Geschäft verschieben?</div>
-    <p class="sheetnote" style="margin:0 4px 10px">„${esc(st.name)}“ liegt in „${esc(gName(st.g))}“. Damit alle in „${esc(gName(l.g))}“ die Liste danach sortieren können, kann das Geschäft in diese Gruppe umziehen. Du siehst es danach weiterhin.</p>
-    <div class="actions"><button type="button" class="btn ghost" data-act="closedlg">Nicht jetzt</button><button type="button" class="btn" style="flex:1" data-act="movestore" data-id="${st.id}" data-g="${l.g}">In „${esc(gName(l.g))}“ verschieben</button></div>`);
+  openSheet(`<div class="sheettitle">${T('Geschäft verschieben?')}</div>
+    <p class="sheetnote" style="margin:0 4px 10px">${T('„{store}“ liegt in „{from}“. Damit alle in „{to}“ die Liste danach sortieren können, kann das Geschäft in diese Gruppe umziehen. Du siehst es danach weiterhin.', { store: esc(st.name), from: esc(gName(st.g)), to: esc(gName(l.g)) })}</p>
+    <div class="actions"><button type="button" class="btn ghost" data-act="closedlg">${T('Nicht jetzt')}</button><button type="button" class="btn" style="flex:1" data-act="movestore" data-id="${st.id}" data-g="${l.g}">${T('In „{name}“ verschieben', { name: esc(gName(l.g)) })}</button></div>`);
   return true;
 }

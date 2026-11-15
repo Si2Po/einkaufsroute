@@ -11,7 +11,7 @@
   S.recent = S.recent || [];
   S.meals = S.meals || [];
   S.customTags = S.customTags || [];
-  if (!S.lists || !S.lists.length) { S.lists = [{ id: uid(), name: 'Einkaufsliste', items: S.items || [] }]; S.listId = S.lists[0].id; }
+  if (!S.lists || !S.lists.length) { S.lists = [{ id: uid(), name: T('Einkaufsliste'), items: S.items || [] }]; S.listId = S.lists[0].id; }
   if (!curList()) S.listId = S.lists[0].id;
   S.items = curList().items || [];
   if (curList().storeId !== undefined && S.stores.some((x) => x.id === curList().storeId)) S.storeId = curList().storeId;

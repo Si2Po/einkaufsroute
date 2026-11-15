@@ -29,11 +29,11 @@ document.addEventListener('keydown', (e) => {
 // Ganz oben weiter nach unten ziehen: in der Liste = Abgleich mit dem Haushalt, in den Einstellungen = nach neuer Version suchen.
 async function checkUpdate() {
   const reg = await navigator.serviceWorker?.getRegistration?.();
-  if (!reg) { toast('Hier gibt es keine Updates (lokale Version)'); return; }
-  try { await reg.update(); } catch (_) { toast('Keine Verbindung – später nochmal versuchen'); return; }
+  if (!reg) { toast(T('Hier gibt es keine Updates (lokale Version)')); return; }
+  try { await reg.update(); } catch (_) { toast(T('Keine Verbindung – später nochmal versuchen')); return; }
   const nw = reg.installing || reg.waiting;
-  if (!nw) { toast(`Du hast die neueste Version (${appVersion})`); return; }
-  toast('Neue Version gefunden – wird geladen …');
+  if (!nw) { toast(T('Du hast die neueste Version ({v})', { v: appVersion })); return; }
+  toast(T('Neue Version gefunden – wird geladen …'));
   // Selbst neu laden, sobald die neue Version bereit ist. Auf dem iPhone (Home-Bildschirm) kommt die Meldung
   // „controllerchange“ nicht zuverlässig an; ohne das müsste man die App schließen und neu öffnen.
   let reloaded = false;
@@ -43,10 +43,10 @@ async function checkUpdate() {
   setTimeout(reload, 10000); // Sicherheitsnetz, falls auch diese Meldung ausbleibt
 }
 async function syncNow() {
-  if (typeof syncRun !== 'function' || !sync.sess) { toast('Nicht angemeldet – nichts abzugleichen'); return; }
+  if (typeof syncRun !== 'function' || !sync.sess) { toast(T('Nicht angemeldet – nichts abzugleichen')); return; }
   sync.dirty = true; sync.ver++;
   await syncRun();
-  toast(sync.status === 'ok' ? 'Abgeglichen' : (sync.err || 'Abgleich später'));
+  toast(sync.status === 'ok' ? T('Abgeglichen') : (sync.err || T('Abgleich später')));
 }
 (function pullToRefresh() {
   const PULL = 70; // so weit ziehen, bis es auslöst
@@ -88,16 +88,16 @@ async function syncNow() {
 // ---------- Darstellung: Automatisch / Hell / Dunkel ----------
 // Gilt nur für dieses Gerät (localStorage), wird nicht mit dem Haushalt abgeglichen. index.html setzt sie schon beim Laden.
 const THEME_BG = { light: '#F2F4F3', dark: '#0D110F' }; // = --bg in style.css (Farbe der Statusleiste)
-const THEME_LABEL = { auto: 'Automatisch (wie das Gerät)', light: 'Hell', dark: 'Dunkel' };
+const THEME_LABEL = { auto: T('Automatisch (wie das Gerät)'), light: T('Hell'), dark: T('Dunkel') };
 function themePref() { try { return localStorage.getItem('ek_theme') || 'auto'; } catch (_) { return 'auto'; } }
 // Akzentfarben: Schlüssel → [Name, Farbe für die Auswahl]. Die eigentlichen Werte (hell/dunkel) stehen in style.css.
-const ACCENTS = { gruen: ['Grün', '#0E7A55'], blau: ['Blau', '#1F6BCF'], lila: ['Lila', '#7A4FD0'], orange: ['Orange', '#C25A00'], pink: ['Pink', '#C2306B'] };
+const ACCENTS = { gruen: [T('Grün'), '#0E7A55'], blau: [T('Blau'), '#1F6BCF'], lila: [T('Lila'), '#7A4FD0'], orange: ['Orange', '#C25A00'], pink: ['Pink', '#C2306B'] };
 const ICON_CHECK = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function customAccentStored() { try { const c = JSON.parse(localStorage.getItem('ek_accent_c')); return c && c.l ? c : null; } catch (_) { return null; } }
 function accentPref() {
   try { const a = localStorage.getItem('ek_accent'); return ACCENTS[a] || (a === 'custom' && customAccentStored()) ? a : 'gruen'; } catch (_) { return 'gruen'; }
 }
-const accentName = () => (accentPref() === 'custom' ? 'Eigene Farbe' : ACCENTS[accentPref()][0]);
+const accentName = () => (accentPref() === 'custom' ? T('Eigene Farbe') : ACCENTS[accentPref()][0]);
 // Eigene Farbe lesbar machen: im hellen Modus so weit abdunkeln, im dunklen so weit aufhellen, bis der Kontrast reicht (4,5 : 1)
 const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const rgbHex = (c) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
@@ -123,17 +123,22 @@ function applyTheme() {
 function themePage() {
   const p = themePref();
   const opt = (v, label, sub) => `<button type="button" class="sheetbtn${p === v ? ' on' : ''}" data-act="settheme" data-id="${v}"><span>${label}${sub ? ` <small>${sub}</small>` : ''}</span></button>`;
+  const lp = langPref();
+  const lopt = (v, label, sub) => `<button type="button" class="sheetbtn${lp === v ? ' on' : ''}" data-act="setlang" data-id="${v}"><span>${label}${sub ? ` <small>${sub}</small>` : ''}</span></button>`;
   const a = accentPref(), cust = customAccentStored();
   const sw = Object.entries(ACCENTS).map(([k, [name, c]]) => `<button type="button" class="swatch" style="--c:${c}" data-act="setaccent" data-id="${k}" aria-pressed="${a === k}" aria-label="${name}">${a === k ? ICON_CHECK : ''}</button>`).join('')
-    + `<label class="swatch custom${a === 'custom' ? ' on' : ''}" style="--c:${cust?.hex || '#888'}" aria-label="Eigene Farbe wählen">
+    + `<label class="swatch custom${a === 'custom' ? ' on' : ''}" style="--c:${cust?.hex || '#888'}" aria-label="${T('Eigene Farbe wählen')}">
         ${a === 'custom' ? `<span class="dot" style="background:${cust.hex}">${ICON_CHECK}</span>` : ''}
         <input type="color" id="accentPicker" value="${cust?.hex || '#0E7A55'}"></label>`;
-  openPage('theme', 'Darstellung', `<div class="sheettitle">Hell oder dunkel</div>
-    <div class="group">${opt('auto', 'Automatisch', 'wie das Gerät')}${opt('light', 'Hell')}${opt('dark', 'Dunkel')}</div>
-    <div class="sheettitle" style="margin-top:12px">Akzentfarbe <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
+  openPage('theme', T('Darstellung und Sprache'), `<div class="sheettitle">${T('Hell oder dunkel')}</div>
+    <div class="group">${opt('auto', T('Automatisch'), T('wie das Gerät'))}${opt('light', T('Hell'))}${opt('dark', T('Dunkel'))}</div>
+    <div class="sheettitle" style="margin-top:12px">${T('Akzentfarbe')} <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
     <div class="group swatches">${sw}</div>
-    <div class="sheettitle" style="margin-top:12px">Glas</div>
-    <div class="group glassrow"><span aria-hidden="true">Deckend</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="Glas-Stärke"><span aria-hidden="true">Glas</span></div>
+    <div class="sheettitle" style="margin-top:12px">${T('Glas')}</div>
+    <div class="group glassrow"><span aria-hidden="true">${T('Deckend')}</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="${T('Glas-Stärke')}"><span aria-hidden="true">${T('Glas')}</span></div>
+    <div class="sheettitle" style="margin-top:12px">Sprache · Language</div>
+    <div class="group">${lopt('auto', T('Automatisch'), T('wie das Gerät'))}${lopt('de', 'Deutsch')}${lopt('en', 'English')}</div>
+    <p class="sheetnote">${T('Gilt nur für dieses Gerät. Deine Kategorien und Stichwörter bleiben, wie sie sind.')}</p>
     `, themePage);
 }
 // Eigene Farbe: sofort anwenden und nur die Farbfelder auf der Seite anpassen. Die Seite wird dabei NICHT neu aufgebaut,

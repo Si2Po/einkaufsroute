@@ -16,7 +16,9 @@
 
 // ---------- Kategorien und Stichwörter ----------
 // Die Reihenfolge hier ist die Standardreihenfolge, wenn kein Laden gewählt ist.
-const DEFAULT_CATS = [
+// Es gibt sie auf Deutsch und Englisch (gleiche Kennungen). Welche gilt, entscheidet die Sprache der App (js/sprache.js):
+// neue Nutzer starten damit, „Auf Standard zurücksetzen“ nimmt sie auch. Vorhandene Kategorien der Nutzer bleiben, wie sie sind.
+const DEFAULT_CATS_DE = [
   // Obst & Gemüse in der Form, in der man es meist kauft (Mehrzahl), damit die Vorschläge beim Tippen passen.
   // Die Einzahl wird trotzdem erkannt (siehe kwStem). „äpfel“ steht vor „apfel“, damit „Äpfel“ vorgeschlagen wird.
   { id: 'obst', name: 'Obst & Gemüse', kw: ['äpfel', 'apfel', 'bananen', 'birnen', 'tomaten', 'gurke', 'paprika', 'zwiebeln', 'knoblauch', 'salat', 'eisberg', 'karotten', 'möhren', 'kartoffeln', 'zitronen', 'orangen', 'mandarinen', 'beere', 'erdbeer', 'himbeer', 'erdbeeren', 'himbeeren', 'heidelbeeren', 'trauben', 'brokkoli', 'blumenkohl', 'zucchini', 'spinat', 'pilze', 'champignons', 'avocados', 'lauch', 'kohl', 'ingwer', 'petersilie', 'schnittlauch', 'gemüse', 'obst', 'mango', 'ananas', 'melone', 'pfirsiche', 'radieschen', 'sellerie', 'aubergine', 'rucola', 'kürbis', 'süßkartoffeln', 'frühlingszwiebeln', 'limetten'] },
@@ -31,6 +33,21 @@ const DEFAULT_CATS = [
   { id: 'drogerie', name: 'Drogerie & Haushalt', kw: ['zahnpasta', 'zahnbürste', 'shampoo', 'duschgel', 'seife', 'deo', 'toilettenpapier', 'klopapier', 'taschentücher', 'spülmittel', 'waschmittel', 'müllbeutel', 'müllsack', 'küchenrolle', 'tampons', 'spülmaschinentabs', 'wattepads', 'rasierer', 'batterien', 'glühbirne', 'schwamm', 'backpapier', 'alufolie', 'frischhaltefolie', 'kerze'] },
   { id: 'sonst', name: 'Sonstiges', kw: [] }
 ];
+// Englisch: Mehrzahl, wo man es so kauft („apples“); die Einzahl wird trotzdem erkannt (siehe kwStem).
+const DEFAULT_CATS_EN = [
+  { id: 'obst', name: 'Fruit & Vegetables', kw: ['apples', 'bananas', 'pears', 'tomatoes', 'cucumber', 'peppers', 'bell pepper', 'onions', 'garlic', 'lettuce', 'salad', 'carrots', 'potatoes', 'lemons', 'oranges', 'tangerines', 'berries', 'strawberries', 'raspberries', 'blueberries', 'grapes', 'broccoli', 'cauliflower', 'zucchini', 'spinach', 'mushrooms', 'avocados', 'leek', 'cabbage', 'ginger', 'parsley', 'chives', 'basil', 'herbs', 'vegetables', 'veggies', 'fruit', 'mango', 'pineapple', 'melon', 'watermelon', 'peaches', 'cherries', 'plums', 'kiwi', 'radishes', 'celery', 'eggplant', 'arugula', 'kale', 'pumpkin', 'butternut', 'sweet potatoes', 'spring onions', 'limes'] },
+  { id: 'brot', name: 'Bread & Bakery', kw: ['bread', 'rolls', 'buns', 'toast', 'baguette', 'croissants', 'cake', 'pretzels', 'tortillas', 'wraps', 'crispbread', 'flatbread', 'bagels', 'muffins', 'pita', 'donuts'] },
+  { id: 'milch', name: 'Dairy & Eggs', kw: ['milk', 'oat milk', 'soy milk', 'almond milk', 'cheese', 'yogurt', 'yoghurt', 'quark', 'butter', 'cream', 'eggs', 'mozzarella', 'parmesan', 'cheddar', 'skyr', 'cream cheese', 'cottage cheese', 'margarine', 'sour cream', 'crème fraîche', 'creme fraiche', 'gouda', 'feta', 'halloumi', 'tofu', 'pudding', 'kefir'] },
+  { id: 'fleisch', name: 'Meat & Fish', kw: ['meat', 'chicken', 'ground beef', 'minced meat', 'mince', 'sausages', 'ham', 'salami', 'bacon', 'salmon', 'fish', 'shrimp', 'prawns', 'steak', 'schnitzel', 'bratwurst', 'hot dogs', 'turkey', 'beef', 'pork', 'lamb', 'cold cuts'] },
+  { id: 'konserven', name: 'Pasta, Rice & Cans', kw: ['pasta', 'noodles', 'spaghetti', 'penne', 'fusilli', 'rice', 'canned', 'tinned', 'tomato paste', 'tomato puree', 'passata', 'crushed tomatoes', 'lentils', 'beans', 'chickpeas', 'oats', 'oatmeal', 'muesli', 'granola', 'cereal', 'couscous', 'oil', 'olive oil', 'vinegar', 'sauce', 'ketchup', 'mustard', 'mayo', 'mayonnaise', 'tuna', 'corn', 'stock', 'broth', 'cornflakes', 'jam', 'honey', 'nutella', 'peanut butter', 'pesto', 'coconut milk', 'soup'] },
+  { id: 'gewuerze', name: 'Baking & Spices', kw: ['salt', 'pepper', 'black pepper', 'spice', 'cinnamon', 'curry', 'paprika', 'oregano', 'baking powder', 'baking soda', 'vanilla', 'yeast', 'nutmeg', 'caraway', 'cumin', 'turmeric', 'flour', 'sugar', 'powdered sugar', 'icing sugar', 'cornstarch', 'chili', 'chilli'] },
+  { id: 'snacks', name: 'Sweets & Snacks', kw: ['chocolate', 'chips', 'crisps', 'cookies', 'biscuits', 'gummy', 'candy', 'sweets', 'nuts', 'peanuts', 'granola bars', 'protein bars', 'popcorn', 'pretzel sticks', 'licorice', 'crackers'] },
+  { id: 'getraenke', name: 'Drinks', kw: ['water', 'sparkling water', 'juice', 'cola', 'coke', 'beer', 'wine', 'lemonade', 'soda', 'tea', 'coffee', 'fanta', 'sprite', 'mate', 'energy drink', 'ginger ale', 'ginger beer', 'champagne', 'prosecco', 'gin', 'vodka', 'whisky', 'cocoa', 'hot chocolate', 'smoothie'] },
+  { id: 'tk', name: 'Frozen', kw: ['frozen', 'pizza', 'ice cream', 'ice cubes', 'fries', 'fish fingers', 'fish sticks', 'popsicles'] },
+  { id: 'drogerie', name: 'Household & Personal Care', kw: ['toothpaste', 'toothbrush', 'shampoo', 'conditioner', 'shower gel', 'body wash', 'soap', 'deodorant', 'toilet paper', 'tissues', 'dish soap', 'washing-up liquid', 'detergent', 'laundry', 'trash bags', 'garbage bags', 'bin bags', 'paper towels', 'kitchen roll', 'tampons', 'pads', 'diapers', 'dishwasher tabs', 'cotton pads', 'razor', 'shaving cream', 'sunscreen', 'hand cream', 'batteries', 'light bulb', 'sponge', 'baking paper', 'parchment paper', 'aluminum foil', 'tin foil', 'cling film', 'plastic wrap', 'candles'] },
+  { id: 'sonst', name: 'Other', kw: [] }
+];
+const DEFAULT_CATS = LANG === 'en' ? DEFAULT_CATS_EN : DEFAULT_CATS_DE;
 // Die Kategorien liegen im Zustand (S.cats) und sind änderbar. DEFAULT_CATS sind die Werkseinstellungen.
 const cloneCat = (c) => ({ id: c.id, name: c.name, kw: [...c.kw] });
 let CATS = DEFAULT_CATS.map(cloneCat), CAT_BY_ID = {}, CAT_INDEX = {};
@@ -43,10 +60,16 @@ const HUES = [150, 25, 205, 350, 45, 270, 175, 310];
 
 const normKey = (n) => n.toLowerCase().replace(/\s+/g, ' ').trim();
 // Schlüssel zum Erkennen von Doppelten: Einzahl und Mehrzahl zählen gleich (Tomate = Tomaten, Apfel = Äpfel, Nudel = Nudeln)
-const STEM_SPECIAL = { eier: 'ei' };
+// Englisch (nur wenn die App auf Englisch läuft, damit sich für deutsche Daten nichts ändert): Apples = Apple, Berries = Berry.
+const STEM_SPECIAL = { eier: 'ei', eggs: 'egg' };
 function stemWord(w) {
   if (STEM_SPECIAL[w]) return STEM_SPECIAL[w];
-  if (w.length >= 5) { if (w.endsWith('en')) return w.slice(0, -2); if (/[ne]$/.test(w)) return w.slice(0, -1); }
+  if (LANG === 'en' && w.length >= 5 && w.endsWith('s') && !w.endsWith('ss')) w = w.slice(0, -1); // Mehrzahl-s weg, dann weiter wie sonst
+  if (w.length >= 5) {
+    if (w.endsWith('en')) return w.slice(0, -2);
+    if (/[ne]$/.test(w)) return w.slice(0, -1);
+    if (LANG === 'en' && w.endsWith('y')) return w.slice(0, -1) + 'i'; // berry = berries (berrie -> berri)
+  }
   return w;
 }
 const dupKey = (n) => fold(normKey(n)).split(/[\s\-]+/).map(stemWord).join(' ');
@@ -57,7 +80,8 @@ function guessCat(name) { return keywordGuess(name); }
 
 // Wortstamm eines Stichworts für die Erkennung: Mehrzahl-Endungen fallen weg, damit „tomaten“ auch „Tomate“ erkennt,
 // „zwiebeln“ auch „Zwiebel“, „pilze“ auch „Pilz“. Kurze Wörter (bis 4 Buchstaben) bleiben, wie sie sind.
-const kwStem = (k) => (k.length >= 5 ? k.replace(/(en|n|e|s)$/, '') : k);
+// Englisch: „berries“ erkennt auch „berry“, „tomatoes“ auch „tomato“.
+const kwStem = (k) => (k.length >= 5 ? k.replace(/(ies|oes|en|n|e|s)$/, '') : k);
 // Stichwörter mit Stern sind Muster: „tk*“ = Wort beginnt mit tk (ohne Mehrzahl-Kürzung), „*saft“ = Wort endet auf saft,
 // „*bio*“ = enthält bio. Ohne Stern: Wortanfang, Mehrzahl-Endung egal (siehe kwStem).
 const KW_SEP = '[\\s\\-/,]', reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -103,7 +127,7 @@ function learnKeyword(name, catId) {
 
 // ---------- Autovervollständigung ----------
 // Vorschläge kommen aus den Stichwörtern, den Einträgen auf der Liste und den zuletzt neu getippten Wörtern.
-const STEMS = new Set(['erdbeer', 'himbeer', 'tk-', 'tiefkühl', 'gefrorene', 'passierte', 'gewürz', 'süßigkeit', 'gemüse', 'obst', 'beere', 'dose', 'crème', 'rind', 'schwein', 'laugen', 'gummibär']); // Wortanfänge, keine Produkte
+const STEMS = new Set(['frozen', 'canned', 'tinned', 'vegetables', 'veggies', 'fruit', 'herbs', 'spice', 'candy', 'sweets', 'gummy', 'meat', 'erdbeer', 'himbeer', 'tk-', 'tiefkühl', 'gefrorene', 'passierte', 'gewürz', 'süßigkeit', 'gemüse', 'obst', 'beere', 'dose', 'crème', 'rind', 'schwein', 'laugen', 'gummibär']); // Wortanfänge, keine Produkte
 const fold = (s) => s.toLowerCase().replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss');
 // Abstand zwischen zwei Wörtern (Einfügen, Löschen, Ersetzen, Vertauschen zählt je 1)
 function editDist(a, b) {
@@ -157,7 +181,7 @@ function suggestions(q) {
     }
     if (tier > -1) out.push({ ...p, tier, dist });
   }
-  out.sort((a, b) => a.tier - b.tier || a.dist - b.dist || a.src - b.src || a.key.length - b.key.length || a.name.localeCompare(b.name, 'de'));
+  out.sort((a, b) => a.tier - b.tier || a.dist - b.dist || a.src - b.src || a.key.length - b.key.length || a.name.localeCompare(b.name, LOCALE));
   return out.slice(0, 4).map((p) => ({ name: p.name, cat: keywordGuess(p.name), listed: open.get(dupKey(p.name)) || '' }));
 }
 // Neue Wörter merken. Tippfehler (fast gleich wie ein bekanntes Wort) landen nicht in der Merkliste.
@@ -177,48 +201,80 @@ function rememberName(name) {
 
 // "2 Milch", "500g Mehl", "3x Joghurt", "2 Flaschen Wasser" -> Menge und Name trennen
 // Kurze Einheiten werden angehängt ("500g"), Wort-Einheiten behalten ihr Leerzeichen ("2 Flaschen").
-const WORD_UNITS = 'flaschen?|dosen?|becher|bund|kisten?|gläser|glas|tüten?|rollen?|pakete?|beutel|päckchen|tafeln?|stange|stangen|netz|schalen?';
+const WORD_UNITS = 'flaschen?|dosen?|becher|bund|kisten?|gläser|glas|tüten?|rollen?|pakete?|beutel|päckchen|tafeln?|stange|stangen|netz|schalen?'
+  + '|bottles?|cans?|tins?|cups?|bunch|bunches|crates?|jars?|bags?|rolls?|boxes|box|bars?|cartons?|loaf|loaves|slices?'; // englisch
 function parseEntry(text) {
   const t = text.trim();
   const w = t.match(new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(${WORD_UNITS})\\s+(.+)$`, 'i'));
   if (w) return { qty: `${w[1]} ${w[2]}`, name: w[3].trim() };
-  const m = t.match(/^(\d+(?:[.,]\d+)?\s?(?:x|×|g|kg|l|ml|stk|stück|pck|pack|packung|packungen)?)\s+(.+)$/i);
+  const m = t.match(/^(\d+(?:[.,]\d+)?\s?(?:x|×|g|kg|l|ml|stk|stück|pck|pack|packung|packungen|packs|pcs|pc|oz|lbs|lb)?)\s+(.+)$/i);
   return m ? { qty: m[1].replace(/\s+/g, ''), name: m[2].trim() } : { qty: '', name: t };
 }
 
 // ---------- Gesprochene Eingabe (Diktieren über die iPhone-Tastatur) ----------
 // „Ich brauche noch Milch, Brot und zwei Butter“ -> ["Milch", "Brot", "2 Butter"]
 // „und“/„sowie“ trennen wie ein Komma, Füllwörter fallen weg, Zahlwörter und Mengenwörter werden zu Mengen.
-const NUM_WORDS = { zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, elf: 11, zwölf: 12, fünfzehn: 15, zwanzig: 20, dreißig: 30, vierzig: 40, fünfzig: 50, hundert: 100, zweihundert: 200, dreihundert: 300, fünfhundert: 500 };
-const HALF = /^(?:ein(?:e|en)?\s+halbe[snr]?|halbe[snr]?)\s+/i;
-const LEAD_FILLER = /^(?:und|also|ähm|äh|dann|außerdem|ich\s+brauche|wir\s+brauchen|brauche|brauchen|bitte|noch|auch|mal|kauf(?:e|t|en)?|hol(?:e|t|en)?|wir\s+haben\s+(?:keine?n?|kein|nichts)|es\s+fehl(?:t|en))\b[,\s]*/i;
-const TAIL_FILLER = /[,\s]*\b(?:bitte|noch|mehr|auch|mitbringen|kaufen|holen)$/i;
-// Gesprochene Einheit nach einer Zahl -> Kurzform: „2 Kilo“ -> „2kg“, „3 Packungen“ -> „3 Pck“
-const SPOKEN_UNITS = [['kilogramm|kilo', 'kg'], ['gramm', 'g'], ['milliliter', 'ml'], ['liter', 'l'], ['packungen|packung', ' Pck'], ['stück', ' Stk']];
+// Die Regeln gibt es je Sprache (SPEECH.de / SPEECH.en), es gilt die Sprache der App.
+const UNIT_NUM = '^(\\d+(?:[.,]\\d+)?)\\s*';
+const SPEECH = {
+  de: {
+    nums: { zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, elf: 11, zwölf: 12, fünfzehn: 15, zwanzig: 20, dreißig: 30, vierzig: 40, fünfzig: 50, hundert: 100, zweihundert: 200, dreihundert: 300, fünfhundert: 500 },
+    half: /^(?:ein(?:e|en)?\s+halbe[snr]?|halbe[snr]?)\s+/i, halfTo: '0,5 ',
+    oneHalf: /^(?:anderthalb|eineinhalb)\s+/i, oneHalfTo: '1,5 ',
+    few: /^ein\s+paar\s+/i, // „ein paar Äpfel“ -> „Äpfel“
+    lead: /^(?:und|also|ähm|äh|dann|außerdem|ich\s+brauche|wir\s+brauchen|brauche|brauchen|bitte|noch|auch|mal|kauf(?:e|t|en)?|hol(?:e|t|en)?|wir\s+haben\s+(?:keine?n?|kein|nichts)|es\s+fehl(?:t|en))\b[,\s]*/i,
+    tail: /[,\s]*\b(?:bitte|noch|mehr|auch|mitbringen|kaufen|holen)$/i,
+    article: /^(?:ein|eine|einen|einem)$/,
+    unitWord: /^(?:kilo|kilogramm|gramm|liter|milliliter|packung|stück|flasche|dose|becher|bund|kiste|glas|tüte|rolle|paket|beutel|päckchen|tafel|netz|schale)\b/i,
+    // Gesprochene Einheit nach einer Zahl -> Kurzform: „2 Kilo“ -> „2kg“, „3 Packungen“ -> „3 Pck“
+    units: [['kilogramm|kilo', 'kg'], ['gramm', 'g'], ['milliliter', 'ml'], ['liter', 'l'], ['packungen|packung', ' Pck'], ['stück', ' Stk']],
+    split: /[,;\n]|\s+(?:und|sowie|plus)\s+/i, drop: /^(?:und|noch|bitte)$/i
+  },
+  // Englisch: „I need milk, bread and two kilos of apples“ -> ["Milk", "Bread", "2kg apples"]
+  en: {
+    nums: { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30, forty: 40, fifty: 50, hundred: 100 },
+    half: /^(?:half\s+an?|a\s+half|half)\s+/i, halfTo: '0.5 ',
+    oneHalf: /^one\s+and\s+a\s+half\s+/i, oneHalfTo: '1.5 ', // steht meist schon als „1.5“ da (siehe splitSpoken)
+    few: /^(?:a\s+couple\s+of|a\s+few)\s+/i, // „a few apples“ -> „apples“
+    lead: /^(?:and|also|um+|uh+|then|plus|i\s+need|we\s+need|i\s+want|we\s+want|need|please|some|more|buy|get|grab|pick\s+up|add|we(?:['’]re|\s+are)\s+out\s+of|we\s+have\s+no|there(?:['’]s|\s+is)\s+no)\b[,\s]*/i,
+    tail: /[,\s]*\b(?:please|too|as\s+well|also)$/i,
+    article: /^(?:a|an|one)$/,
+    unitWord: /^(?:kilo|kilogram|gram|liter|litre|milliliter|millilitre|pound|ounce|pack|packet|package|piece|bottle|can|tin|cup|bunch|crate|jar|bag|roll|box|bar|carton|loaf|dozen)\b/i,
+    units: [['kilograms?|kilos?', 'kg'], ['grams?', 'g'], ['milliliters?|millilitres?', 'ml'], ['liters?|litres?', 'l'], ['pounds?', 'lb'], ['ounces?', 'oz'], ['packets?|packages?|packs?', ' pack'], ['pieces?', ' pcs']],
+    split: /[,;\n]|\s+(?:and|plus|as\s+well\s+as)\s+/i, drop: /^(?:and|also|please)$/i
+  }
+};
 function spokenPart(p) {
+  const L = SPEECH[LANG] || SPEECH.de;
   let s = p.trim().replace(/[.!?]+$/, '').trim();
-  for (let i = 0; i < 4; i++) { const t = s.replace(LEAD_FILLER, ''); if (t === s) break; s = t; }
-  for (let i = 0; i < 3; i++) { const t = s.replace(TAIL_FILLER, ''); if (t === s) break; s = t; }
+  for (let i = 0; i < 4; i++) { const t = s.replace(L.lead, ''); if (t === s) break; s = t; }
+  for (let i = 0; i < 3; i++) { const t = s.replace(L.tail, ''); if (t === s) break; s = t; }
   // halbe Mengen: „ein halbes Kilo Mehl“ -> „500g Mehl“, „ein halber Liter Sahne“ -> „0,5l Sahne“
-  const half = s.match(HALF);
-  if (half) s = '0,5 ' + s.slice(half[0].length);
-  s = s.replace(/^(?:anderthalb|eineinhalb)\s+/i, '1,5 ');
-  s = s.replace(/^ein\s+paar\s+/i, ''); // „ein paar Äpfel“ -> „Äpfel“
+  const half = s.match(L.half);
+  if (half) s = L.halfTo + s.slice(half[0].length);
+  s = s.replace(L.oneHalf, L.oneHalfTo);
+  s = s.replace(L.few, '');
   // Zahlwörter -> Ziffern; „ein/eine“ nur vor einer Einheit („ein Kilo Mehl“), sonst ist es nur der Artikel („eine Gurke“)
   const first = s.split(/\s+/)[0].toLowerCase();
-  if (NUM_WORDS[first]) s = NUM_WORDS[first] + s.slice(first.length);
-  else if (/^(?:ein|eine|einen|einem)$/.test(first)) {
+  if (L.nums[first]) s = L.nums[first] + s.slice(first.length);
+  else if (L.article.test(first)) {
     const rest = s.slice(first.length).trim();
-    s = /^(?:kilo|kilogramm|gramm|liter|milliliter|packung|stück|flasche|dose|becher|bund|kiste|glas|tüte|rolle|paket|beutel|päckchen|tafel|netz|schale)\b/i.test(rest) ? '1 ' + rest : rest;
+    s = L.unitWord.test(rest) ? '1 ' + rest : rest;
   }
+  if (L === SPEECH.en) s = s.replace(/^(\d+)\s+dozen\s+(?:of\s+)?/i, (m, n) => n * 12 + ' '); // „a dozen eggs“ -> „12 eggs“
   // Mengenwörter vereinheitlichen: „2 Kilo“ -> „2kg“, „0,5 kg“ -> „500g“
-  for (const [words, short] of SPOKEN_UNITS) s = s.replace(new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(?:${words})\\b`, 'i'), '$1' + short);
+  for (const [words, short] of L.units) s = s.replace(new RegExp(`${UNIT_NUM}(?:${words})\\b`, 'i'), '$1' + short);
+  if (L === SPEECH.en) s = s.replace(/^(\d+(?:[.,]\d+)?\s?[a-z]*)\s+of\s+/i, '$1 '); // „2 bottles of water“ -> „2 bottles water“
   s = s.replace(/^0[.,]5kg\b/i, '500g').replace(/^0[.,]25kg\b/i, '250g');
   s = s.replace(/^(\d+)\s+x\s+/i, '$1x ');
+  // Englisch diktiert kommt klein an: auch den Namen hinter einer Menge groß beginnen („2 butter“ -> „2 Butter“)
+  if (L === SPEECH.en) { const n = parseEntry(s).name; if (n && s.endsWith(n)) s = s.slice(0, s.length - n.length) + n.charAt(0).toUpperCase() + n.slice(1); }
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function splitSpoken(text) {
-  return text.split(/[,;\n]|\s+(?:und|sowie|plus)\s+/i).map(spokenPart).filter((x) => x && !/^(?:und|noch|bitte)$/i.test(x));
+  const L = SPEECH[LANG] || SPEECH.de;
+  if (L === SPEECH.en) text = text.replace(/\bone\s+and\s+a\s+half\b/gi, '1.5'); // sonst trennt das „and“ die Menge
+  return text.split(L.split).map(spokenPart).filter((x) => x && !L.drop.test(x));
 }
 
 // ---------- Hilfsfunktionen ----------

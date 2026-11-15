@@ -3,13 +3,13 @@
 
 function viewStores() {
   const cards = S.stores.map((s) => `<li><button type="button" class="card" data-act="openstore" data-id="${s.id}">
-      <span><strong>${esc(s.name)}</strong><small>${groupTag(s.g)}${s.zones.length} ${s.zones.length === 1 ? 'Bereich' : 'Bereiche'}${s.id === S.storeId ? ' · aktiv' : ''}</small></span>
+      <span><strong>${esc(s.name)}</strong><small>${groupTag(s.g)}${T(s.zones.length === 1 ? '{n} Bereich' : '{n} Bereiche', { n: s.zones.length })}${s.id === S.storeId ? ' · ' + T('aktiv') : ''}</small></span>
       <span class="go">›</span></button></li>`).join('');
-  return `${pageHead('Einstellungen', 'Geschäfte', 'data-act="tab" data-tab="settings"')}
-    <div class="group" style="margin-bottom:10px"><label class="sheetbtn swrow"><span>In der Liste verwenden<small>Sortiert die Einkaufsliste nach dem Laufweg im Geschäft. Gilt nur für dieses Gerät.</small></span><input type="checkbox" switch id="storesSwitch"${storesOn() ? ' checked' : ''}></label></div>
-    ${introCard('stores') || '<p class="hint">Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.</p>'}
+  return `${pageHead(T('Einstellungen'), T('Geschäfte'), 'data-act="tab" data-tab="settings"')}
+    <div class="group" style="margin-bottom:10px"><label class="sheetbtn swrow"><span>${T('In der Liste verwenden')}<small>${T('Sortiert die Einkaufsliste nach dem Laufweg im Geschäft. Gilt nur für dieses Gerät.')}</small></span><input type="checkbox" switch id="storesSwitch"${storesOn() ? ' checked' : ''}></label></div>
+    ${introCard('stores') || `<p class="hint">${T('Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.')}</p>`}
     ${S.stores.length ? `<ul class="cards">${cards}</ul>` : ''}
-    <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">+ Neues Geschäft</button>`;
+    <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">${T('+ Neues Geschäft')}</button>`;
 }
 
 // ---------- Plan: endlose Fläche mit Raster ----------
@@ -113,8 +113,8 @@ function planInner(st) {
 
 const ICON_FIT = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function planHtml(st) {
-  return `<div class="plan" id="plan"><svg id="planSvg" class="${ui.drawing ? 'drawing' : ''}" viewBox="${vbStr()}" role="img" aria-label="Grundriss von ${esc(st.name)}">${planInner(st)}</svg>
-    <div class="zoombar"><button type="button" data-act="zoomin" aria-label="Vergrößern">+</button><button type="button" data-act="zoomout" aria-label="Verkleinern">−</button><button type="button" data-act="fit" aria-label="Alles anzeigen">${ICON_FIT}</button></div></div>`;
+  return `<div class="plan" id="plan"><svg id="planSvg" class="${ui.drawing ? 'drawing' : ''}" viewBox="${vbStr()}" role="img" aria-label="${esc(T('Grundriss von {name}', { name: st.name }))}">${planInner(st)}</svg>
+    <div class="zoombar"><button type="button" data-act="zoomin" aria-label="${T('Vergrößern')}">+</button><button type="button" data-act="zoomout" aria-label="${T('Verkleinern')}">−</button><button type="button" data-act="fit" aria-label="${T('Alles anzeigen')}">${ICON_FIT}</button></div></div>`;
 }
 function updatePlan() {
   const st = editStore(), svg = $('#planSvg');
@@ -131,40 +131,40 @@ function viewEditor() {
   const catNames = (z) => z.cats.filter((c) => CAT_BY_ID[c]).map((c) => {
     const shared = st.zones.some((o) => o !== z && o.cats.includes(c));
     return (shared && st.zones[defaultZoneIdx(st, c)] === z ? '★ ' : '') + CAT_BY_ID[c].name;
-  }).join(', ') || 'keine Kategorie';
+  }).join(', ') || T('keine Kategorie');
   const zlist = st.zones.map((z, i) => `<li class="zli" data-zid="${z.id}" data-key="${z.id}"><button type="button" class="zitem" data-act="selzone" data-id="${z.id}" aria-pressed="${z.id === ui.selZone}">
-      <span class="badge">${i + 1}</span><span class="zn"><strong>${esc(z.name)}</strong><small>${esc(catNames(z))}${z.rect || !S.showPlan ? '' : ' · nicht eingezeichnet'}</small></span></button>
+      <span class="badge">${i + 1}</span><span class="zn"><strong>${esc(z.name)}</strong><small>${esc(catNames(z))}${z.rect || !S.showPlan ? '' : ' · ' + T('nicht eingezeichnet')}</small></span></button>
       </li>${z.id === ui.selZone ? '<!--PANEL-->' : ''}`).join('');
   let panel = '';
   if (sel) {
     const sum = (arr) => (arr.length ? esc(arr.slice(0, 2).join(', ')) + (arr.length > 2 ? ` +${arr.length - 2}` : '') : '–');
     panel = `<div class="zpanel">
-      <input id="zName" value="${esc(sel.name)}" aria-label="Name von Bereich ${selIdx + 1}">
-      <div class="prowwrap"><button type="button" class="prow" data-act="catsheet"><span class="pl">Kategorien</span><span class="pv">${sum(sel.cats.map((c) => CAT_BY_ID[c]?.name).filter(Boolean))}</span></button>${sharedCats(st, sel).length ? `<button type="button" class="star${isStdZone(st, sel) ? ' on' : ''}" data-act="setstd" aria-pressed="${isStdZone(st, sel)}" aria-label="Standard-Bereich für seine Kategorien">${isStdZone(st, sel) ? '★' : '☆'}</button>` : ''}</div>
-      <button type="button" class="prow" data-act="prodsheet"><span class="pl">Produkte</span><span class="pv">${sum(Object.values(sel.prods || {}))}</span></button>
+      <input id="zName" value="${esc(sel.name)}" aria-label="${T('Name von Bereich {n}', { n: selIdx + 1 })}">
+      <div class="prowwrap"><button type="button" class="prow" data-act="catsheet"><span class="pl">${T('Kategorien')}</span><span class="pv">${sum(sel.cats.map((c) => CAT_BY_ID[c]?.name).filter(Boolean))}</span></button>${sharedCats(st, sel).length ? `<button type="button" class="star${isStdZone(st, sel) ? ' on' : ''}" data-act="setstd" aria-pressed="${isStdZone(st, sel)}" aria-label="${T('Standard-Bereich für seine Kategorien')}">${isStdZone(st, sel) ? '★' : '☆'}</button>` : ''}</div>
+      <button type="button" class="prow" data-act="prodsheet"><span class="pl">${T('Produkte')}</span><span class="pv">${sum(Object.values(sel.prods || {}))}</span></button>
       <div class="actions">
-        <button type="button" class="btn ghost small" data-act="zup" aria-label="Früher in der Route"${selIdx === 0 ? ' disabled' : ''}>↑</button>
-        <button type="button" class="btn ghost small" data-act="zdown" aria-label="Später in der Route"${selIdx === st.zones.length - 1 ? ' disabled' : ''}>↓</button>
-        ${S.showPlan ? `<button type="button" class="btn ghost small" data-act="zdraw" style="flex:1">${sel.rect ? 'Form ändern' : 'Einzeichnen'}</button>` : ''}
-        <button type="button" class="btn danger small"${S.showPlan ? '' : ' style="flex:1"'} data-act="zdel">Löschen</button>
+        <button type="button" class="btn ghost small" data-act="zup" aria-label="${T('Früher in der Route')}"${selIdx === 0 ? ' disabled' : ''}>↑</button>
+        <button type="button" class="btn ghost small" data-act="zdown" aria-label="${T('Später in der Route')}"${selIdx === st.zones.length - 1 ? ' disabled' : ''}>↓</button>
+        ${S.showPlan ? `<button type="button" class="btn ghost small" data-act="zdraw" style="flex:1">${T(sel.rect ? 'Form ändern' : 'Einzeichnen')}</button>` : ''}
+        <button type="button" class="btn danger small"${S.showPlan ? '' : ' style="flex:1"'} data-act="zdel">${T('Löschen')}</button>
       </div></div>`;
   }
   if (!ui.view) ui.view = fitView(st);
   if (!S.showPlan) ui.drawing = false;
   const bar = ui.drawing && sel
-    ? `<p class="hint live">Ziehen = neu · Kante/Ecke = anpassen · Mitte = schieben · Daneben tippen = fertig</p>`
-    : `<p class="hint${st.zones.length ? ' bedien' : ''}">${S.showPlan ? (st.zones.length ? 'Antippen: bearbeiten · Gedrückt halten: im Plan Form ändern, in der Liste sortieren' : 'Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.') : (st.zones.length ? 'Reihenfolge = Laufweg. Lange drücken zum Sortieren.' : 'Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.')}</p><button type="button" class="btn small" data-act="addzone">+ Bereich</button>`;
+    ? `<p class="hint live">${T('Ziehen = neu · Kante/Ecke = anpassen · Mitte = schieben · Daneben tippen = fertig')}</p>`
+    : `<p class="hint${st.zones.length ? ' bedien' : ''}">${S.showPlan ? (st.zones.length ? T('Antippen: bearbeiten · Gedrückt halten: im Plan Form ändern, in der Liste sortieren') : T('Lege Bereiche an, zeichne sie ein und wähle ihre Kategorien.')) : (st.zones.length ? T('Reihenfolge = Laufweg. Lange drücken zum Sortieren.') : T('Lege Bereiche in der Reihenfolge deines Laufwegs an und wähle ihre Kategorien.'))}</p><button type="button" class="btn small" data-act="addzone">${T('+ Bereich')}</button>`;
   return `
     <div class="edhead">
-      <button type="button" class="pageback" data-act="back" aria-label="Zurück zu Geschäfte">${ICON_BACK}<span>Geschäfte</span></button>
-      <input id="storeName" value="${esc(st.name)}" aria-label="Name des Geschäfts">
-      <button type="button" class="iconbtn" data-act="editormenu" aria-haspopup="dialog" aria-label="Menü">${ICON_DOTS}</button>
+      <button type="button" class="pageback" data-act="back" aria-label="${T('Zurück zu {name}', { name: T('Geschäfte') })}">${ICON_BACK}<span>${T('Geschäfte')}</span></button>
+      <input id="storeName" value="${esc(st.name)}" aria-label="${T('Name des Geschäfts')}">
+      <button type="button" class="iconbtn" data-act="editormenu" aria-haspopup="dialog" aria-label="${T('Menü')}">${ICON_DOTS}</button>
     </div>
-    <button type="button" class="prow plantoggle${S.showPlan ? ' open' : ''}" data-act="togplan" aria-expanded="${!!S.showPlan}"><span class="pl">Grundriss</span><span class="pv">${S.showPlan ? 'Bereiche einzeichnen' : 'optional, zum Einzeichnen'}</span></button>
+    <button type="button" class="prow plantoggle${S.showPlan ? ' open' : ''}" data-act="togplan" aria-expanded="${!!S.showPlan}"><span class="pl">${T('Grundriss')}</span><span class="pv">${T(S.showPlan ? 'Bereiche einzeichnen' : 'optional, zum Einzeichnen')}</span></button>
     ${S.showPlan ? `${planHtml(st)}
     <div class="bgrow">
-      <label for="bgFile" class="bgadd" title="Foto oder Skizze als Vorlage hinter den Grundriss legen">${ICON_CAM}<span>${st.bg ? 'Grundrissskizze ersetzen' : 'Grundrissskizze hinzufügen'}</span></label><input type="file" id="bgFile" accept="image/*" hidden>
-      ${st.bg ? '<button type="button" class="chipbtn" data-act="clearbg" aria-label="Skizze entfernen">×</button>' : ''}
+      <label for="bgFile" class="bgadd" title="${T('Foto oder Skizze als Vorlage hinter den Grundriss legen')}">${ICON_CAM}<span>${T(st.bg ? 'Grundrissskizze ersetzen' : 'Grundrissskizze hinzufügen')}</span></label><input type="file" id="bgFile" accept="image/*" hidden>
+      ${st.bg ? `<button type="button" class="chipbtn" data-act="clearbg" aria-label="${T('Skizze entfernen')}">×</button>` : ''}
     </div>` : ''}
     <div class="planbar">${bar}</div>
     ${ui.wiggle === 'zones' ? wiggleBar() : ''}
@@ -188,22 +188,22 @@ function addPins(text) {
     const cats = z.cats.filter((c) => CAT_BY_ID[c]);
     if (cats.length && keywordGuess(name) === 'sonst' && !cats.includes('sonst')) { CAT_BY_ID[cats[0]].kw.push(k); (learned[cats[0]] = learned[cats[0]] || []).push(name); }
   });
-  const msg = Object.entries(learned).map(([c, w]) => `${w.map((x) => '„' + x + '“').join(', ')} jetzt Stichwort bei ${CAT_BY_ID[c].name}`).join(' · ');
+  const msg = Object.entries(learned).map(([c, w]) => T('{words} jetzt Stichwort bei {cat}', { words: w.map((x) => T('„{x}“', { x })).join(', '), cat: CAT_BY_ID[c].name })).join(' · ');
   if (msg) toast(msg);
   return true;
 }
 function storeSheet() {
-  openSheet(`<div class="sheettitle">Einkauf bei</div>
-    <button type="button" class="sheetbtn${S.storeId ? '' : ' on'}" data-act="pickstore" data-id="">Kein Geschäft <small>Standardreihenfolge</small></button>
+  openSheet(`<div class="sheettitle">${T('Einkauf bei')}</div>
+    <button type="button" class="sheetbtn${S.storeId ? '' : ' on'}" data-act="pickstore" data-id="">${T('Kein Geschäft')} <small>${T('Standardreihenfolge')}</small></button>
     ${S.stores.map((s) => `<button type="button" class="sheetbtn${s.id === S.storeId ? ' on' : ''}" data-act="pickstore" data-id="${s.id}"><span>${esc(s.name)}</span><small>${groupTag(s.g, '')}</small></button>`).join('')}
-    <button type="button" class="sheetbtn accent" data-act="newstoresheet">+ Neues Geschäft</button>
-    <button type="button" class="sheetbtn accent" data-act="gostores">Geschäfte bearbeiten …</button>`);
+    <button type="button" class="sheetbtn accent" data-act="newstoresheet">${T('+ Neues Geschäft')}</button>
+    <button type="button" class="sheetbtn accent" data-act="gostores">${T('Geschäfte bearbeiten …')}</button>`);
 }
 function assignSheet(cat) {
   const st = curStore();
-  openSheet(`<div class="sheettitle">Wo liegt „${esc(CAT_BY_ID[cat]?.name || cat)}“ bei ${esc(st.name)}?</div>
+  openSheet(`<div class="sheettitle">${T('Wo liegt „{cat}“ bei {store}?', { cat: esc(CAT_BY_ID[cat]?.name || cat), store: esc(st.name) })}</div>
     ${st.zones.map((z, i) => `<button type="button" class="sheetbtn" data-act="putcat" data-id="${z.id}" data-cat="${cat}"><span><b>${i + 1}</b> &nbsp;${esc(z.name)}</span><small>${esc(z.cats.map((c) => CAT_BY_ID[c]?.name).filter(Boolean).join(', '))}</small></button>`).join('')}
-    <button type="button" class="sheetbtn accent" data-act="newzonefor" data-cat="${cat}">Neuer Bereich am Ende der Route</button>`);
+    <button type="button" class="sheetbtn accent" data-act="newzonefor" data-cat="${cat}">${T('Neuer Bereich am Ende der Route')}</button>`);
 }
 function selZoneOrNull() { const st = editStore(); return st ? st.zones.find((z) => z.id === ui.selZone) || null : null; }
 function catSheet() {
@@ -213,31 +213,31 @@ function catSheet() {
   const chips = CATS.filter((c) => c.id !== 'sonst').map((c) => {
     const mine = z.cats.includes(c.id);
     const others = st.zones.map((o, i) => (i !== idx && o.cats.includes(c.id) ? i + 1 : 0)).filter(Boolean);
-    const chip = `<button type="button" class="chip" data-act="togcat" data-cat="${c.id}" aria-pressed="${mine}">${esc(c.name)}${others.length ? `<small>(auch ${others.join(', ')})</small>` : ''}</button>`;
+    const chip = `<button type="button" class="chip" data-act="togcat" data-cat="${c.id}" aria-pressed="${mine}">${esc(c.name)}${others.length ? `<small>(${T('auch {n}', { n: others.join(', ') })})</small>` : ''}</button>`;
     return chip;
   }).join('');
-  openSheet(`<div class="sheettitle">Kategorien · ${esc(z.name)}</div>
+  openSheet(`<div class="sheettitle">${T('Kategorien')} · ${esc(z.name)}</div>
     <div class="chips big">${chips}</div>
-    <p class="sheetnote" style="margin:10px 0">Eine Kategorie darf in mehreren Bereichen liegen, zum Beispiel bei zwei Kühltheken.</p>`);
+    <p class="sheetnote" style="margin:10px 0">${T('Eine Kategorie darf in mehreren Bereichen liegen, zum Beispiel bei zwei Kühltheken.')}</p>`);
 
 }
 function starSheet() {
-  openSheet(`<div class="sheettitle">Standard-Bereich</div>
-    <p class="sheetnote" style="margin:0 0 10px">Liegt eine Kategorie in mehreren Bereichen, zum Beispiel bei mehreren Kühltheken, landen Produkte dieser Kategorie ohne festen Bereich im Standard-Bereich.</p>
-    <p class="sheetnote" style="margin:0 0 10px">★ = dieser Bereich ist der Standard. ☆ = tippen, um ihn dazu zu machen. Ohne Auswahl gilt der erste Bereich in der Laufreihenfolge.</p>`);
+  openSheet(`<div class="sheettitle">${T('Standard-Bereich')}</div>
+    <p class="sheetnote" style="margin:0 0 10px">${T('Liegt eine Kategorie in mehreren Bereichen, zum Beispiel bei mehreren Kühltheken, landen Produkte dieser Kategorie ohne festen Bereich im Standard-Bereich.')}</p>
+    <p class="sheetnote" style="margin:0 0 10px">${T('★ = dieser Bereich ist der Standard. ☆ = tippen, um ihn dazu zu machen. Ohne Auswahl gilt der erste Bereich in der Laufreihenfolge.')}</p>`);
 }
 function prodSheet() {
   const z = selZoneOrNull();
   if (!z) return;
-  const rows = Object.entries(z.prods || {}).map(([k, n]) => `<div class="prodrow"><span>${esc(n)}</span><button type="button" class="link" data-act="unpin" data-key="${esc(k)}" aria-label="${esc(n)} aus diesem Bereich lösen">Entfernen</button></div>`).join('');
-  openSheet(`<div class="sheettitle">Produkte · ${esc(z.name)}</div>
-    <p class="sheetnote" style="margin:0 0 6px">Diese Produkte liegen hier, egal welche Kategorie sie haben.</p>
-    ${rows || '<p class="sheetnote" style="padding:6px 0">Noch keine festgelegt.</p>'}
+  const rows = Object.entries(z.prods || {}).map(([k, n]) => `<div class="prodrow"><span>${esc(n)}</span><button type="button" class="link" data-act="unpin" data-key="${esc(k)}" aria-label="${esc(T('{name} aus diesem Bereich lösen', { name: n }))}">${T('Entfernen')}</button></div>`).join('');
+  openSheet(`<div class="sheettitle">${T('Produkte')} · ${esc(z.name)}</div>
+    <p class="sheetnote" style="margin:0 0 6px">${T('Diese Produkte liegen hier, egal welche Kategorie sie haben.')}</p>
+    ${rows || `<p class="sheetnote" style="padding:6px 0">${T('Noch keine festgelegt.')}</p>`}
     <form id="pinForm" class="add" autocomplete="off" style="margin:10px 0">
-      <input id="pinName" placeholder="Produkt hinzufügen, z. B. Tofu" aria-label="Produkt hinzufügen">
-      <button type="submit" class="plus" aria-label="Hinzufügen">${ICON_PLUS}</button>
+      <input id="pinName" placeholder="${T('Produkt hinzufügen, z. B. Tofu')}" aria-label="${T('Produkt hinzufügen')}">
+      <button type="submit" class="plus" aria-label="${T('Hinzufügen')}">${ICON_PLUS}</button>
     </form>
-    <div id="pinSugg" class="sugg inl" role="listbox" aria-label="Vorschläge" hidden></div>`);
+    <div id="pinSugg" class="sugg inl" role="listbox" aria-label="${T('Vorschläge')}" hidden></div>`);
 }
 // Vorschläge unter dem Produktfeld: schon festgelegte fehlen, liegt ein Produkt in einem anderen Bereich, steht das dabei
 function updatePinSugg() {
@@ -250,31 +250,31 @@ function updatePinSugg() {
   box.innerHTML = list.map((m) => {
     const other = st.zones.find((o) => o !== z && o.prods && Object.keys(o.prods).some((x) => dupKey(x) === dupKey(m.name)));
     const hit = fold(m.name).startsWith(qf) ? `<b>${esc(m.name.slice(0, qf.length))}</b>${esc(m.name.slice(qf.length))}` : esc(m.name);
-    return `<button type="button" class="sg" role="option" data-act="pinsugg" data-name="${esc(m.name)}"><span class="sgn">${hit}</span><span class="sgtag${other ? ' on' : ''}">${other ? 'jetzt: ' + esc(other.name) : esc(CAT_BY_ID[m.cat]?.name || 'Sonstiges')}</span></button>`;
+    return `<button type="button" class="sg" role="option" data-act="pinsugg" data-name="${esc(m.name)}"><span class="sgn">${hit}</span><span class="sgtag${other ? ' on' : ''}">${other ? T('jetzt: {name}', { name: esc(other.name) }) : esc(CAT_BY_ID[m.cat]?.name || T('Sonstiges'))}</span></button>`;
   }).join('');
   box.hidden = false;
 }
 function newStoreSheet() {
-  openSheet(`<div class="sheettitle">Neues Geschäft</div>
+  openSheet(`<div class="sheettitle">${T('Neues Geschäft')}</div>
     <form id="newStoreForm" autocomplete="off">
-      <input id="newStoreName" autofocus class="notein" placeholder="Name, z. B. Rewe Hauptstraße" aria-label="Name des Geschäfts" required>
-      ${S.stores.length ? `<label class="srow"><span class="pl">Vorlage</span><select id="nsTemplate" aria-label="Bereiche übernehmen von"><option value="">Leer beginnen</option>${S.stores.map((x) => `<option value="${x.id}">Kopie von ${esc(x.name)}</option>`).join('')}</select></label>` : ''}
+      <input id="newStoreName" autofocus class="notein" placeholder="${T('Name, z. B. Rewe Hauptstraße')}" aria-label="${T('Name des Geschäfts')}" required>
+      ${S.stores.length ? `<label class="srow"><span class="pl">${T('Vorlage')}</span><select id="nsTemplate" aria-label="${T('Bereiche übernehmen von')}"><option value="">${T('Leer beginnen')}</option>${S.stores.map((x) => `<option value="${x.id}">${T('Kopie von {name}', { name: esc(x.name) })}</option>`).join('')}</select></label>` : ''}
       ${groupSelect('nsGroup', curList()?.g || defaultGroup())}
-      <button type="submit" class="btn">Anlegen</button>
+      <button type="submit" class="btn">${T('Anlegen')}</button>
     </form>`);
 }
 function editorSheet() {
   const st = editStore();
   openSheet(`<div class="sheettitle">${esc(st.name)}</div>
-    ${S.storeId === st.id ? '' : `<button type="button" class="sheetbtn" data-act="usestore" data-id="${st.id}">In der Liste verwenden</button>`}
-    ${groupSelect('stGroup', st.g, 'Gruppe', ` data-id="${st.id}"`)}
-    <button type="button" class="sheetbtn danger" data-act="delstore">${ui.confirmDel ? 'Wirklich löschen?' : 'Geschäft löschen'}</button>`);
+    ${S.storeId === st.id ? '' : `<button type="button" class="sheetbtn" data-act="usestore" data-id="${st.id}">${T('In der Liste verwenden')}</button>`}
+    ${groupSelect('stGroup', st.g, T('Gruppe'), ` data-id="${st.id}"`)}
+    <button type="button" class="sheetbtn danger" data-act="delstore">${T(ui.confirmDel ? 'Wirklich löschen?' : 'Geschäft löschen')}</button>`);
 }
 function zoneField(it) {
   const st = listStore();
   if (!st || !st.zones.length) return '';
   const pinned = pinIdx(st, it.name);
-  return `<label class="srow"><span class="pl">Bereich</span><select id="eZone" aria-label="Bereich bei ${esc(st.name)}">
+  return `<label class="srow"><span class="pl">${T('Bereich')}</span><select id="eZone" aria-label="${esc(T('Bereich bei {store}', { store: st.name }))}">
     <option value="">–</option>
     ${st.zones.map((z, i) => `<option value="${z.id}"${i === pinned ? ' selected' : ''}>${i + 1} · ${esc(z.name)}</option>`).join('')}
   </select></label>`;

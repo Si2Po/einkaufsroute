@@ -28,7 +28,7 @@ async function siriTake() {
     if (res) added.push(...res.added);
   }
   sync.dirty = true; sync.ver++; sync.again = true; // gleich noch ein Durchgang, der die neuen Einträge hochlädt
-  if (added.length) toast(`Von Siri: ${added.join(', ')}`);
+  if (added.length) toast(T('Von Siri: {names}', { names: added.join(', ') }));
   return true;
 }
 
@@ -50,27 +50,27 @@ async function siriSetList(lid, quiet) {
   if (!l || !l.g) return;
   await api('/rest/v1/rpc/siri_set_list', { method: 'POST', body: JSON.stringify({ g: l.g, lid }) });
   siri.info = { ...(siri.info || {}), g: l.g, lid };
-  if (pageTop() === 'siri') siriPage(quiet ? '' : `Siri schreibt jetzt in „${l.name}“.`);
+  if (pageTop() === 'siri') siriPage(quiet ? '' : T('Siri schreibt jetzt in „{name}“.', { name: l.name }));
 }
-const siriCopy = (v, label) => `<div class="siricopy"><code class="sel">${esc(v)}</code><button type="button" class="link" data-act="siri_copy" data-v="${esc(v)}" aria-label="${label} kopieren">Kopieren</button></div>`;
+const siriCopy = (v, label) => `<div class="siricopy"><code class="sel">${esc(v)}</code><button type="button" class="link" data-act="siri_copy" data-v="${esc(v)}" aria-label="${T('{name} kopieren', { name: label })}">${T('Kopieren')}</button></div>`;
 
 function siriPage(msg) {
   const note = msgNote(msg); // sync.js
-  const intro = '<p class="sheetnote" style="margin:0 4px 12px">Sag „Hey Siri, Einkauf“ und dann, was fehlt. Das klappt auch bei gesperrtem iPhone. Die Einträge erscheinen auf der Liste, sobald jemand aus der Gruppe die App offen hat.</p>';
+  const intro = `<p class="sheetnote" style="margin:0 4px 12px">${T('Sag „Hey Siri, Einkauf“ und dann, was fehlt. Das klappt auch bei gesperrtem iPhone. Die Einträge erscheinen auf der Liste, sobald jemand aus der Gruppe die App offen hat.')}</p>`;
   let body;
-  if (!sync.sess) body = '<p class="sheetnote">Für Siri musst du angemeldet sein.</p>';
-  else if (siri.noSql) body = '<p class="sheetnote" style="color:var(--warn)">Die Datenbank kennt Siri noch nicht. Bitte zuerst die Datei <b>supabase/schritte/siri.sql</b> im SQL-Editor von Supabase ausführen.</p>';
-  else if (siri.info === undefined) body = '<p class="sheetnote">Wird geladen …</p>';
+  if (!sync.sess) body = `<p class="sheetnote">${T('Für Siri musst du angemeldet sein.')}</p>`;
+  else if (siri.noSql) body = `<p class="sheetnote" style="color:var(--warn)">${T('Die Datenbank kennt Siri noch nicht. Bitte zuerst die Datei <b>supabase/schritte/siri.sql</b> im SQL-Editor von Supabase ausführen.')}</p>`;
+  else if (siri.info === undefined) body = `<p class="sheetnote">${T('Wird geladen …')}</p>`;
   else {
     const info = siri.info, cur = info ? info.lid : S.listId;
     const lists = S.lists.filter((l) => l.g);
     const opts = lists.map((l) => `<option value="${l.id}"${l.id === cur ? ' selected' : ''}>${esc(l.name)}${groupsOn() ? ` (${esc(groupName(l.g))})` : ''}</option>`).join('');
-    const pick = `<div class="group"><label class="srow"><span class="pl">Liste</span><select id="siriList" aria-label="Liste für Siri">${opts}</select></label></div>`;
+    const pick = `<div class="group"><label class="srow"><span class="pl">${T('Liste')}</span><select id="siriList" aria-label="${T('Liste für Siri')}">${opts}</select></label></div>`;
     if (!info) {
-      body = `${pick}<button type="button" class="btn" style="margin-top:12px;width:100%" data-act="siri_new">Siri einrichten</button>`;
+      body = `${pick}<button type="button" class="btn" style="margin-top:12px;width:100%" data-act="siri_new">${T('Siri einrichten')}</button>`;
     } else {
       const k = siriKey();
-      const steps = k ? `
+      const steps = k ? (LANG === 'en' ? SIRI_STEPS_EN(k) /* js/en.js, bei Änderungen dort nachziehen */ : `
         <div class="sheettitle" style="margin-top:16px">Kurzbefehl einrichten</div>
         <div class="helpbody group" style="padding-top:12px"><ol>
           <li>Die App <b>Kurzbefehle</b> öffnen und mit <b>+</b> einen neuen Kurzbefehl anlegen.</li>
@@ -86,12 +86,12 @@ function siriPage(msg) {
           <li>Aktion <b>„Ergebnis anzeigen“</b> hinzufügen. Siri sagt dann z. B. „Notiert: Milch und zwei Butter“.</li>
           <li>Den Kurzbefehl oben <b>„Einkauf“</b> nennen. So heißt auch der Siri-Befehl.</li>
         </ol></div>
-        <p class="sheetnote" style="margin:8px 4px">Der Siri-Schlüssel ist wie ein Passwort nur zum Hinzufügen: Wer ihn hat, kann Text auf deine Liste setzen, aber nichts lesen oder löschen. Nicht weitergeben.</p>`
-        : '<p class="sheetnote" style="margin:12px 4px">Siri ist eingerichtet. Den Schlüssel zeigt die App nur auf dem Gerät, auf dem er erzeugt wurde. Brauchst du ihn hier, erzeuge einen neuen. Dann musst du ihn auch im Kurzbefehl ersetzen.</p>';
+        <p class="sheetnote" style="margin:8px 4px">Der Siri-Schlüssel ist wie ein Passwort nur zum Hinzufügen: Wer ihn hat, kann Text auf deine Liste setzen, aber nichts lesen oder löschen. Nicht weitergeben.</p>`)
+        : `<p class="sheetnote" style="margin:12px 4px">${T('Siri ist eingerichtet. Den Schlüssel zeigt die App nur auf dem Gerät, auf dem er erzeugt wurde. Brauchst du ihn hier, erzeuge einen neuen. Dann musst du ihn auch im Kurzbefehl ersetzen.')}</p>`;
       body = `${pick}${steps}
         <div class="actions" style="margin-top:16px">
-          <button type="button" class="btn ghost" data-act="siri_new">${siri.confirm === 'new' ? 'Wirklich? Alter Schlüssel geht nicht mehr' : 'Neuer Schlüssel'}</button>
-          <button type="button" class="btn danger" data-act="siri_off">${siri.confirm === 'off' ? 'Wirklich ausschalten?' : 'Siri ausschalten'}</button>
+          <button type="button" class="btn ghost" data-act="siri_new">${T(siri.confirm === 'new' ? 'Wirklich? Alter Schlüssel geht nicht mehr' : 'Neuer Schlüssel')}</button>
+          <button type="button" class="btn danger" data-act="siri_off">${T(siri.confirm === 'off' ? 'Wirklich ausschalten?' : 'Siri ausschalten')}</button>
         </div>`;
     }
   }
@@ -108,17 +108,17 @@ document.addEventListener('click', async (e) => {
   e.stopImmediatePropagation();
   const act = el.dataset.act;
   if (act === 'siripage') { siri.confirm = null; siri.info = undefined; siriPage(); siriLoad(); return; }
-  if (act === 'siri_copy') { toast((await copyText(el.dataset.v)) ? 'Kopiert' : 'Kopieren blockiert, bitte von Hand markieren'); return; }
+  if (act === 'siri_copy') { toast(T((await copyText(el.dataset.v)) ? 'Kopiert' : 'Kopieren blockiert, bitte von Hand markieren')); return; }
   if (act === 'siri_new') {
     if (siri.info && siri.confirm !== 'new') { siri.confirm = 'new'; siriPage(); return; }
     siri.confirm = null;
     const l = S.lists.find((x) => x.id === $('#siriList')?.value);
-    if (!l || !l.g) { siriPage('!Bitte eine Liste wählen.'); return; }
+    if (!l || !l.g) { siriPage('!' + T('Bitte eine Liste wählen.')); return; }
     try {
       const k = await api('/rest/v1/rpc/siri_new_key', { method: 'POST', body: JSON.stringify({ g: l.g, lid: l.id }) });
       setSiriKey(k);
       siri.info = { g: l.g, lid: l.id };
-      siriPage('Siri-Schlüssel erzeugt. Richte jetzt den Kurzbefehl ein.');
+      siriPage(T('Siri-Schlüssel erzeugt. Richte jetzt den Kurzbefehl ein.'));
     } catch (err) { siriPage('!' + niceError(err)); }
     return;
   }
@@ -128,7 +128,7 @@ document.addEventListener('click', async (e) => {
     try {
       await api('/rest/v1/rpc/siri_off', { method: 'POST', body: '{}' });
       setSiriKey(''); siri.info = null;
-      siriPage('Siri ist ausgeschaltet. Den Kurzbefehl kannst du löschen.');
+      siriPage(T('Siri ist ausgeschaltet. Den Kurzbefehl kannst du löschen.'));
     } catch (err) { siriPage('!' + niceError(err)); }
   }
 }, true);

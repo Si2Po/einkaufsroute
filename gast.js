@@ -1,6 +1,6 @@
 'use strict';
 /* Gast-Ansicht (gast.html#SCHLÜSSEL): eine per Link geteilte Liste, ohne Konto.
-   Benutzt aus js/grund.js nur Hilfsfunktionen (Text zerlegen, Kategorie erraten, esc) und fasst die gespeicherten
+   Benutzt aus js/grund.js nur Hilfsfunktionen (Text zerlegen, Kategorie erraten, esc), dazu die Sprache (js/en.js, js/sprache.js), und fasst die gespeicherten
    Daten der App auf diesem Gerät nicht an. Alles läuft über die Funktionen in supabase/schritte/gast.sql.
    Einkaufsliste: nach den Kategorien der Gruppe sortiert. Einfache Liste: Abschnitte und eigene Reihenfolge. */
 
@@ -48,10 +48,10 @@ function body() {
     const groups = new Map();
     for (const i of shown) { const c = CAT_BY_ID[i.cat] ? i.cat : 'sonst'; if (!groups.has(c)) groups.set(c, []); groups.get(c).push(i); }
     rows = [...groups.entries()].sort((a, b) => (CAT_INDEX[a[0]] ?? 999) - (CAT_INDEX[b[0]] ?? 999))
-      .map(([c, its]) => head(CAT_BY_ID[c]?.name || 'Sonstiges', its.length) + its.map(rowHtml).join('')).join('');
+      .map(([c, its]) => head(CAT_BY_ID[c]?.name || T('Sonstiges'), its.length) + its.map(rowHtml).join('')).join('');
   }
-  const list = rows ? `<ul class="srows">${rows}</ul>` : `<p class="empty">${l.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
-  const doneHtml = keep || !done.length ? '' : `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${G.showDone}">Erledigt (${done.length}) ${G.showDone ? '▴' : '▾'}</button></div>
+  const list = rows ? `<ul class="srows">${rows}</ul>` : `<p class="empty">${l.items.length ? T('Alles erledigt.') : T('Die Liste ist leer.')}</p>`;
+  const doneHtml = keep || !done.length ? '' : `<div class="donehead"><button type="button" class="link donetoggle" data-act="showdone" aria-expanded="${G.showDone}">${T('Erledigt ({n})', { n: done.length })} ${G.showDone ? '▴' : '▾'}</button></div>
     ${G.showDone ? `<ul class="rows">${done.map(rowHtml).join('')}</ul>` : ''}`;
   return list + doneHtml;
 }
@@ -59,26 +59,26 @@ function body() {
 function draw() {
   const v = document.getElementById('view');
   if (G.gone) {
-    document.title = 'Geteilte Liste';
-    v.innerHTML = '<div class="ghead"><h1>Geteilte Liste</h1></div><p class="empty">Dieser Link gilt nicht mehr. Frag nach einem neuen.</p>';
+    document.title = T('Geteilte Liste');
+    v.innerHTML = `<div class="ghead"><h1>${T('Geteilte Liste')}</h1></div><p class="empty">${T('Dieser Link gilt nicht mehr. Frag nach einem neuen.')}</p>`;
     return;
   }
-  if (!G.list) { v.innerHTML = `<p class="empty">${G.offline ? 'Keine Verbindung. Bitte später nochmal versuchen.' : 'Liste wird geladen …'}</p>`; return; }
-  document.title = G.list.name || 'Geteilte Liste';
+  if (!G.list) { v.innerHTML = `<p class="empty">${T(G.offline ? 'Keine Verbindung. Bitte später nochmal versuchen.' : 'Liste wird geladen …')}</p>`; return; }
+  document.title = G.list.name || T('Geteilte Liste');
   // Kopf und Eingabefeld nur einmal bauen: beim Nachladen bleibt so die Tastatur offen und Getipptes stehen
   if (!document.getElementById('gList')) {
     v.innerHTML = `<div class="ghead"><h1 id="gTitle"></h1><p id="gSub"></p></div>
       <div class="addwrap"><form id="gAdd" class="add" autocomplete="off">
-        <input id="gName" aria-label="Neuer Eintrag" enterkeyhint="done">
-        <button type="submit" class="plus" aria-label="Hinzufügen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+        <input id="gName" aria-label="${T('Neuer Eintrag')}" enterkeyhint="done">
+        <button type="submit" class="plus" aria-label="${T('Hinzufügen')}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
       </form></div>
-      <p class="ghint">Mehreres auf einmal mit Komma oder „und“ trennen. Eine Zahl am Anfang wird zur Menge, z. B. „500g Pasta, 2 Gurken und Milch“.</p>
+      <p class="ghint">${T('Mehreres auf einmal mit Komma oder „und“ trennen. Eine Zahl am Anfang wird zur Menge, z. B. „500g Pasta, 2 Gurken und Milch“.')}</p>
       <div id="gList"></div>
-      <p class="gfoot">Geteilt mit der App <a href="./">Einkaufsroute</a> · <a href="ueber.html">Über diese App</a></p>`;
+      <p class="gfoot">${T('Geteilt mit der App')} <a href="./">Einkaufsroute</a> · <a href="${LANG === 'en' ? 'about.html' : 'ueber.html'}">${T('Über diese App')}</a></p>`;
   }
-  document.getElementById('gTitle').textContent = G.list.name || 'Liste';
-  document.getElementById('gSub').innerHTML = `Geteilte Liste${G.offline ? ' · <b>keine Verbindung</b>' : ''}`;
-  document.getElementById('gName').placeholder = G.list.type === 'simple' ? 'Neuer Eintrag' : 'Was fehlt noch?';
+  document.getElementById('gTitle').textContent = G.list.name || T('Liste');
+  document.getElementById('gSub').innerHTML = `${T('Geteilte Liste')}${G.offline ? ` · <b>${T('keine Verbindung')}</b>` : ''}`;
+  document.getElementById('gName').placeholder = T(G.list.type === 'simple' ? 'Neuer Eintrag' : 'Was fehlt noch?');
   document.getElementById('gList').innerHTML = body();
 }
 
@@ -143,4 +143,6 @@ setInterval(() => { if (document.visibilityState === 'visible') load(); }, 10000
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); else flushMarked(); });
 window.addEventListener('pagehide', flushMarked); // Seite verlassen: Angetipptes gleich speichern
 window.addEventListener('hashchange', () => { G.t = decodeURIComponent(location.hash.slice(1)).trim(); G.gone = false; G.list = null; load(); });
+document.title = T('Geteilte Liste');
+draw(); // „Liste wird geladen …“ gleich in der Sprache des Geräts (gast.html selbst ist fest auf Deutsch)
 load();

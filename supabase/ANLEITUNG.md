@@ -6,7 +6,7 @@ In diesem Ordner:
 - **`passwort_setzen.sql`**: Vorlage, wenn jemand sein Passwort vergessen hat.
 
 ## A. Bestehende Datenbank (das echte Projekt)
-Alle Schritte sind ausgeführt. Kommt eine neue Änderung dazu, steht sie unten in der Liste, und du führst nur diese aus:
+Bis auf Schritt 11 sind alle Schritte ausgeführt. Kommt eine neue Änderung dazu, steht sie unten in der Liste, und du führst nur diese aus:
 1. Supabase → **SQL Editor** → „New query“.
 2. Den kompletten Inhalt der Datei einfügen und **Run** drücken.
 3. Erwartet: „Success. No rows returned“.
@@ -23,6 +23,7 @@ Alle Schritte sind ausgeführt. Kommt eine neue Änderung dazu, steht sie unten 
 | 8 | `schritte/konto_loeschen.sql` (Konto löschen) | 0.8.0 | ja |
 | 9 | `schritte/gruppen_rechte.sql` (nur Verwalter lädt ein und entfernt, Benutzernamen) | 0.8.1 | ja |
 | 10 | `schritte/abgehakt_zeit.sql` (Gast und Uhr merken sich, wann abgehakt wurde) | 0.8.2 | ja |
+| 11 | `schritte/siri_sprache.sql` (Siri antwortet auch auf Englisch) | 0.9.0 | **noch nicht** |
 
 Fehlt ein Schritt, läuft die App trotzdem; nur die jeweilige Funktion geht dann nicht und die App weist darauf hin.
 

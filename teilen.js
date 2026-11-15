@@ -8,34 +8,34 @@ const guestLink = (k) => location.origin + location.pathname.replace(/[^/]*$/, '
 
 // Abschnitt in „Liste bearbeiten“ (js/listen.js)
 function shareBlock(l) {
-  const head = '<div class="sheettitle" style="margin-top:16px">Teilen</div>';
+  const head = `<div class="sheettitle" style="margin-top:16px">${T('Teilen')}</div>`;
   if (!sync.sess || !l.g) {
-    return `${head}<p class="sheetnote" style="margin:0 4px">Zum Teilen per Link musst du angemeldet sein (Einstellungen → Konto und Gruppen).</p>`;
+    return `${head}<p class="sheetnote" style="margin:0 4px">${T('Zum Teilen per Link musst du angemeldet sein (Einstellungen → Konto und Gruppen).')}</p>`;
   }
   const msg = msgNote(ui.shareMsg); // sync.js
   if (!l.share) {
     return `${head}
-      <p class="sheetnote" style="margin:0 4px 8px">Schick die Liste per Link an jemanden ohne Konto. Er kann sie im Browser ansehen, abhaken und etwas hinzufügen, aber nichts löschen.</p>
+      <p class="sheetnote" style="margin:0 4px 8px">${T('Schick die Liste per Link an jemanden ohne Konto. Er kann sie im Browser ansehen, abhaken und etwas hinzufügen, aber nichts löschen.')}</p>
       ${msg}
-      <button type="button" class="btn ghost" style="width:100%" data-act="sh_on" data-id="${l.id}">Per Link teilen</button>`;
+      <button type="button" class="btn ghost" style="width:100%" data-act="sh_on" data-id="${l.id}">${T('Per Link teilen')}</button>`;
   }
   return `${head}
-    <p class="sheetnote" style="margin:0 4px 8px">Die Liste ist per Link geteilt. Wer den Link hat, kann sie ansehen, abhaken und etwas hinzufügen.</p>
+    <p class="sheetnote" style="margin:0 4px 8px">${T('Die Liste ist per Link geteilt. Wer den Link hat, kann sie ansehen, abhaken und etwas hinzufügen.')}</p>
     <div class="siricopy"><code class="sel">${esc(guestLink(l.share))}</code></div>
     ${msg}
     <div class="actions" style="margin-top:8px">
-      <button type="button" class="btn" style="flex:1" data-act="sh_send" data-id="${l.id}">${navigator.share ? 'Link schicken' : 'Link kopieren'}</button>
-      <button type="button" class="btn danger" style="flex:1" data-act="sh_off" data-id="${l.id}">${ui.confirmShare === l.id ? 'Wirklich beenden?' : 'Teilen beenden'}</button>
+      <button type="button" class="btn" style="flex:1" data-act="sh_send" data-id="${l.id}">${T(navigator.share ? 'Link schicken' : 'Link kopieren')}</button>
+      <button type="button" class="btn danger" style="flex:1" data-act="sh_off" data-id="${l.id}">${T(ui.confirmShare === l.id ? 'Wirklich beenden?' : 'Teilen beenden')}</button>
     </div>`;
 }
 
 async function sendGuestLink(l) {
   const url = guestLink(l.share);
   if (navigator.share) {
-    try { await navigator.share({ title: l.name, text: `Meine Liste „${l.name}“:`, url }); } catch (_) { /* abgebrochen */ }
+    try { await navigator.share({ title: l.name, text: T('Meine Liste „{name}“:', { name: l.name }), url }); } catch (_) { /* abgebrochen */ }
     return;
   }
-  toast((await copyText(url)) ? 'Link kopiert' : 'Bitte den Link oben markieren und kopieren');
+  toast(T((await copyText(url)) ? 'Link kopiert' : 'Bitte den Link oben markieren und kopieren'));
 }
 
 document.addEventListener('click', async (e) => {
@@ -55,7 +55,7 @@ document.addEventListener('click', async (e) => {
       again();
       sendGuestLink(l);
     } catch (err) {
-      again('!' + (err.status === 404 ? 'Die Datenbank kennt das Teilen noch nicht (gast.sql fehlt).' : niceError(err)));
+      again('!' + (err.status === 404 ? T('Die Datenbank kennt das Teilen noch nicht (gast.sql fehlt).') : niceError(err)));
     }
   } else if (act === 'sh_send') {
     sendGuestLink(l);
@@ -65,7 +65,7 @@ document.addEventListener('click', async (e) => {
     try {
       await api('/rest/v1/rpc/guest_link_off', { method: 'POST', body: JSON.stringify({ lid: l.id }) });
       delete l.share; commit();
-      again('Teilen beendet. Der alte Link geht nicht mehr.');
+      again(T('Teilen beendet. Der alte Link geht nicht mehr.'));
     } catch (err) { again('!' + niceError(err)); }
   }
 }, true);

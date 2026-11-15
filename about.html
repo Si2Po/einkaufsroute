@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>About this app · Einkaufsroute</title>
+<meta name="theme-color" content="#F2F4F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D110F" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script>/* gleiche Darstellung (Hell/Dunkel, Farbe) wie in der App */ try { var t = localStorage.getItem("ek_theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; var a = localStorage.getItem("ek_accent"); if (a && a !== "custom") document.documentElement.dataset.accent = a; } catch (e) {}</script>
+</head>
+<body class="guest about">
+<!-- About this app: englische Fassung von ueber.html. Bei Änderungen an ueber.html hier nachziehen (die App zeigt die Abschnitte .abox). -->
+<div class="wrap"><main>
+  <p class="aback"><a href="./">‹ Back to the app</a> · <a href="ueber.html" lang="de">Deutsch</a></p>
+  <div class="ghead"><h1>About this app</h1><p>Einkaufsroute · As of November 2026</p></div>
+
+  <div class="helpbody group abox">
+    <h2>A hobby project</h2>
+    <p>Einkaufsroute is a private hobby project. The app is free, has no ads and is developed on the side.</p>
+    <p>It is 100&nbsp;% <b>“vibe-coded”</b>: every line of code was written by <b>Claude Code</b> (with the AI model <b>Claude Opus 5.5</b> by Anthropic), following my ideas and wishes.</p>
+    <p>You use it <b>at your own risk and without any guarantee</b>: there may be bugs, and the app may not exist forever.
+      So save a backup now and then (Settings → Account and groups → Back up and transfer data).</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Where your data is stored</h2>
+    <ul>
+      <li><b>On your device:</b> The app stores everything in your device’s browser storage, so that it also works offline.</li>
+      <li><b>At Supabase</b> (database, servers in the EU, Frankfurt), only if you have an account: your email address, your password (encrypted only), your username (if set),
+        your lists, meals, stores, categories and the purchase history for the suggestions.</li>
+      <li><b>At GitHub Pages</b> (GitHub, USA) the app itself is hosted. When loading it, GitHub technically sees your IP address, as with any website.</li>
+    </ul>
+    <p>There is <b>no tracking, no advertising, no analytics tools</b> and no sharing with third parties.</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Who sees what</h2>
+    <ul>
+      <li>What is in your group “Personal” is visible to you only.</li>
+      <li>What is in a shared group is visible to all members of that group. They see you with your username, or without one with the part of your email address before the @.</li>
+      <li>Whoever has a share link to a list sees exactly this one list, until the link is stopped.</li>
+      <li>The operator of this app could technically look into the database. This only happens if you ask for help, e.g. with a forgotten password.</li>
+    </ul>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Deleting your account</h2>
+    <p>Under Settings → Account and groups → <b>Delete account</b> you delete your account yourself. This removes your email address, your password and everything in “Personal”.
+      Shared groups remain for the other members; if you are the last member, the group is deleted as well.</p>
+    <p>You also have the right to access, correct and delete your data. Just write to the address below.</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>On a Pebble watch</h2>
+    <p>There is a separate watch app for Pebble watches: <a href="https://github.com/Si2Po/einkaufsroute-pebble">github.com/Si2Po/einkaufsroute-pebble</a>.
+      It shows a list via its share link, checks items off and accepts dictation. It does not need an account.</p>
+    <ul>
+      <li>The Pebble app on your phone stores the share link, along with the last loaded state of the list. The watch gets the list from the phone.</li>
+      <li>The phone only talks to the database at Supabase, just like the guest view in the browser.</li>
+      <li>When you dictate on the watch, the Pebble app’s speech service turns your recording into text. Einkaufsroute only receives this text.</li>
+    </ul>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Run it yourself</h2>
+    <p>The code is open: <a href="https://github.com/Si2Po/einkaufsroute">github.com/Si2Po/einkaufsroute</a>.
+      With the instructions in the <code>supabase</code> folder anyone can set up their own copy for free (GitHub Pages + Supabase, both on the free plan).
+      Then the data is only with you. (The instructions are in German.)</p>
+  </div>
+
+  <div class="helpbody group abox">
+    <h2>Contact and responsible person</h2>
+    <p>Simon Popp<br>einkaufsroute [at] si2po.com</p>
+    <p class="sheetnote" style="margin:0">If you write to me, your email address will only be used to answer your request.</p>
+  </div>
+</main></div>
+</body>
+</html>

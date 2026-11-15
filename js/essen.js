@@ -2,7 +2,7 @@
 // Essen: Zutaten auf einen Tipp auf die Liste, Mengenrechner, Zufall, Favoriten, Bearbeiten.
 
 // ---------- Essen: Zutaten auf einen Tipp auf die Liste, mit Mengenrechner und Zufall ----------
-const DEFAULT_TAGS = ['Nudeln', 'Reis', 'schnell', 'viel Gemüse'];
+const DEFAULT_TAGS = ['Nudeln', 'Reis', 'schnell', 'viel Gemüse'].map((x) => T(x));
 Object.assign(ui, { mealTags: [], mealQ: '', mealId: null, mealPortions: 2, mealPick: new Set(), mealRandom: false, lastRandom: null, confirmMeal: false });
 const meals = () => (S.meals = S.meals || []);
 const mealById = (id) => meals().find((m) => m.id === id);
@@ -10,16 +10,16 @@ const mealById = (id) => meals().find((m) => m.id === id);
 const FAV = '★';
 const isFav = (m) => m.tags.includes(FAV);
 const plainTags = (m) => m.tags.filter((t) => t !== FAV);
-const allTags = () => [FAV, ...[...new Set([...meals().flatMap((m) => m.tags), ...(S.customTags || [])])].filter((t) => t !== FAV).sort((a, b) => a.localeCompare(b, 'de'))];
+const allTags = () => [FAV, ...[...new Set([...meals().flatMap((m) => m.tags), ...(S.customTags || [])])].filter((t) => t !== FAV).sort((a, b) => a.localeCompare(b, LOCALE))];
 const tagUsed = (t) => meals().some((m) => m.tags.includes(t));
 function filteredMeals() {
   const q = fold(ui.mealQ.trim());
   return meals()
     .filter((m) => ui.mealTags.every((t) => m.tags.includes(t)) && (!q || fold(m.name).includes(q) || m.ing.some((i) => fold(i.name).includes(q))))
-    .sort((a, b) => isFav(b) - isFav(a) || a.name.localeCompare(b.name, 'de')); // Favoriten oben, sonst A–Z
+    .sort((a, b) => isFav(b) - isFav(a) || a.name.localeCompare(b.name, LOCALE)); // Favoriten oben, sonst A–Z
 }
-const fmtNum = (v) => String(v).replace('.', ',');
-const fmtPortions = (p) => `${fmtNum(p)} ${p === 1 ? 'Person' : 'Personen'}`;
+const fmtNum = (v) => (LANG === 'en' ? String(v) : String(v).replace('.', ',')); // Englisch: Punkt statt Komma
+const fmtPortions = (p) => T(p === 1 ? '{n} Person' : '{n} Personen', { n: fmtNum(p) });
 // "200g" -> "300g", "2" -> "3", "1,5l" -> "2,3l" (Menge hochrechnen; Text ohne Zahl bleibt)
 function scaleQty(qty, f) {
   const m = String(qty || '').match(/^(\d+(?:[.,]\d+)?)(.*)$/);
@@ -29,33 +29,33 @@ function scaleQty(qty, f) {
   return fmtNum(v) + m[2];
 }
 function mealCard(m) {
-  const sub = [plainTags(m).join(' · '),`${m.ing.length} ${m.ing.length === 1 ? 'Zutat' : 'Zutaten'}`].filter(Boolean).join(' · ');
-  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${isFav(m) ? '<span class="favmark" aria-label="Favorit">★</span>' : ''}${esc(m.name)}</strong><small>${esc(sub)}</small></span></button></li>`;
+  const sub = [plainTags(m).join(' · '),T(m.ing.length === 1 ? '{n} Zutat' : '{n} Zutaten', { n: m.ing.length })].filter(Boolean).join(' · ');
+  return `<li class="swp" data-mid="${m.id}"><button type="button" class="card mcard" data-act="m_open" data-id="${m.id}">${m.photo ? `<img class="mthumb" src="${m.photo}" alt="">` : ''}<span class="mt"><strong>${isFav(m) ? `<span class="favmark" aria-label="${T('Favorit')}">★</span>` : ''}${esc(m.name)}</strong><small>${esc(sub)}</small></span></button></li>`;
 }
 function mealListHtml() {
-  if (!meals().length) return '<p class="empty">Noch kein Essen. Lege eins an, dann kommen seine Zutaten mit einem Tipp auf die Liste.</p>';
+  if (!meals().length) return `<p class="empty">${T('Noch kein Essen. Lege eins an, dann kommen seine Zutaten mit einem Tipp auf die Liste.')}</p>`;
   const list = filteredMeals();
-  return list.length ? `<ul class="cards">${list.map(mealCard).join('')}</ul><p class="tip bedien">Tippen: auf die Liste · Gedrückt halten: bearbeiten</p>` : '<p class="empty">Nichts passt zu dieser Auswahl.</p>';
+  return list.length ? `<ul class="cards">${list.map(mealCard).join('')}</ul><p class="tip bedien">${T('Tippen: auf die Liste · Gedrückt halten: bearbeiten')}</p>` : `<p class="empty">${T('Nichts passt zu dieser Auswahl.')}</p>`;
 }
 // Ein Tag zum Filtern. „★“ = nur Favoriten. Ein Tag ohne Essen wird mit „×“ angezeigt: Antippen entfernt ihn.
 function filterChip(t) {
   const on = ui.mealTags.includes(t);
   let cls = 'chip' + (on ? ' on' : ''), extra = '', label = esc(t);
   if (t === FAV) {
-    cls += ' favchip'; extra = ' aria-label="Nur Favoriten"';
+    cls += ' favchip'; extra = ` aria-label="${T('Nur Favoriten')}"`;
   } else if (!tagUsed(t)) {
-    cls += ' unused'; extra = ' title="Kein Essen mit diesem Tag: Tippen entfernt ihn"'; label += ' ×';
+    cls += ' unused'; extra = ` title="${T('Kein Essen mit diesem Tag: Tippen entfernt ihn')}"`; label += ' ×';
   }
   return `<button type="button" class="${cls}" data-act="m_tag" data-tag="${esc(t)}" aria-pressed="${on}"${extra}>${label}</button>`;
 }
 function viewMeals() {
   const tags = allTags();
-  return `<div class="edhead"><h2>Essen</h2></div>
-    ${meals().length ? `<input id="mealQ" type="search" class="notein catsearch" placeholder="Essen oder Zutat suchen" aria-label="Essen suchen" autocomplete="off" value="${esc(ui.mealQ)}">` : ''}
+  return `<div class="edhead"><h2>${T('Essen')}</h2></div>
+    ${meals().length ? `<input id="mealQ" type="search" class="notein catsearch" placeholder="${T('Essen oder Zutat suchen')}" aria-label="${T('Essen suchen')}" autocomplete="off" value="${esc(ui.mealQ)}">` : ''}
     <div class="chips mtags" role="group" aria-label="Tags">${tags.map(filterChip).join('')}${ui.ovTagInput
-      ? '<form id="mOvTagForm" class="tagadd" autocomplete="off"><input id="mOvTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
-      : '<button type="button" class="chip tagplus" data-act="m_ovtagplus" aria-label="Neuen Tag anlegen">+</button>'}</div>
-    <div class="actions mact">${meals().length ? '<button type="button" class="btn" data-act="m_random">Zufälliges Essen</button>' : ''}<button type="button" class="btn ghost" data-act="m_new">+ Neues Essen</button></div>
+      ? `<form id="mOvTagForm" class="tagadd" autocomplete="off"><input id="mOvTagNew" autofocus placeholder="${T('Neuer Tag')}" aria-label="${T('Neuer Tag')}" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="${T('Tag hinzufügen')}">✓</button></form>`
+      : `<button type="button" class="chip tagplus" data-act="m_ovtagplus" aria-label="${T('Neuen Tag anlegen')}">+</button>`}</div>
+    <div class="actions mact">${meals().length ? `<button type="button" class="btn" data-act="m_random">${T('Zufälliges Essen')}</button>` : ''}<button type="button" class="btn ghost" data-act="m_new">${T('+ Neues Essen')}</button></div>
     ${introCard('meals') /* Einführung (hilfe.js) */}
     <div id="mealList">${mealListHtml()}</div>`;
 }
@@ -72,20 +72,20 @@ function mealSheet() {
   const m = mealById(ui.mealId);
   if (!m) return;
   const f = ui.mealPortions / (m.base || 2);
-  const rows = ingSorted(m).map((i) => `<li><label class="mrow"><input type="checkbox" data-act="m_pick" data-id="${i.id}"${ui.mealPick.has(i.id) ? ' checked' : ''}><span class="mn">${esc(i.name)}${i.basic ? ' <small class="basic">Basis</small>' : ''}</span><span class="mq">${esc(scaleQty(i.qty, f))}</span></label></li>`).join('');
-  openSheet(`<div class="sheettitle">${esc(m.name)}<button type="button" class="favbtn${isFav(m) ? ' on' : ''}" data-act="m_fav" aria-pressed="${isFav(m)}" aria-label="Favorit">${isFav(m) ? '★' : '☆'}</button></div>
+  const rows = ingSorted(m).map((i) => `<li><label class="mrow"><input type="checkbox" data-act="m_pick" data-id="${i.id}"${ui.mealPick.has(i.id) ? ' checked' : ''}><span class="mn">${esc(i.name)}${i.basic ? ` <small class="basic">${T('Basis')}</small>` : ''}</span><span class="mq">${esc(scaleQty(i.qty, f))}</span></label></li>`).join('');
+  openSheet(`<div class="sheettitle">${esc(m.name)}<button type="button" class="favbtn${isFav(m) ? ' on' : ''}" data-act="m_fav" aria-pressed="${isFav(m)}" aria-label="${T('Favorit')}">${isFav(m) ? '★' : '☆'}</button></div>
     ${plainTags(m).length ? `<p class="sheetnote" style="margin:-4px 0 8px">${esc(plainTags(m).join(' · '))}</p>` : ''}
     ${m.photo ? `<img class="mphoto" src="${m.photo}" alt="">` : ''}
-    <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="Weniger Personen"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="Mehr Personen">${ICON_PLUS_S}</button></div>
-    ${m.ing.length ? `<ul class="scrollbox mings">${rows}</ul>` : '<p class="sheetnote">Noch keine Zutaten. Tippe auf „Bearbeiten“.</p>'}
+    <div class="mstep"><button type="button" class="stepbtn" data-act="m_pm" data-d="-0.5" aria-label="${T('Weniger Personen')}"${ui.mealPortions <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(ui.mealPortions)}</span><button type="button" class="stepbtn" data-act="m_pm" data-d="0.5" aria-label="${T('Mehr Personen')}">${ICON_PLUS_S}</button></div>
+    ${m.ing.length ? `<ul class="scrollbox mings">${rows}</ul>` : `<p class="sheetnote">${T('Noch keine Zutaten. Tippe auf „Bearbeiten“.')}</p>`}
     <div class="actions mealacts">
-      <button type="button" class="btn ghost" data-act="m_edit">Bearbeiten</button>
-      ${ui.mealRandom ? `<button type="button" class="btn ghost diceBtn${ui.diceRoll ? ' roll' : ''}" data-act="m_random" aria-label="Nochmal würfeln">${ICON_DICE}</button>` : ''}
+      <button type="button" class="btn ghost" data-act="m_edit">${T('Bearbeiten')}</button>
+      ${ui.mealRandom ? `<button type="button" class="btn ghost diceBtn${ui.diceRoll ? ' roll' : ''}" data-act="m_random" aria-label="${T('Nochmal würfeln')}">${ICON_DICE}</button>` : ''}
       <button type="button" class="btn" id="mAddBtn" data-act="m_tolist"${ui.mealPick.size ? '' : ' disabled'}>${mealBtnText()}</button>
     </div>`); // Kochanleitung steht nur unter „Bearbeiten“, das Sheet bleibt fürs Einkaufen schlank
   ui.diceRoll = false;
 }
-const mealBtnText = () => `Zu „${curList()?.name || 'Liste'}“ (${ui.mealPick.size})`;
+const mealBtnText = () => T('Zu „{name}“ ({n})', { name: curList()?.name || T('Liste'), n: ui.mealPick.size });
 // Würfel schräg von oben: drei sichtbare Seiten mit 1, 2 und 3 Augen
 const ICON_DICE = `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
   <path d="M12 2.8l8.2 4.6v9.2L12 21.2l-8.2-4.6V7.4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
@@ -102,27 +102,27 @@ function mealEditPage() {
   const m = mealById(ui.mealId);
   if (!m) return;
   const tags = [...new Set([...allTags(), ...m.tags, ...DEFAULT_TAGS])];
-  const ings = ingSorted(m).map((i) => `<li class="ming"><input class="mqty" data-ing="${i.id}" value="${esc(i.qty || '')}" placeholder="Menge" aria-label="Menge für ${esc(i.name)}" autocomplete="off" autocapitalize="off" enterkeyhint="done"><input class="mname" data-ingname="${i.id}" value="${esc(i.name)}" aria-label="Name der Zutat" autocomplete="off" enterkeyhint="done"><button type="button" class="chipbtn basicbtn${i.basic ? ' on' : ''}" data-act="m_basic" data-id="${i.id}" aria-pressed="${!!i.basic}">Basis</button><button type="button" class="chipbtn" data-act="m_deling" data-id="${i.id}" aria-label="${esc(i.name)} entfernen">×</button></li>`).join('');
+  const ings = ingSorted(m).map((i) => `<li class="ming"><input class="mqty" data-ing="${i.id}" value="${esc(i.qty || '')}" placeholder="${T('Menge')}" aria-label="${esc(T('Menge für {name}', { name: i.name }))}" autocomplete="off" autocapitalize="off" enterkeyhint="done"><input class="mname" data-ingname="${i.id}" value="${esc(i.name)}" aria-label="${T('Name der Zutat')}" autocomplete="off" enterkeyhint="done"><button type="button" class="chipbtn basicbtn${i.basic ? ' on' : ''}" data-act="m_basic" data-id="${i.id}" aria-pressed="${!!i.basic}">${T('Basis')}</button><button type="button" class="chipbtn" data-act="m_deling" data-id="${i.id}" aria-label="${esc(T('{name} entfernen', { name: i.name }))}">×</button></li>`).join('');
   const mid = m.id;
-  openPage('meal:' + mid, 'Essen bearbeiten', `
+  openPage('meal:' + mid, T('Essen bearbeiten'), `
     <input id="mName" class="notein" value="${esc(m.name)}" aria-label="Name">
     <div class="label" style="margin:12px 0 4px">Tags</div>
     <div class="chips">${tags.map((t) => `<button type="button" class="chip${m.tags.includes(t) ? ' on' : ''}" data-act="m_edtag" data-tag="${esc(t)}" aria-pressed="${m.tags.includes(t)}">${esc(t)}</button>`).join('')}${ui.mealTagInput
-      ? '<form id="mTagForm" class="tagadd" autocomplete="off"><input id="mTagNew" autofocus placeholder="Neuer Tag" aria-label="Neuer Tag" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="Tag hinzufügen">✓</button></form>'
-      : '<button type="button" class="chip tagplus" data-act="m_tagplus" aria-label="Neuen Tag anlegen">+</button>'}</div>
-    <div class="label" style="margin:12px 0 4px">Zutaten für <span class="mstep inl"><button type="button" class="stepbtn sm" data-act="m_base" data-d="-0.5" aria-label="Weniger"${(m.base || 2) <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(m.base || 2)}</span><button type="button" class="stepbtn sm" data-act="m_base" data-d="0.5" aria-label="Mehr">${ICON_PLUS_S}</button></span></div>
-    <p class="sheetnote" style="margin:0 0 6px">„Basis“ = hast du meist da, wird beim Hinzufügen nicht vorausgewählt.</p>
+      ? `<form id="mTagForm" class="tagadd" autocomplete="off"><input id="mTagNew" autofocus placeholder="${T('Neuer Tag')}" aria-label="${T('Neuer Tag')}" enterkeyhint="done"><button type="submit" class="chipbtn" aria-label="${T('Tag hinzufügen')}">✓</button></form>`
+      : `<button type="button" class="chip tagplus" data-act="m_tagplus" aria-label="${T('Neuen Tag anlegen')}">+</button>`}</div>
+    <div class="label" style="margin:12px 0 4px">${T('Zutaten für')} <span class="mstep inl"><button type="button" class="stepbtn sm" data-act="m_base" data-d="-0.5" aria-label="${T('Weniger')}"${(m.base || 2) <= 0.5 ? ' disabled' : ''}>${ICON_MINUS}</button><span class="mpers">${fmtPortions(m.base || 2)}</span><button type="button" class="stepbtn sm" data-act="m_base" data-d="0.5" aria-label="${T('Mehr')}">${ICON_PLUS_S}</button></span></div>
+    <p class="sheetnote" style="margin:0 0 6px">${T('„Basis“ = hast du meist da, wird beim Hinzufügen nicht vorausgewählt.')}</p>
     ${m.ing.length ? `<ul class="scrollbox mings edit">${ings}</ul>` : ''}
-    <form id="mIngForm" class="add" autocomplete="off" style="margin:8px 0 0"><input id="mIng" placeholder="Zutat, z. B. 200g Nudeln" aria-label="Zutat hinzufügen"><button type="submit" class="plus" aria-label="Hinzufügen">${ICON_PLUS}</button></form>
-    <div id="mIngSugg" class="sugg inl" role="listbox" aria-label="Vorschläge" hidden></div>
-    <details class="mmore"${m.photo || m.steps ? ' open' : ''}><summary>Foto und Kochanleitung (optional)</summary>
+    <form id="mIngForm" class="add" autocomplete="off" style="margin:8px 0 0"><input id="mIng" placeholder="${T('Zutat, z. B. 200g Nudeln')}" aria-label="${T('Zutat hinzufügen')}"><button type="submit" class="plus" aria-label="${T('Hinzufügen')}">${ICON_PLUS}</button></form>
+    <div id="mIngSugg" class="sugg inl" role="listbox" aria-label="${T('Vorschläge')}" hidden></div>
+    <details class="mmore"${m.photo || m.steps ? ' open' : ''}><summary>${T('Foto und Kochanleitung (optional)')}</summary>
       ${m.photo ? `<img class="mphoto" src="${m.photo}" alt="">` : ''}
-      <div class="bgrow"><label for="mPhoto" class="bgadd">${ICON_CAM}<span>${m.photo ? 'Foto ersetzen' : 'Foto hinzufügen'}</span></label><input type="file" id="mPhoto" accept="image/*" hidden>${m.photo ? '<button type="button" class="chipbtn" data-act="m_delphoto" aria-label="Foto entfernen">×</button>' : ''}</div>
-      <textarea id="mSteps" class="notein" rows="5" placeholder="Kochanleitung" aria-label="Kochanleitung">${esc(m.steps || '')}</textarea>
+      <div class="bgrow"><label for="mPhoto" class="bgadd">${ICON_CAM}<span>${T(m.photo ? 'Foto ersetzen' : 'Foto hinzufügen')}</span></label><input type="file" id="mPhoto" accept="image/*" hidden>${m.photo ? `<button type="button" class="chipbtn" data-act="m_delphoto" aria-label="${T('Foto entfernen')}">×</button>` : ''}</div>
+      <textarea id="mSteps" class="notein" rows="5" placeholder="${T('Kochanleitung')}" aria-label="${T('Kochanleitung')}">${esc(m.steps || '')}</textarea>
     </details>
     ${groupLine('meGroup', m.g, ` data-id="${m.id}"`)}
     <div class="actions" style="margin-top:16px">
-      <button type="button" class="btn danger" data-act="m_del">${ui.confirmMeal ? 'Wirklich löschen?' : 'Essen löschen'}</button>
+      <button type="button" class="btn danger" data-act="m_del">${T(ui.confirmMeal ? 'Wirklich löschen?' : 'Essen löschen')}</button>
     </div>`, () => { if (mealById(mid)) { ui.mealId = mid; mealEditPage(); } });
 }
 function addIngredients(id, text) {
@@ -143,7 +143,7 @@ function updateIngSugg() {
   const qf = fold(q);
   box.innerHTML = list.map((x) => {
     const hit = fold(x.name).startsWith(qf) ? `<b>${esc(x.name.slice(0, qf.length))}</b>${esc(x.name.slice(qf.length))}` : esc(x.name);
-    return `<button type="button" class="sg" role="option" data-act="m_ingsugg" data-name="${esc(x.name)}"><span class="sgn">${hit}</span><span class="sgtag">${esc(CAT_BY_ID[x.cat]?.name || 'Sonstiges')}</span></button>`;
+    return `<button type="button" class="sg" role="option" data-act="m_ingsugg" data-name="${esc(x.name)}"><span class="sgn">${hit}</span><span class="sgtag">${esc(CAT_BY_ID[x.cat]?.name || T('Sonstiges'))}</span></button>`;
   }).join('');
   box.hidden = false;
 }
@@ -177,7 +177,7 @@ function addMealItems(m, portions, pick) {
   });
   return { added: fresh.length, dup, fresh };
 }
-const addedMsg = (r) => `${r.added} ${r.added === 1 ? 'Zutat' : 'Zutaten'} auf der Liste${r.dup ? `, ${r.dup} schon drauf` : ''}`;
+const addedMsg = (r) => T(r.added === 1 ? '{n} Zutat auf der Liste' : '{n} Zutaten auf der Liste', { n: r.added }) + (r.dup ? T(', {n} schon drauf', { n: r.dup }) : '');
 function mealToList() {
   const m = mealById(ui.mealId);
   if (!m) return;
@@ -188,7 +188,7 @@ function mealToList() {
 }
 function randomMeal() {
   const pool = filteredMeals();
-  if (!pool.length) { toast(meals().length ? 'Nichts passt zu dieser Auswahl' : 'Lege zuerst ein Essen an'); return; }
+  if (!pool.length) { toast(T(meals().length ? 'Nichts passt zu dieser Auswahl' : 'Lege zuerst ein Essen an')); return; }
   funRolled();
   const opts = pool.length > 1 ? pool.filter((m) => m.id !== ui.lastRandom) : pool;
   const m = opts[Math.floor(Math.random() * opts.length)];
@@ -196,11 +196,11 @@ function randomMeal() {
   startMeal(m.id, true);
 }
 function newMealSheet() {
-  openSheet(`<div class="sheettitle">Neues Essen</div>
+  openSheet(`<div class="sheettitle">${T('Neues Essen')}</div>
     <form id="newMealForm" autocomplete="off">
-      <input id="newMealName" autofocus class="notein" placeholder="Name, z. B. Spaghetti Bolognese" aria-label="Name des Essens" required>
+      <input id="newMealName" autofocus class="notein" placeholder="${T('Name, z. B. Spaghetti Bolognese')}" aria-label="${T('Name des Essens')}" required>
       ${groupLine('nmGroup', defaultGroup())}
-      <button type="submit" class="btn">Anlegen</button>
+      <button type="submit" class="btn">${T('Anlegen')}</button>
     </form>`);
 }
 // Klicks auf Essen-Elemente (Capture: die allgemeine Klick-Behandlung soll das Sheet nicht schließen)

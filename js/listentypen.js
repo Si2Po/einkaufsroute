@@ -8,16 +8,16 @@ const isSimple = (l = curList()) => l?.type === 'simple';
 const validSec = (id) => !!id && (curList()?.secs || []).some((s) => s.id === id);
 const secName = (id) => (curList()?.secs || []).find((s) => s.id === id)?.name || '';
 function addPlaceholder() {
-  if (!isSimple()) return 'Was brauchst du?';
-  if (validSec(ui.addSec)) return `Zu „${secName(ui.addSec)}“ hinzufügen`;
-  return 'Neuer Eintrag';
+  if (!isSimple()) return T('Was brauchst du?');
+  if (validSec(ui.addSec)) return T('Zu „{name}“ hinzufügen', { name: secName(ui.addSec) });
+  return T('Neuer Eintrag');
 }
 function typeSelect(id, cur, attrs = '') {
-  return `<label class="srow"><span class="pl">Art</span><select id="${id}" aria-label="Art der Liste"${attrs}><option value="">Einkaufsliste</option><option value="simple"${cur === 'simple' ? ' selected' : ''}>Einfache Liste</option></select></label>`;
+  return `<label class="srow"><span class="pl">${T('Art')}</span><select id="${id}" aria-label="${T('Art der Liste')}"${attrs}><option value="">${T('Einkaufsliste')}</option><option value="simple"${cur === 'simple' ? ' selected' : ''}>${T('Einfache Liste')}</option></select></label>`;
 }
 function secField(it) {
   const secs = curList()?.secs || [];
-  return `<label class="srow"><span class="pl">Abschnitt</span><select id="eSec" aria-label="Abschnitt"><option value="">–</option>${secs.map((s) => `<option value="${s.id}"${s.id === it.sec ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>`;
+  return `<label class="srow"><span class="pl">${T('Abschnitt')}</span><select id="eSec" aria-label="${T('Abschnitt')}"><option value="">–</option>${secs.map((s) => `<option value="${s.id}"${s.id === it.sec ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>`;
 }
 function simpleBody() {
   const l = curList(), secs = l.secs || [], keep = !!l.keepDone;
@@ -32,16 +32,16 @@ function simpleBody() {
     const on = ui.addSec === s.id, n = of(s.id).filter((i) => !i.done).length;
     return `<li class="grp secli secbtn${on ? ' on' : ''}" role="button" tabindex="0" data-act="secpick" data-sec="${s.id}" data-key="§${s.id}" aria-pressed="${on}"><span class="gname">${esc(s.name)}</span><span class="cnt">${n}</span></li>`;
   };
-  const rows = of('').map(rowHtml).join('') + secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? its.map(rowHtml).join('') : '<li class="secempty">Noch leer</li>'); }).join('');
-  const body = rows ? `<ul class="srows${wig ? ' wiggle' : ''}" id="listRows">${rows}</ul>` : `<p class="empty">${S.items.length ? 'Alles erledigt.' : 'Die Liste ist leer.'}</p>`;
+  const rows = of('').map(rowHtml).join('') + secs.map((s) => { const its = of(s.id); return head(s) + (its.length ? its.map(rowHtml).join('') : `<li class="secempty">${T('Noch leer')}</li>`); }).join('');
+  const body = rows ? `<ul class="srows${wig ? ' wiggle' : ''}" id="listRows">${rows}</ul>` : `<p class="empty">${S.items.length ? T('Alles erledigt.') : T('Die Liste ist leer.')}</p>`;
   if (wig) return body + wiggleBar(true); // „Fertig“ schwebt über der Tab-Leiste: oben verrutscht nichts, immer mit dem Daumen erreichbar
   let doneHtml;
   if (keep && done.length) { // Abgehakte stehen an ihrem Platz: nur zurücksetzen oder löschen
-    doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">Alle Haken entfernen</button><button type="button" class="link clearbtn" data-act="cleardone">Abgehakte löschen</button></div>`;
+    doneHtml = `<div class="donehead"><button type="button" class="link" data-act="resetdone">${T('Alle Haken entfernen')}</button><button type="button" class="link clearbtn" data-act="cleardone">${T('Abgehakte löschen')}</button></div>`;
   } else {
     doneHtml = doneBlock(done);
   }
-  return body + doneHtml + `<button type="button" class="link addsec" data-act="newsec">+ Abschnitt</button>` + listTip('sortieren');
+  return body + doneHtml + `<button type="button" class="link addsec" data-act="newsec">${T('+ Abschnitt')}</button>` + listTip('sortieren');
 }
 // Einfache Liste, Eintrag gedrückt halten: der Eintrag hebt sich leicht an.
 //   loslassen ohne Bewegung = bearbeiten, Finger bewegen = Eintrag ziehen (danach bleibt der Wackelmodus an).
@@ -93,13 +93,13 @@ function shopDrop(order) {
     if (target[0] === 'z') { // Bereich in diesem Geschäft
       const zi = +target.slice(1), z = st.zones[zi];
       if (defaultZoneIdx(st, it.cat) !== zi) { z.prods = z.prods || {}; z.prods[key] = it.name; }
-      msg = `„${it.name}“ → ${z.name} (merkt sich ${st.name})`;
+      msg = T('„{name}“ → {area} (merkt sich {store})', { name: it.name, area: z.name, store: st.name });
     } else { // Kategorie: „c<Index>“ ohne Geschäft, „n<Kategorie>“ = Kategorie ohne Bereich in diesem Geschäft
       const cat = target[0] === 'c' ? CATS[+target.slice(1)]?.id : target.slice(1);
       if (cat && CAT_BY_ID[cat]) {
         learnKeyword(it.name, cat);
         S.items.forEach((o) => { if (!o.done && normKey(o.name) === key) o.cat = cat; });
-        msg = `„${it.name}“ → ${CAT_BY_ID[cat].name}`;
+        msg = `${T('„{x}“', { x: it.name })} → ${CAT_BY_ID[cat].name}`;
       }
     }
   }
@@ -114,22 +114,22 @@ function shopDrop(order) {
   }
 }
 function newSecSheet() {
-  openSheet(`<div class="sheettitle">Neuer Abschnitt</div>
+  openSheet(`<div class="sheettitle">${T('Neuer Abschnitt')}</div>
     <form id="newSecForm" autocomplete="off">
-      <input id="newSecName" autofocus class="notein" placeholder="Name, z. B. Kino, Streaming oder Kleidung" aria-label="Name des Abschnitts" required>
-      <button type="submit" class="btn">Anlegen</button>
+      <input id="newSecName" autofocus class="notein" placeholder="${T('Name, z. B. Kino, Streaming oder Kleidung')}" aria-label="${T('Name des Abschnitts')}" required>
+      <button type="submit" class="btn">${T('Anlegen')}</button>
     </form>`);
 }
 function sectionSheet(id) {
   const secs = curList()?.secs || [], i = secs.findIndex((s) => s.id === id);
   if (i < 0) return;
   if (ui.confirmSec && ui.confirmSec !== id) ui.confirmSec = null;
-  openSheet(`<div class="sheettitle">Abschnitt</div>
-    <input id="secNameIn" data-id="${id}" class="notein" style="margin-bottom:8px" value="${esc(secs[i].name)}" aria-label="Name des Abschnitts" autocomplete="off" enterkeyhint="done">
-    ${i > 0 ? `<button type="button" class="sheetbtn" data-act="secup" data-id="${id}">Nach oben</button>` : ''}
-    ${i < secs.length - 1 ? `<button type="button" class="sheetbtn" data-act="secdown" data-id="${id}">Nach unten</button>` : ''}
-    <button type="button" class="sheetbtn" data-act="sortitems">Einträge sortieren</button>
-    <button type="button" class="sheetbtn danger" data-act="secdel" data-id="${id}">${ui.confirmSec === id ? 'Wirklich löschen? (Einträge bleiben)' : 'Abschnitt löschen'}</button>`);
+  openSheet(`<div class="sheettitle">${T('Abschnitt')}</div>
+    <input id="secNameIn" data-id="${id}" class="notein" style="margin-bottom:8px" value="${esc(secs[i].name)}" aria-label="${T('Name des Abschnitts')}" autocomplete="off" enterkeyhint="done">
+    ${i > 0 ? `<button type="button" class="sheetbtn" data-act="secup" data-id="${id}">${T('Nach oben')}</button>` : ''}
+    ${i < secs.length - 1 ? `<button type="button" class="sheetbtn" data-act="secdown" data-id="${id}">${T('Nach unten')}</button>` : ''}
+    <button type="button" class="sheetbtn" data-act="sortitems">${T('Einträge sortieren')}</button>
+    <button type="button" class="sheetbtn danger" data-act="secdel" data-id="${id}">${T(ui.confirmSec === id ? 'Wirklich löschen? (Einträge bleiben)' : 'Abschnitt löschen')}</button>`);
 }
 function moveSec(id, d) {
   const secs = curList()?.secs || [], i = secs.findIndex((s) => s.id === id), j = i + d;

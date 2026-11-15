@@ -24,9 +24,9 @@ document.addEventListener('change', (e) => {
 // Jeder Hinweis erscheint, bis man „Verstanden“ tippt. Gemerkt wird das nur auf diesem Gerät (ek_intro).
 // In der Hilfe holt „Einführung nochmal zeigen“ alle zurück.
 const INTRO = {
-  list: ['Willkommen! 👋', 'Schreib oben, was du brauchst, z. B. „Milch, 2 Butter und 500g Pasta“. Die App sortiert alles nach Kategorien. <b>Tippen</b> hakt ab, <b>gedrückt halten</b> bearbeitet.</p><p>Unter Einstellungen → <b>Geschäfte</b> kannst du dein Geschäft anlegen. Dann sortiert sich die Liste nach deinem Weg durch den Laden. Mehr steht unter Einstellungen → Hilfe.'],
-  meals: ['Eure Essen', 'Sammle hier Gerichte mit ihren Zutaten. Antippen setzt die Zutaten auf die Einkaufsliste, passend zur Personenanzahl. Leg dein erstes Essen mit „+ Neues Essen“ an.'],
-  stores: ['Geschäfte (optional)', 'Leg dein Geschäft an und teile es in <b>Bereiche</b> ein, in der Reihenfolge deines Laufwegs (z. B. Obst, Brot, Kühlregal). Jedem Bereich ordnest du <b>Kategorien</b> zu. Dann sortiert sich die Liste genau so, wie du durch den Laden gehst.</p><p>Liegt ein einzelnes <b>Produkt</b> woanders als seine Kategorie, zieh es in der Liste in den richtigen Bereich oder trag es hier beim Bereich unter „Produkte“ ein. Das gilt dann nur für dieses Geschäft.</p><p>Brauchst du keine Geschäfte, schalte „In der Liste verwenden“ aus.']
+  list: [T('Willkommen! 👋'), T('Schreib oben, was du brauchst, z. B. „Milch, 2 Butter und 500g Pasta“. Die App sortiert alles nach Kategorien. <b>Tippen</b> hakt ab, <b>gedrückt halten</b> bearbeitet.</p><p>Unter Einstellungen → <b>Geschäfte</b> kannst du dein Geschäft anlegen. Dann sortiert sich die Liste nach deinem Weg durch den Laden. Mehr steht unter Einstellungen → Hilfe.')],
+  meals: [T('Eure Essen'), T('Sammle hier Gerichte mit ihren Zutaten. Antippen setzt die Zutaten auf die Einkaufsliste, passend zur Personenanzahl. Leg dein erstes Essen mit „+ Neues Essen“ an.')],
+  stores: [T('Geschäfte (optional)'), T('Leg dein Geschäft an und teile es in <b>Bereiche</b> ein, in der Reihenfolge deines Laufwegs (z. B. Obst, Brot, Kühlregal). Jedem Bereich ordnest du <b>Kategorien</b> zu. Dann sortiert sich die Liste genau so, wie du durch den Laden gehst.</p><p>Liegt ein einzelnes <b>Produkt</b> woanders als seine Kategorie, zieh es in der Liste in den richtigen Bereich oder trag es hier beim Bereich unter „Produkte“ ein. Das gilt dann nur für dieses Geschäft.</p><p>Brauchst du keine Geschäfte, schalte „In der Liste verwenden“ aus.')]
 };
 function introSeen() {
   try { return JSON.parse(localStorage.getItem('ek_intro') || '{}') || {}; } catch (_) { return {}; }
@@ -37,7 +37,7 @@ function setIntroSeen(v) {
 function introCard(key) {
   if (introSeen()[key] || !INTRO[key]) return '';
   const [title, text] = INTRO[key];
-  return `<div class="intro" role="note"><strong>${title}</strong><p>${text}</p><button type="button" class="link" data-act="introok" data-key="${key}">Verstanden</button></div>`;
+  return `<div class="intro" role="note"><strong>${title}</strong><p>${text}</p><button type="button" class="link" data-act="introok" data-key="${key}">${T('Verstanden')}</button></div>`;
 }
 function introDismiss(key) { setIntroSeen({ ...introSeen(), [key]: 1 }); }
 // Bisherige Nutzer (Daten schon da): alle Hinweise als gesehen markieren, aber nur beim allerersten Mal
@@ -47,17 +47,17 @@ function introSkipAll() {
 }
 
 // ---------- Über diese App ----------
-// Der Text steht nur in ueber.html (die Gast-Ansicht verlinkt die Datei direkt). In der App erscheint er als normale
+// Der Text steht nur in ueber.html (englisch: about.html; die Gast-Ansicht verlinkt die Datei direkt). In der App erscheint er als normale
 // Unterseite (Zurück-Pfeil, Wisch vom Rand): Die Abschnitte (.abox) werden aus der Datei übernommen, offline aus dem Cache.
 async function aboutPage() {
-  openPage('about', 'Über diese App', '<p class="sheetnote">Wird geladen …</p>');
+  openPage('about', T('Über diese App'), `<p class="sheetnote">${T('Wird geladen …')}</p>`);
   let html;
   try {
-    const doc = new DOMParser().parseFromString(await (await fetch('ueber.html')).text(), 'text/html');
+    const doc = new DOMParser().parseFromString(await (await fetch(LANG === 'en' ? 'about.html' : 'ueber.html')).text(), 'text/html');
     html = [...doc.querySelectorAll('.abox')].map((b) => b.outerHTML).join('');
   } catch (_) { /* unten: Hinweis */ }
   if (pageTop() !== 'about') return; // inzwischen zurückgegangen
-  openPage('about', 'Über diese App', html ? `<div class="about">${html}</div>` : '<p class="sheetnote">Konnte gerade nicht geladen werden. Bitte später nochmal versuchen.</p>');
+  openPage('about', T('Über diese App'), html ? `<div class="about">${html}</div>` : `<p class="sheetnote">${T('Konnte gerade nicht geladen werden. Bitte später nochmal versuchen.')}</p>`);
 }
 
 // ---------- Hilfe-Seite ----------
@@ -66,8 +66,9 @@ const helpTopic = (title, html, icon = '') => `<details class="helpsec"><summary
 const ICON_SHARE = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" class="inl"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 11v9h14v-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function helpPage() {
+  const en = LANG === 'en' ? HELP_EN() : null; // englische Fassung der Themen: js/en.js (bei Änderungen dort nachziehen)
   const topics = [
-    helpTopic('Die App aufs iPhone holen', `
+    helpTopic(T('Die App aufs iPhone holen'), en ? en.iphone : `
       <ol>
         <li>Die Adresse der App in <b>Safari</b> öffnen.</li>
         <li>Unten auf <b>Teilen</b> ${ICON_SHARE} tippen.</li>
@@ -75,7 +76,7 @@ function helpPage() {
       </ol>
       <p>Danach kannst du die App über das neue Symbol auf dem Home-Bildschirm öffnen.</p>
       <p>Sie hat dort einen eigenen Speicher. Wenn du dich anmeldest, werden deine Listen, Kategorien, Essen und Geschäfte synchronisiert.</p>`),
-    helpTopic('Die Liste bedienen', `
+    helpTopic(T('Die Liste bedienen'), en ? en.list : `
       <ul>
         <li><b>Liste wählen oder anlegen:</b> unten ein zweites Mal auf ${TAB_ICONS.list} „Liste“ tippen.</li>
         <li><b>Hinzufügen:</b> oben eintippen und mit + bestätigen. Mehrere Dinge auf einmal gehen auch: einfach durch Komma trennen, z. B. „Milch, Brot, 2 Butter“. Eine Zahl am Anfang wird zur Menge.<br>
@@ -86,11 +87,11 @@ function helpPage() {
         <li><b>Tippen:</b> abhaken. Der Eintrag rutscht kurz danach nach „Erledigt“. Nochmal tippen macht es rückgängig.</li>
         <li><b>Vielleicht fällig:</b> Kaufst du etwas regelmäßig (mindestens dreimal), schlägt die App es über der Liste vor, sobald es wieder Zeit dafür ist. Antippen setzt es auf die Liste, × blendet den Vorschlag eine Weile aus. Unter Einstellungen → Vorschläge siehst du, was erkannt wurde, kannst den Rhythmus ändern und eigene Vorschläge anlegen.</li>
       </ul>`),
-    helpTopic('Mit Siri hinzufügen', `
+    helpTopic(T('Mit Siri hinzufügen'), en ? en.siri : `
       <p>Mit einem <b>Kurzbefehl</b> sagst du „Hey Siri, Einkauf“ und dann einfach, was fehlt, z. B. „Milch und zwei Butter“. Das klappt auch bei gesperrtem iPhone.</p>
       <p>Einrichten unter Einstellungen → Konto und Gruppen → <b>Siri</b> (dafür musst du angemeldet sein). Dort wählst du die Liste und bekommst eine Schritt-für-Schritt-Anleitung mit allem zum Kopieren.</p>
       <p>Die Einträge erscheinen auf der Liste, sobald jemand aus der Gruppe die App offen hat.</p>`),
-    helpTopic('Einkaufsliste und einfache Liste', `
+    helpTopic(T('Einkaufsliste und einfache Liste'), en ? en.types : `
       <p>Beim Anlegen (oder unter „Liste bearbeiten“) wählst du die <b>Art</b>:</p>
       <ul>
         <li><b>Einkaufsliste:</b> sortiert sich nach dem Laufweg im gewählten Geschäft und nach Kategorien.</li>
@@ -99,7 +100,7 @@ function helpPage() {
         <li>Bei einfachen Listen wählst du auch, ob Abgehaktes nach unten rutscht oder durchgestrichen stehen bleibt (praktisch für Packlisten).</li>
         <li><b>Mit jemandem ohne Konto teilen:</b> Liste bearbeiten → „Per Link teilen“. Wer den Link hat, sieht nur diese Liste im Browser, kann abhaken und etwas hinzufügen, aber nichts löschen. „Teilen beenden“ macht den Link ungültig.</li>
       </ul>`),
-    helpTopic('Geschäfte und Grundriss', `
+    helpTopic(T('Geschäfte und Grundriss'), en ? en.stores : `
       <ul>
         <li>Brauchst du keine Geschäfte, schalte sie unter Einstellungen → Geschäfte → <b>„In der Liste verwenden“</b> aus. Die Liste sortiert dann nur nach Kategorien. Das gilt nur für dein Gerät, die anderen in der Gruppe sehen weiter ihr Geschäft.</li>
         <li>Lege für jedes Geschäft seine <b>Bereiche</b> in der Reihenfolge deines Laufwegs an und wähle, welche Kategorien dort liegen. Die Liste sortiert sich dann genau so.</li>
@@ -107,14 +108,14 @@ function helpPage() {
         <li>Liegt ein Produkt woanders als seine Kategorie, ziehe es in der Liste in den richtigen Bereich, wähle im Eintrag den „Bereich“ oder trag es beim Geschäft im Bereich unter „Produkte“ ein. Das gilt dann nur für dieses Geschäft.</li>
         <li>Liegt eine Kategorie in mehreren Bereichen, markiert der <b>★</b>, welcher Bereich hauptsächlich für diese Kategorie verwendet werden soll.</li>
       </ul>`),
-    helpTopic('Kategorien und Stichwörter', `
+    helpTopic(T('Kategorien und Stichwörter'), en ? en.cats : `
       <ul>
         <li>Die App ordnet neue Einträge anhand von <b>Stichwörtern</b> einer Kategorie zu („Tomaten“ → Obst & Gemüse).</li>
         <li>Ordnest du einen Eintrag selbst um, <b>lernt</b> sie das für das nächste Mal.</li>
         <li><b>Stichwörter mit Stern</b> gelten für ganze Wortgruppen: „tk*“ erkennt alles, was mit TK beginnt (TK Erbsen, TK-Spinat), „*saft“ alles, was auf saft endet (Orangensaft, Apfelsaft).</li>
         <li>Unter Einstellungen → Kategorien siehst du alle Stichwörter, legst eigene Kategorien an und bestimmst die Reihenfolge, wenn kein Geschäft gewählt ist (gedrückt halten zum Sortieren).</li>
       </ul>`),
-    helpTopic('Essen', `
+    helpTopic(T('Essen'), en ? en.meals : `
       <ul>
         <li><b>Antippen:</b> Zutaten auswählen, Personenanzahl anpassen und mit einem Tipp auf die Liste setzen. Die Mengen rechnen sich mit.</li>
         <li><b>Basis</b>-Zutaten (z. B. Salz, Öl) hast du meist da: sie sind nicht vorausgewählt.</li>
@@ -125,7 +126,7 @@ function helpPage() {
         <li><b>Zufälliges Essen</b> wählt eins aus, passend zu den gewählten Tags. Der Würfel würfelt neu.</li>
         <li><b>Gedrückt halten:</b> Essen bearbeiten (Zutaten, Tags, Foto, Kochanleitung).</li>
       </ul>`),
-    helpTopic('Gruppen', `
+    helpTopic(T('Gruppen'), en ? en.groups : `
       <ul>
         <li>Du siehst immer <b>alles</b> aus allen deinen Gruppen. Die Gruppe regelt nur, <b>wer etwas mitsieht</b>.</li>
         <li><b>Persönlich</b> siehst nur du. Weitere Gruppen (z. B. „Einkauf“) kannst du mit anderen teilen.</li>
@@ -138,7 +139,7 @@ function helpPage() {
         <li>Unter Einstellungen → Konto und Gruppen kannst du neue Gruppen anlegen, einer Gruppe beitreten oder sie wieder verlassen.</li>
         <li><b>Einladen und Mitglieder entfernen</b> kann nur, wer die Gruppe angelegt hat (steht bei den Mitgliedern als „verwaltet“). Verlässt diese Person die Gruppe, übernimmt das Mitglied, das am längsten dabei ist. Umbenennen dürfen alle.</li>
       </ul>`, ICON_GROUP),
-    helpTopic('Konto, Abgleich und Sicherung', `
+    helpTopic(T('Konto, Abgleich und Sicherung'), en ? en.account : `
       <ul>
         <li>Wenn du angemeldet bist, gleicht die App deine Daten automatisch ab: jedes Mal, wenn du sie öffnest, und danach alle paar Sekunden, solange sie geöffnet ist. Änderungen der anderen in deinen Gruppen siehst du so nach kurzer Zeit auch bei dir.</li>
         <li><b>Ohne Netz</b> kannst du die App ganz normal weiter benutzen, zum Beispiel im Laden ohne Empfang. Deine Änderungen werden abgeglichen, sobald du wieder Netz hast.</li>
@@ -147,10 +148,10 @@ function helpPage() {
         <li><b>Abmelden:</b> Wenn du dich abmeldest, bleiben deine Daten auf diesem Gerät erhalten. Sie werden dann nur nicht mehr abgeglichen.</li>
         <li><b>Sicherung:</b> Unter Einstellungen → Konto und Gruppen → Daten sichern und übertragen kannst du alles als Datei oder als Text sichern. So nimmst du deine Daten auch auf ein anderes Gerät mit.</li>
       </ul>`),
-    helpTopic('Neue Version', `
+    helpTopic(T('Neue Version'), en ? en.version : `
       <p>Die App aktualisiert sich von selbst, sobald es eine neue Version gibt. Wenn du sofort nachsehen möchtest, öffne die Einstellungen und ziehe die Seite <b>ganz oben nach unten</b>. Welche Version du gerade hast, steht ganz unten in den Einstellungen.</p>`),
   ];
-  openPage('help', 'Hilfe', `
-    <div class="group"><label class="sheetbtn swrow"><span>Hinweise anzeigen<small>Kleine Bedienhinweise unter Listen und Essen</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="Kleine Späße">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label><button type="button" class="sheetbtn swrow" data-act="introreset"><span>Einführung nochmal zeigen<small>Willkommens-Hinweise in Liste, Essen und Geschäfte</small></span><span class="swicon" aria-hidden="true">↺</span></button></div>
+  openPage('help', T('Hilfe'), `
+    <div class="group"><label class="sheetbtn swrow"><span>${T('Hinweise anzeigen')}<small>${T('Kleine Bedienhinweise unter Listen und Essen')}</small></span><input type="checkbox" switch id="tipsSwitch"${tipsOn() ? ' checked' : ''}></label><label class="sheetbtn swrow"><span class="funicon" aria-label="${T('Kleine Späße')}">🎉</span><input type="checkbox" switch id="funSwitch"${funOn() ? ' checked' : ''}></label><button type="button" class="sheetbtn swrow" data-act="introreset"><span>${T('Einführung nochmal zeigen')}<small>${T('Willkommens-Hinweise in Liste, Essen und Geschäfte')}</small></span><span class="swicon" aria-hidden="true">↺</span></button></div>
     <div class="helplist">${topics.join('')}</div>`); // ohne Neuaufbau beim Abgleich: aufgeklappte Themen bleiben offen
 }
