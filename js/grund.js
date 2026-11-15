@@ -244,8 +244,9 @@ const SPEECH = {
     split: /[,;\n]|\s+(?:and|plus|as\s+well\s+as)\s+/i, drop: /^(?:and|also|please)$/i
   }
 };
+const speech = () => SPEECH[LANG] || SPEECH.de;
 function spokenPart(p) {
-  const L = SPEECH[LANG] || SPEECH.de;
+  const L = speech(), en = L === SPEECH.en;
   let s = p.trim().replace(/[.!?]+$/, '').trim();
   for (let i = 0; i < 4; i++) { const t = s.replace(L.lead, ''); if (t === s) break; s = t; }
   for (let i = 0; i < 3; i++) { const t = s.replace(L.tail, ''); if (t === s) break; s = t; }
@@ -261,18 +262,21 @@ function spokenPart(p) {
     const rest = s.slice(first.length).trim();
     s = L.unitWord.test(rest) ? '1 ' + rest : rest;
   }
-  if (L === SPEECH.en) s = s.replace(/^(\d+)\s+dozen\s+(?:of\s+)?/i, (m, n) => n * 12 + ' '); // „a dozen eggs“ -> „12 eggs“
+  if (en) s = s.replace(/^(\d+)\s+dozen\s+(?:of\s+)?/i, (m, n) => n * 12 + ' '); // „a dozen eggs“ -> „12 eggs“
   // Mengenwörter vereinheitlichen: „2 Kilo“ -> „2kg“, „0,5 kg“ -> „500g“
   for (const [words, short] of L.units) s = s.replace(new RegExp(`${UNIT_NUM}(?:${words})\\b`, 'i'), '$1' + short);
-  if (L === SPEECH.en) s = s.replace(/^(\d+(?:[.,]\d+)?\s?[a-z]*)\s+of\s+/i, '$1 '); // „2 bottles of water“ -> „2 bottles water“
+  if (en) s = s.replace(/^(\d+(?:[.,]\d+)?\s?[a-z]*)\s+of\s+/i, '$1 '); // „2 bottles of water“ -> „2 bottles water“
   s = s.replace(/^0[.,]5kg\b/i, '500g').replace(/^0[.,]25kg\b/i, '250g');
   s = s.replace(/^(\d+)\s+x\s+/i, '$1x ');
   // Englisch diktiert kommt klein an: auch den Namen hinter einer Menge groß beginnen („2 butter“ -> „2 Butter“)
-  if (L === SPEECH.en) { const n = parseEntry(s).name; if (n && s.endsWith(n)) s = s.slice(0, s.length - n.length) + n.charAt(0).toUpperCase() + n.slice(1); }
+  if (en) {
+    const name = parseEntry(s).name;
+    if (name && s.endsWith(name)) s = s.slice(0, s.length - name.length) + name.charAt(0).toUpperCase() + name.slice(1);
+  }
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function splitSpoken(text) {
-  const L = SPEECH[LANG] || SPEECH.de;
+  const L = speech();
   if (L === SPEECH.en) text = text.replace(/\bone\s+and\s+a\s+half\b/gi, '1.5'); // sonst trennt das „and“ die Menge
   return text.split(L.split).map(spokenPart).filter((x) => x && !L.drop.test(x));
 }

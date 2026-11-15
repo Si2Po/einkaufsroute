@@ -557,7 +557,12 @@ function groupPage(id, msg) {
   if (!g) { backTo('account', () => accountPage()); return; }
   const personal = g.kind === 'personal', me = sync.sess?.user.email;
   const count = (arr) => arr.filter((x) => x.g === id).length;
-  const what = [T(count(S.lists) === 1 ? '{n} Liste' : '{n} Listen', { n: count(S.lists) }), T(count(S.stores) === 1 ? '{n} Geschäft' : '{n} Geschäfte', { n: count(S.stores) }), T(count(S.meals || []) === 1 ? '1 Essen' : '{n} Essen', { n: count(S.meals || []) })].join(' · ');
+  const nl = count(S.lists), ns = count(S.stores), nm = count(S.meals || []);
+  const what = [
+    T(nl === 1 ? '{n} Liste' : '{n} Listen', { n: nl }),
+    T(ns === 1 ? '{n} Geschäft' : '{n} Geschäfte', { n: ns }),
+    T(nm === 1 ? '1 Essen' : '{n} Essen', { n: nm }),
+  ].join(' · ');
   openPage('group:' + id, g.name, `
     ${personal ? '' : `<label class="field"><span>Name</span><input id="grpName" data-id="${id}" value="${esc(g.name)}" autocomplete="off"></label>`}
     <p class="sheetnote" style="margin:4px">${T(personal ? 'Nur für dich. Diese Gruppe kann nicht geteilt oder verlassen werden.' : 'Alle Mitglieder sehen, was in dieser Gruppe liegt.')} ${T('Darin: {what}.', { what })}</p>
