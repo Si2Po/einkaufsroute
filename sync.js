@@ -771,7 +771,8 @@ document.addEventListener('click', async (e) => {
   else if (act === 'acc_sync') { sync.dirty = true; sync.ver++; await syncRun(); accountPage(sync.status === 'ok' ? T('Abgeglichen.') : '!' + sync.err); }
   else if (act === 'acc_share') {
     const link = el.dataset.link;
-    if (navigator.share) { try { await navigator.share({ title: 'Einkaufsroute', text: T('Komm in meinen Haushalt bei Einkaufsroute:'), url: link }); } catch (_) { /* abgebrochen */ } }
+    // Link im Text (nicht als url): „Kopieren“ im iPhone-Teilen-Menü nimmt sonst nur den Text ohne Link
+    if (navigator.share) { try { await navigator.share({ title: 'Einkaufsroute', text: T('Komm in meinen Haushalt bei Einkaufsroute:') + ' ' + link }); } catch (_) { /* abgebrochen */ } }
     else { const ok = await copyText(link); const i = $('#invLink'); if (i) { i.select(); } toast(T(ok ? 'Link kopiert' : 'Link markiert – bitte kopieren')); }
   } else if (act === 'acc_logout') {
     await signOutHere();

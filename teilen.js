@@ -32,7 +32,8 @@ function shareBlock(l) {
 async function sendGuestLink(l) {
   const url = guestLink(l.share);
   if (navigator.share) {
-    try { await navigator.share({ title: l.name, text: T('Meine Liste „{name}“:', { name: l.name }), url }); } catch (_) { /* abgebrochen */ }
+    // Link im Text statt als eigenes url-Feld: „Kopieren“ im iPhone-Teilen-Menü nimmt sonst nur den Text ohne Link
+    try { await navigator.share({ title: l.name, text: T('Meine Liste „{name}“:', { name: l.name }) + ' ' + url }); } catch (_) { /* abgebrochen */ }
     return;
   }
   toast(T((await copyText(url)) ? 'Link kopiert' : 'Bitte den Link oben markieren und kopieren'));
