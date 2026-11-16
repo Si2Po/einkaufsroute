@@ -95,7 +95,7 @@ function celebrate() {
   cv.className = 'confetti';
   cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
   document.body.append(cv);
-  const ctx = cv.getContext('2d'), accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0E7A55';
+  const ctx = cv.getContext('2d'), accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#1F6BCF';
   const colors = [accent, '#F4B400', '#E2557A', '#4DA3FF', '#7ED957'];
   const bits = Array.from({ length: 90 }, () => ({
     x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * 0.4,

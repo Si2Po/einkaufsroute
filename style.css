@@ -1,14 +1,14 @@
 /* Layout: eine schmale Spalte für das iPhone (375 pt breit). Unten die schwebende Leiste (Liste | Essen | Einstellungen).
-   Farben: neutrale Flächen, Grün als Akzent. Hell/Dunkel folgt dem iPhone oder dem Schalter in Einstellungen → Darstellung
-   (setzt data-theme="light"/"dark" auf <html>). Bei Farbänderungen auch THEME_BG in app.js und theme-color in index.html anpassen. */
+   Farben: graue Flächen, der Hintergrund mit einem Hauch der Akzentfarbe (Standard Blau, siehe unten „Akzentfarbe“). Hell/Dunkel folgt dem iPhone oder dem Schalter in Einstellungen → Darstellung
+   (setzt data-theme="light"/"dark" auf <html>). Bei Farbänderungen auch themeBg() in bedienung.js und theme-color in index.html, ueber.html, about.html, gast.html anpassen. */
 :root {
-  --bg: #F2F4F3;
+  --bg: #F2F4F6;
   --surface: #FFFFFF;
-  --ink: #16201B;
-  --muted: #5F6B65;
-  --line: #DCE2DE;
-  --soft: #E7EDEA;
-  --accent: #0E7A55;
+  --ink: #1D1D1D;
+  --muted: #686868;
+  --line: #E0E0E0;
+  --soft: #EBEBEB;
+  --accent: #1F6BCF;
   --on-accent: #FFFFFF;
   --warn: #B3361E;
   --glass: rgba(255, 255, 255, .72);
@@ -19,16 +19,16 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0D110F; --surface: #171C19; --ink: #E9EFEB; --muted: #93A29A;
-    --line: #29312D; --soft: #1F2622; --accent: #4CD49B; --on-accent: #04261A; --warn: #FF8A72;
-    --glass: rgba(30, 36, 33, .66); --glass-line: rgba(255, 255, 255, .08);
+    --bg: #0E1013; --surface: #1B1B1B; --ink: #EDEDED; --muted: #9E9E9E;
+    --line: #2F2F2F; --soft: #242424; --accent: #6AA8FF; --on-accent: #04172E; --warn: #FF8A72;
+    --glass: rgba(34, 34, 34, .66); --glass-line: rgba(255, 255, 255, .08);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0D110F; --surface: #171C19; --ink: #E9EFEB; --muted: #93A29A;
-  --line: #29312D; --soft: #1F2622; --accent: #4CD49B; --on-accent: #04261A; --warn: #FF8A72;
-  --glass: rgba(30, 36, 33, .66); --glass-line: rgba(255, 255, 255, .08);
+  --bg: #0E1013; --surface: #1B1B1B; --ink: #EDEDED; --muted: #9E9E9E;
+  --line: #2F2F2F; --soft: #242424; --accent: #6AA8FF; --on-accent: #04172E; --warn: #FF8A72;
+  --glass: rgba(34, 34, 34, .66); --glass-line: rgba(255, 255, 255, .08);
   color-scheme: dark;
 }
 
@@ -267,6 +267,8 @@ html.kb #tabbar { visibility: hidden; }
 .sgn b { font-weight: 700; }
 .sgtag { flex: none; max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .75rem; color: var(--muted); }
 .sgtag.on { color: var(--accent); font-weight: 600; }
+.sg.dupnote { padding: 10px 14px; color: var(--accent); font-weight: 600; font-size: .9rem; line-height: 1.3; }
+.sg.dupnote .sgn { white-space: normal; }
 .row.flash { animation: rowflash 1.1s ease-out; }
 @keyframes rowflash { 0%, 55% { background: var(--soft); } 100% { background: transparent; } }
 
@@ -303,7 +305,7 @@ dialog.viewer::backdrop { background: #000; }
 #toast:not(:popover-open):not(.fallback){display:none}
 
 .catsearch{margin:0 0 8px}
-#catRes .sheetbtn small.on{color:var(--accent,#0f6b4f);font-weight:600}
+#catRes .sheetbtn small.on{color:var(--accent);font-weight:600}
 #catRes .sheetbtn small.muted{color:#8a8a90;font-weight:400}
 #catRes .sheetbtn i{font-style:normal;font-weight:600}
 
@@ -374,7 +376,7 @@ dialog.viewer::backdrop { background: #000; }
 .row[data-kind="details"]::after,.row[data-kind="check"]::after,.swp[data-kind="open"]::after,.swp[data-kind="edit"]::after,.swp[data-kind="tolist"]::after{background:var(--accent);color:var(--on-accent)}
 .row[data-kind="none"]::after,.swp[data-kind="none"]::after{background:var(--line)}
 .row[data-armed="1"]::after,.swp[data-armed="1"]::after{opacity:1}
-#toast .toastbtn{margin-left:12px;background:none;border:0;color:#8FE3C2;font:inherit;font-weight:700;padding:2px 4px}
+#toast .toastbtn{margin-left:12px;background:none;border:0;color:color-mix(in srgb,var(--accent) 45%,#fff);font:inherit;font-weight:700;padding:2px 4px}
 
 .cards{overflow-x:clip}
 
@@ -482,7 +484,11 @@ dialog:not(.viewer) {
 html.kb dialog:not(.viewer) { padding-bottom: 14px; }
 dialog::backdrop { background: rgba(0, 0, 0, .32); }
 
-/* Akzentfarbe (Einstellungen → Darstellung): data-accent auf <html>. Je Farbe hell und dunkel. */
+/* Akzentfarbe (Einstellungen → Darstellung): data-accent auf <html>, ohne = Blau (oben in :root). Je Farbe hell und dunkel.
+   Neue Farbe: auch in ACCENTS in bedienung.js eintragen (Name, Farbe hell und dunkel). */
+:root[data-accent="gruen"] { --accent: #0E7A55; --on-accent: #FFFFFF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="gruen"] { --accent: #4CD49B; --on-accent: #04261A; } }
+:root[data-theme="dark"][data-accent="gruen"] { --accent: #4CD49B; --on-accent: #04261A; }
 :root[data-accent="blau"] { --accent: #1F6BCF; --on-accent: #FFFFFF; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="blau"] { --accent: #6AA8FF; --on-accent: #04172E; } }
 :root[data-theme="dark"][data-accent="blau"] { --accent: #6AA8FF; --on-accent: #04172E; }
@@ -495,6 +501,14 @@ dialog::backdrop { background: rgba(0, 0, 0, .32); }
 :root[data-accent="pink"] { --accent: #C2306B; --on-accent: #FFFFFF; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"])[data-accent="pink"] { --accent: #FF7FAE; --on-accent: #3A0A1D; } }
 :root[data-theme="dark"][data-accent="pink"] { --accent: #FF7FAE; --on-accent: #3A0A1D; }
+/* Nur der Hintergrund (--bg) bekommt einen Hauch der Akzentfarbe: feste Helligkeit, Farbton (h) von --accent,
+   Sättigung (c) als kleiner Anteil davon (Grau als eigene Farbe gibt also Grau). Karten, Linien und Schrift bleiben rein grau.
+   Ältere Browser ohne „oklch(from …)“ behalten den festen Wert oben (passt zu Blau). Gleiche Rechnung in themeBg() in bedienung.js (Statusleiste). */
+@supports (color: oklch(from red l calc(c * .5) h)) {
+  :root { --bg: oklch(from var(--accent) .9654 calc(c * .023) h); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: oklch(from var(--accent) .1724 calc(c * .053) h); } }
+  :root[data-theme="dark"] { --bg: oklch(from var(--accent) .1724 calc(c * .053) h); }
+}
 .swatches { display: flex; flex-wrap: wrap; gap: 12px; padding: 14px; }
 .swatch { width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: var(--c); display: grid; place-items: center; color: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
 .swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--c); }

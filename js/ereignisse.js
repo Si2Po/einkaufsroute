@@ -179,36 +179,46 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Eingabefeld oben: mehrere Einträge mit Komma trennen ("Milch, Brot, 2 Äpfel"). Das Feld bleibt bestehen, die Tastatur bleibt offen.
-function addFromInput() {
+// Steht etwas schon auf der Liste, bleibt es im Feld stehen (der Rest kommt dazu) und direkt unter dem Feld steht ein Hinweis
+// statt der Vorschläge (eine Meldung unten würde die iPhone-Tastatur verdecken). Nochmal + / Enter mit demselben Text
+// oder Antippen des Hinweises fügt es doppelt hinzu. ui.dupText merkt sich, wonach gefragt wurde, ui.dupNames für den Hinweis.
+function addFromInput(force) {
   const input = $('#addName');
-  const r = addText(input.value);
+  force = force === true || (!!ui.dupText && input.value.trim() === ui.dupText);
+  ui.dupText = '';
+  const r = addText(input.value, curList(), force);
   if (!r) return;
-  input.value = '';
-  commit();
+  input.value = r.dupParts.join(', ');
+  if (r.added.length) commit();
+  if (r.dups.length) {
+    ui.dupText = input.value.trim();
+    ui.dupNames = quotedNames(r.dups);
+    flashItem(r.dups[0].id);
+    input.focus(); // sonst blendet focusout den Hinweis aus (Tippen auf + nimmt dem Feld den Fokus)
+  } else funItemAdded(r.added);
   updateSugg();
-  if (r.dups.length) { flashItem(r.dups[0].id); toast(T('{names} steht schon auf der Liste', { names: quotedNames(r.dups) })); }
-  else funItemAdded(r.added);
 }
 const quotedNames = (items) => items.map((i) => T('„{x}“', { x: i.name })).join(', ');
 // Text (getippt, gesprochen oder per Kurzbefehl/Siri) in eine Liste übernehmen, ohne Angabe in die offene. Speichert noch nicht.
-// Gibt null zurück, wenn nichts drinstand, sonst { added: [Namen], dups: [schon vorhandene Einträge] }.
-function addText(text, l = curList()) {
+// Gibt null zurück, wenn nichts drinstand, sonst { added: [Namen], dups: [schon vorhandene Einträge], dupParts: [deren Text] }.
+// force: auch Doppelte hinzufügen (nach Rückfrage).
+function addText(text, l = curList(), force = false) {
   const parts = splitSpoken(text); // auch Gesprochenes: „Milch, Brot und zwei Butter“
   if (!parts.length || !l) return null;
   const open = l === curList();
   const items = open ? S.items : (l.items = l.items || []); // die offene Liste steht in S.items
-  const dups = [], added = [];
+  const dups = [], dupParts = [], added = [];
   parts.forEach((p, n) => {
     const { qty, name } = parseEntry(p);
-    const same = items.find((i) => !i.done && dupKey(i.name) === dupKey(name));
-    if (same) { dups.push(same); return; } // steht schon auf der Liste (auch als Mehrzahl/Einzahl)
+    const same = !force && items.find((i) => !i.done && dupKey(i.name) === dupKey(name));
+    if (same) { dups.push(same); dupParts.push(p.trim()); return; } // steht schon auf der Liste (auch als Mehrzahl/Einzahl)
     const it = { id: uid(), name, qty, note: '', cat: guessCat(name), done: false, ts: Date.now() + n };
     if (isSimple(l)) { if (open && validSec(ui.addSec)) it.sec = ui.addSec; } // einfache Liste: in den gewählten Abschnitt, Wörter nicht für Einkaufs-Vorschläge merken
     else rememberName(name);
     items.push(it);
     added.push(name);
   });
-  return { added, dups };
+  return { added, dups, dupParts };
 }
 // Kurzbefehl / Siri: Die App wird mit ?neu=Milch und zwei Butter (optional &liste=Name) geöffnet (englisch: ?new=…&list=…).
 // Einträge kommen in diese Liste (sonst die zuletzt geöffnete). Danach wird die Adresse bereinigt,
@@ -237,6 +247,11 @@ function flashItem(id) {
 function updateSugg() {
   const box = $('#sugg'), input = $('#addName');
   if (!box || !input) return;
+  if (ui.dupText && input.value.trim() === ui.dupText) { // nach + mit etwas, das schon auf der Liste steht (siehe addFromInput)
+    box.innerHTML = `<button type="button" class="sg dupnote" data-act="dupadd"><span class="sgn">${esc(T('{names} steht schon auf der Liste. Nochmal + tippen fügt es trotzdem hinzu.', { names: ui.dupNames }))}</span></button>`;
+    box.hidden = false;
+    return;
+  }
   const last = input.value.split(/[,\n]/).pop();
   const q = parseEntry(last).name;
   const list = isSimple() ? [] : suggestions(q); // Einkaufs-Vorschläge passen nicht zu Filmen, Packlisten usw.
@@ -279,7 +294,7 @@ document.addEventListener('click', (e) => {
     case 'storesheet': storeSheet(); keep = true; break;
     case 'swipesheet': swipePage(); keep = true; break;
     case 'wiggleoff': endWiggle(); keep = true; break;
-    case 'themepage': themePage(); keep = true; break;
+    case 'themepage': ui.langAsk = null; themePage(); keep = true; break;
     case 'helppage': helpPage(); keep = true; break;
     case 'aboutpage': aboutPage(); keep = true; break;
     case 'introok': introDismiss(el.dataset.key); render(); break;
@@ -292,7 +307,14 @@ document.addEventListener('click', (e) => {
     case 'catimp': keep = catImport(el.dataset.mode); break;
     case 'vertap': funVersionTap(); keep = true; break; // Versionsnummer: 7× tippen = Statistik
     case 'setaccent': try { localStorage.setItem('ek_accent', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
-    case 'setlang': setLang(id); keep = true; break; // lädt die App in der gewählten Sprache neu (js/sprache.js)
+    // Sprache: ändert sich die Sprache wirklich, erst fragen, ob die Kategorien mit umgestellt werden (langAskBox in bedienung.js).
+    // setLang lädt die App in der gewählten Sprache neu (js/sprache.js).
+    case 'setlang':
+      if (langFor(id) === LANG) setLang(id); else { ui.langAsk = id; themePage(); $('.langask')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      keep = true; break;
+    case 'setlangonly': setLang(id); keep = true; break;
+    case 'setlangcats': setLangWithCats(id); keep = true; break;
+    case 'setlangno': ui.langAsk = null; themePage(); keep = true; break;
     case 'settheme': try { localStorage.setItem('ek_theme', id); } catch (_) { /* privat: gilt nur bis zum Schließen */ } applyTheme(); themePage(); keep = true; break;
     case 'listspage': listsPage(); keep = true; break;
     case 'pageback': popPages(1); keep = true; break;
@@ -376,21 +398,16 @@ document.addEventListener('click', (e) => {
       ui.confirmCat = false; commit(); backTo('cats', catListPage); keep = true; break;
     }
     case 'newstoresheet': newStoreSheet(); keep = true; break;
+    case 'dupadd': addFromInput(true); $('#addName')?.focus(); keep = true; break;
     case 'sugg': {
       const input = $('#addName');
       if (!input) break;
       const parts = input.value.split(/[,\n]/);
       const { qty } = parseEntry(parts.pop());
       const before = parts.map((x) => x.trim()).filter(Boolean);
-      if (el.dataset.listed) {
-        // steht schon auf der Liste: nichts doppelt anlegen, nur zeigen wo
-        input.value = before.join(', ');
-        if (before.length) addFromInput(); else { render(); updateSugg(); }
-        flashItem(el.dataset.listed);
-      } else {
-        input.value = [...before, (qty ? qty + ' ' : '') + el.dataset.name].join(', ');
-        addFromInput();
-      }
+      // Steht der Vorschlag schon auf der Liste, warnt addFromInput und lässt ihn im Feld („Trotzdem hinzufügen“)
+      input.value = [...before, (qty ? qty + ' ' : '') + el.dataset.name].join(', ');
+      addFromInput();
       input.focus();
       keep = true; break;
     }

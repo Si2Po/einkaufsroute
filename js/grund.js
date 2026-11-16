@@ -201,8 +201,8 @@ function rememberName(name) {
 
 // "2 Milch", "500g Mehl", "3x Joghurt", "2 Flaschen Wasser" -> Menge und Name trennen
 // Kurze Einheiten werden angehängt ("500g"), Wort-Einheiten behalten ihr Leerzeichen ("2 Flaschen").
-const WORD_UNITS = 'flaschen?|dosen?|becher|bund|kisten?|gläser|glas|tüten?|rollen?|pakete?|beutel|päckchen|tafeln?|stange|stangen|netz|schalen?'
-  + '|bottles?|cans?|tins?|cups?|bunch|bunches|crates?|jars?|bags?|rolls?|boxes|box|bars?|cartons?|loaf|loaves|slices?'; // englisch
+const WORD_UNITS = 'flaschen?|dosen?|becher|bund|kisten?|gläser|glas|tüten?|rollen?|pakete?|beutel|päckchen|tafeln?|stange|stangen|netz|schalen?|el|tl|prisen?'
+  + '|bottles?|cans?|tins?|cups?|bunch|bunches|crates?|jars?|bags?|rolls?|boxes|box|bars?|cartons?|loaf|loaves|slices?|tbsp|tsp|pinch|pinches'; // englisch
 function parseEntry(text) {
   const t = text.trim();
   const w = t.match(new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(${WORD_UNITS})\\s+(.+)$`, 'i'));
@@ -225,9 +225,9 @@ const SPEECH = {
     lead: /^(?:und|also|ähm|äh|dann|außerdem|ich\s+brauche|wir\s+brauchen|brauche|brauchen|bitte|noch|auch|mal|kauf(?:e|t|en)?|hol(?:e|t|en)?|wir\s+haben\s+(?:keine?n?|kein|nichts)|es\s+fehl(?:t|en))\b[,\s]*/i,
     tail: /[,\s]*\b(?:bitte|noch|mehr|auch|mitbringen|kaufen|holen)$/i,
     article: /^(?:ein|eine|einen|einem)$/,
-    unitWord: /^(?:kilo|kilogramm|gramm|liter|milliliter|packung|stück|flasche|dose|becher|bund|kiste|glas|tüte|rolle|paket|beutel|päckchen|tafel|netz|schale)\b/i,
-    // Gesprochene Einheit nach einer Zahl -> Kurzform: „2 Kilo“ -> „2kg“, „3 Packungen“ -> „3 Pck“
-    units: [['kilogramm|kilo', 'kg'], ['gramm', 'g'], ['milliliter', 'ml'], ['liter', 'l'], ['packungen|packung', ' Pck'], ['stück', ' Stk']],
+    unitWord: /^(?:kilo|kilogramm|gramm|liter|milliliter|packung|stück|flasche|dose|becher|bund|kiste|glas|tüte|rolle|paket|beutel|päckchen|tafel|netz|schale|esslöffel|teelöffel|prise)\b/i,
+    // Gesprochene Einheit nach einer Zahl -> Kurzform: „2 Kilo“ -> „2kg“, „3 Packungen“ -> „3 Pck“, „2 Esslöffel“ -> „2 EL“
+    units: [['kilogramm|kilo', 'kg'], ['gramm', 'g'], ['milliliter', 'ml'], ['liter', 'l'], ['packungen|packung', ' Pck'], ['stück', ' Stk'], ['esslöffel', ' EL'], ['teelöffel', ' TL']],
     split: /[,;\n]|\s+(?:und|sowie|plus)\s+/i, drop: /^(?:und|noch|bitte)$/i
   },
   // Englisch: „I need milk, bread and two kilos of apples“ -> ["Milk", "Bread", "2kg apples"]
@@ -239,8 +239,8 @@ const SPEECH = {
     lead: /^(?:and|also|um+|uh+|then|plus|i\s+need|we\s+need|i\s+want|we\s+want|need|please|some|more|buy|get|grab|pick\s+up|add|we(?:['’]re|\s+are)\s+out\s+of|we\s+have\s+no|there(?:['’]s|\s+is)\s+no)\b[,\s]*/i,
     tail: /[,\s]*\b(?:please|too|as\s+well|also)$/i,
     article: /^(?:a|an|one)$/,
-    unitWord: /^(?:kilo|kilogram|gram|liter|litre|milliliter|millilitre|pound|ounce|pack|packet|package|piece|bottle|can|tin|cup|bunch|crate|jar|bag|roll|box|bar|carton|loaf|dozen)\b/i,
-    units: [['kilograms?|kilos?', 'kg'], ['grams?', 'g'], ['milliliters?|millilitres?', 'ml'], ['liters?|litres?', 'l'], ['pounds?', 'lb'], ['ounces?', 'oz'], ['packets?|packages?|packs?', ' pack'], ['pieces?', ' pcs']],
+    unitWord: /^(?:kilo|kilogram|gram|liter|litre|milliliter|millilitre|pound|ounce|pack|packet|package|piece|bottle|can|tin|cup|bunch|crate|jar|bag|roll|box|bar|carton|loaf|dozen|tablespoons?|teaspoons?|pinch)\b/i,
+    units: [['kilograms?|kilos?', 'kg'], ['grams?', 'g'], ['milliliters?|millilitres?', 'ml'], ['liters?|litres?', 'l'], ['pounds?', 'lb'], ['ounces?', 'oz'], ['packets?|packages?|packs?', ' pack'], ['pieces?', ' pcs'], ['tablespoons?', ' tbsp'], ['teaspoons?', ' tsp']],
     split: /[,;\n]|\s+(?:and|plus|as\s+well\s+as)\s+/i, drop: /^(?:and|also|please)$/i
   }
 };
@@ -318,17 +318,25 @@ function snapshot() {
   return snap;
 }
 let saveTimer;
+// Zustand in IndexedDB schreiben (geht das nicht: localStorage); fertig, wenn die Daten wirklich gespeichert sind
+async function writeState() {
+  try {
+    const db = await openDb();
+    await new Promise((ok, fail) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(snapshot(), KEY); tx.oncomplete = ok; tx.onerror = () => fail(tx.error); });
+  } catch (e) {
+    try { localStorage.setItem(KEY, JSON.stringify(snapshot())); } catch (_) { /* Speicher gesperrt */ }
+  }
+}
 function save() {
   if (window.syncHook) window.syncHook(); // Konto: Änderung zum Hochladen vormerken
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    try {
-      const db = await openDb();
-      db.transaction('kv', 'readwrite').objectStore('kv').put(snapshot(), KEY);
-    } catch (e) {
-      try { localStorage.setItem(KEY, JSON.stringify(snapshot())); } catch (_) { /* Speicher gesperrt */ }
-    }
-  }, 120);
+  saveTimer = setTimeout(writeState, 120);
+}
+// Sofort speichern und warten, bis es fertig ist (vor einem Neuladen, z. B. beim Sprachwechsel)
+async function saveNow() {
+  if (window.syncHook) window.syncHook();
+  clearTimeout(saveTimer);
+  await writeState();
 }
 
 // ---------- Startdaten ----------
@@ -340,7 +348,7 @@ function seed() {
 
 // ---------- Zustand ----------
 let S;
-const ui = { tab: 'list', wiggle: null, editStoreId: null, selZone: null, drawing: false, showDone: false, confirmDel: false, justDrew: 0, sheetT: 0, pending: new Map(), confirmCat: false, confirmList: false };
+const ui = { tab: 'list', wiggle: null, editStoreId: null, selZone: null, drawing: false, showDone: false, confirmDel: false, justDrew: 0, sheetT: 0, pending: new Map(), confirmCat: false, confirmList: false, dupText: '', dupNames: '', langAsk: null };
 const curList = () => (S.lists || []).find((l) => l.id === S.listId) || null;
 const curStore = () => S.stores.find((s) => s.id === S.storeId) || null;
 const editStore = () => S.stores.find((s) => s.id === ui.editStoreId) || null;

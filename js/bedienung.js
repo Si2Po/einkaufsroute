@@ -87,15 +87,16 @@ async function syncNow() {
 
 // ---------- Darstellung: Automatisch / Hell / Dunkel ----------
 // Gilt nur für dieses Gerät (localStorage), wird nicht mit dem Haushalt abgeglichen. index.html setzt sie schon beim Laden.
-const THEME_BG = { light: '#F2F4F3', dark: '#0D110F' }; // = --bg in style.css (Farbe der Statusleiste)
 const THEME_LABEL = { auto: T('Automatisch (wie das Gerät)'), light: T('Hell'), dark: T('Dunkel') };
 function themePref() { try { return localStorage.getItem('ek_theme') || 'auto'; } catch (_) { return 'auto'; } }
-// Akzentfarben: Schlüssel → [Name, Farbe für die Auswahl]. Die eigentlichen Werte (hell/dunkel) stehen in style.css.
-const ACCENTS = { gruen: [T('Grün'), '#0E7A55'], blau: [T('Blau'), '#1F6BCF'], lila: [T('Lila'), '#7A4FD0'], orange: ['Orange', '#C25A00'], pink: ['Pink', '#C2306B'] };
+// Akzentfarben: Schlüssel → [Name, Farbe hell, Farbe dunkel] wie in style.css (dort gelten sie; hier für Auswahl und Statusleiste).
+// Ohne Wahl gilt Blau (DEFAULT_ACCENT, in style.css die Werte in :root).
+const ACCENTS = { blau: [T('Blau'), '#1F6BCF', '#6AA8FF'], gruen: [T('Grün'), '#0E7A55', '#4CD49B'], lila: [T('Lila'), '#7A4FD0', '#B79BFF'], orange: ['Orange', '#C25A00', '#FFA552'], pink: ['Pink', '#C2306B', '#FF7FAE'] };
+const DEFAULT_ACCENT = 'blau';
 const ICON_CHECK = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function customAccentStored() { try { const c = JSON.parse(localStorage.getItem('ek_accent_c')); return c && c.l ? c : null; } catch (_) { return null; } }
 function accentPref() {
-  try { const a = localStorage.getItem('ek_accent'); return ACCENTS[a] || (a === 'custom' && customAccentStored()) ? a : 'gruen'; } catch (_) { return 'gruen'; }
+  try { const a = localStorage.getItem('ek_accent'); return ACCENTS[a] || (a === 'custom' && customAccentStored()) ? a : DEFAULT_ACCENT; } catch (_) { return DEFAULT_ACCENT; }
 }
 const accentName = () => (accentPref() === 'custom' ? T('Eigene Farbe') : ACCENTS[accentPref()][0]);
 // Eigene Farbe lesbar machen: im hellen Modus so weit abdunkeln, im dunklen so weit aufhellen, bis der Kontrast reicht (4,5 : 1)
@@ -105,20 +106,39 @@ const lumi = (c) => { const [r, g, b] = c.map((v) => { v /= 255; return v <= 0.0
 const contrastOf = (a, b) => { const x = lumi(a), y = lumi(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 const mixRgb = (c, t, f) => c.map((v, i) => v + (t[i] - v) * f);
 function customAccent(hex) {
-  const c = hexRgb(hex), W = [255, 255, 255], DARK = [23, 28, 25]; // DARK = --surface im Dunkelmodus
+  const c = hexRgb(hex), W = [255, 255, 255], DARK = [27, 27, 27]; // DARK = --surface im Dunkelmodus
   let l = c, d = c;
   for (let f = 0.05; contrastOf(l, W) < 4.5 && f <= 1; f += 0.05) l = mixRgb(c, [0, 0, 0], f);
   for (let f = 0.05; contrastOf(d, DARK) < 4.5 && f <= 1; f += 0.05) d = mixRgb(c, W, f);
   return { hex, l: rgbHex(l), d: rgbHex(d), od: contrastOf(d, [0, 0, 0]) >= contrastOf(d, W) ? '#0B0F0D' : '#FFFFFF' };
 }
+// Farbe der Statusleiste = --bg in style.css: feste Helligkeit, Farbton der Akzentfarbe (gleiche Rechnung wie dort, in OKLCH)
+const srgbLin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+const linSrgb = (v) => 255 * Math.min(1, Math.max(0, v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055));
+function hexOklab(hex) {
+  const [r, g, b] = hexRgb(hex).map(srgbLin);
+  const [l, m, s] = [0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b, 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b].map(Math.cbrt);
+  return [1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s]; // a, b (Helligkeit wird nicht gebraucht)
+}
+function oklabHex(L, a, b) {
+  const [l, m, s] = [L + 0.3963377774 * a + 0.2158037573 * b, L - 0.1055613458 * a - 0.0638541728 * b, L - 0.0894841775 * a - 1.2914855480 * b].map((v) => v ** 3);
+  return rgbHex([4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960771 * l - 0.7034186147 * m + 1.7076147010 * s].map(linSrgb));
+}
+// Farbton von accent, Helligkeit L, Sättigung = f × Sättigung von accent (gleiches Verhältnis bleibt in Lab erhalten)
+const tintHex = (accent, L, f) => { const [a, b] = hexOklab(accent); return oklabHex(L, a * f, b * f); };
+function themeBg(mode) {
+  const a = accentPref(), c = a === 'custom' ? customAccentStored() : null;
+  if (mode === 'dark') return tintHex(c ? c.d : ACCENTS[a][2], 0.1724, 0.053);
+  return tintHex(c ? c.l : ACCENTS[a][1], 0.9654, 0.023);
+}
 function applyTheme() {
   const p = themePref(), root = document.documentElement;
   if (p === 'auto') delete root.dataset.theme; else root.dataset.theme = p;
   const a = accentPref(), c = a === 'custom' ? customAccentStored() : null;
-  if (a === 'gruen') delete root.dataset.accent; else root.dataset.accent = a;
+  if (a === DEFAULT_ACCENT) delete root.dataset.accent; else root.dataset.accent = a;
   applyGlass(glassPref());
   ['l', 'd', 'od'].forEach((k) => { if (c) root.style.setProperty(`--cust-${k}`, c[k]); else root.style.removeProperty(`--cust-${k}`); });
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = THEME_BG[p === 'auto' ? (/dark/.test(m.media) ? 'dark' : 'light') : p]; });
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = themeBg(p === 'auto' ? (/dark/.test(m.media) ? 'dark' : 'light') : p); });
 }
 function themePage() {
   const p = themePref();
@@ -129,7 +149,7 @@ function themePage() {
   const sw = Object.entries(ACCENTS).map(([k, [name, c]]) => `<button type="button" class="swatch" style="--c:${c}" data-act="setaccent" data-id="${k}" aria-pressed="${a === k}" aria-label="${name}">${a === k ? ICON_CHECK : ''}</button>`).join('')
     + `<label class="swatch custom${a === 'custom' ? ' on' : ''}" style="--c:${cust?.hex || '#888'}" aria-label="${T('Eigene Farbe wählen')}">
         ${a === 'custom' ? `<span class="dot" style="background:${cust.hex}">${ICON_CHECK}</span>` : ''}
-        <input type="color" id="accentPicker" value="${cust?.hex || '#0E7A55'}"></label>`;
+        <input type="color" id="accentPicker" value="${cust?.hex || ACCENTS[DEFAULT_ACCENT][1]}"></label>`;
   openPage('theme', T('Darstellung und Sprache'), `<div class="sheettitle">${T('Hell oder dunkel')}</div>
     <div class="group">${opt('auto', T('Automatisch'), T('wie das Gerät'))}${opt('light', T('Hell'))}${opt('dark', T('Dunkel'))}</div>
     <div class="sheettitle" style="margin-top:12px">${T('Akzentfarbe')} <small style="text-transform:none;letter-spacing:0;font-weight:600">· ${accentName()}</small></div>
@@ -138,8 +158,30 @@ function themePage() {
     <div class="group glassrow"><span aria-hidden="true">${T('Deckend')}</span><input type="range" id="glassRange" min="0" max="100" step="5" value="${glassPref()}" aria-label="${T('Glas-Stärke')}"><span aria-hidden="true">${T('Glas')}</span></div>
     <div class="sheettitle" style="margin-top:12px">Sprache · Language</div>
     <div class="group">${lopt('auto', T('Automatisch'), T('wie das Gerät'))}${lopt('de', 'Deutsch')}${lopt('en', 'English')}</div>
-    <p class="sheetnote">${T('Gilt nur für dieses Gerät. Deine Kategorien und Stichwörter bleiben, wie sie sind.')}</p>
+    ${ui.langAsk ? langAskBox(ui.langAsk) : `<p class="sheetnote">${T('Gilt nur für dieses Gerät. Beim Wechsel kannst du die Kategorien mit umstellen.')}</p>`}
     `, themePage);
+}
+// Rückfrage beim Sprachwechsel: Kategorien und Stichwörter auf die Standard-Kategorien der neuen Sprache zurücksetzen?
+// Betrifft die gerade gewählte Stichwortliste (S.cats), bei Gruppen also alle in dieser Gruppe.
+function langAskBox(p) {
+  const name = langFor(p) === 'en' ? T('Englisch') : T('Deutsch');
+  const who = groupsOn() ? T(' Das gilt für alle in der Gruppe „{name}“.', { name: gName(S.catGroup) }) : '';
+  return `<div class="group langask" style="padding:14px">
+      <p style="margin:0 0 12px">${T('Kategorien und Stichwörter auch auf {lang} zurücksetzen? Eigene Kategorien und Stichwörter gehen dabei verloren.', { lang: name })}${esc(who)}</p>
+      <div class="actions" style="display:flex;flex-direction:column;gap:8px">
+        <button type="button" class="btn" data-act="setlangcats" data-id="${p}">${T('Sprache und Kategorien umstellen')}</button>
+        <button type="button" class="btn ghost" data-act="setlangonly" data-id="${p}">${T('Nur die Sprache umstellen')}</button>
+        <button type="button" class="link" data-act="setlangno">${T('Abbrechen')}</button>
+      </div>
+    </div>`;
+}
+// Kategorien auf die Standard-Kategorien einer Sprache setzen (wie „Ersetzen“ beim Import: Einträge mit einer
+// nicht mehr vorhandenen Kategorie erscheinen unter „Sonstiges“), sofort speichern, dann in der Sprache neu laden
+async function setLangWithCats(p) {
+  S.cats = (langFor(p) === 'en' ? DEFAULT_CATS_EN : DEFAULT_CATS_DE).map(cloneCat);
+  CATS = S.cats; indexCats();
+  await saveNow();
+  setLang(p);
 }
 // Eigene Farbe: sofort anwenden und nur die Farbfelder auf der Seite anpassen. Die Seite wird dabei NICHT neu aufgebaut,
 // sonst würde das Farbfeld ersetzt und iOS schließt den Farbwähler nach jeder Auswahl (Feinjustieren unmöglich).

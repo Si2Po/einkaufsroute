@@ -9,11 +9,12 @@
 function langPref() {
   try { const l = localStorage.getItem('ek_lang'); return l === 'de' || l === 'en' ? l : 'auto'; } catch (_) { return 'auto'; }
 }
-const LANG = (() => {
-  const p = langPref();
+// Sprache, die eine Einstellung ergibt ('auto' = nach dem Gerät: Deutsch bei deutschem Gerät, sonst Englisch)
+function langFor(p) {
   if (p !== 'auto') return p;
   return /^de\b/i.test(navigator.language || 'de') ? 'de' : 'en';
-})();
+}
+const LANG = langFor(langPref());
 const LOCALE = LANG === 'en' ? 'en' : 'de-DE'; // für Datum, Uhrzeit und Sortieren nach Alphabet
 document.documentElement.lang = LANG;
 
