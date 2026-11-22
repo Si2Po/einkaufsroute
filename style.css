@@ -681,7 +681,16 @@ form .gline { margin: 0 2px 10px; }
   box-shadow: 0 8px 30px rgba(0, 0, 0, .16), 0 0 0 .5px var(--line);
 }
 .wigglebar.floatbar .btn { border-radius: 999px; }
-.srows.wiggle { margin-bottom: 64px; } /* Platz, damit der letzte Eintrag nicht unter der Leiste liegt */
+.srows.wiggle { margin-bottom: 64px; }
+/* Auswahl im Wackelmodus: runder Kreis statt Kästchen, ausgewählt = gefüllt mit Haken und leicht eingefärbt */
+.srows.wiggle .row .chk::before { border-radius: 50%; background: none; border-color: var(--muted); }
+.srows.wiggle .row.picked { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.srows.wiggle .row.picked .chk::before {
+  background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat;
+  border-color: var(--accent);
+}
+.wigglebar.floatbar .wbtxt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wigglebar.floatbar .btn:disabled { opacity: .45; } /* Platz, damit der letzte Eintrag nicht unter der Leiste liegt */
 @media (orientation: landscape) and (max-height: 520px) {
   .wigglebar.floatbar { max-width: 420px; bottom: calc(max(6px, calc(env(safe-area-inset-bottom, 0px) - 14px)) + 50px); }
 }

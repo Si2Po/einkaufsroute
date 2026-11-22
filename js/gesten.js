@@ -214,7 +214,7 @@ function sortDrag(e, handle, li, list, sel, scroller, done) {
 }
 // ---------- Wackelmodus (wie auf dem iPhone-Home-Bildschirm) ----------
 // Lange drücken auf eine Zeile startet ihn. Danach greift kurzes Halten einer Zeile sie zum Verschieben (sofort wischen scrollt),
-// Antippen öffnet nichts. „Fertig“ oder Verlassen der Seite beendet ihn.
+// Antippen öffnet nichts; bei Listeneinträgen wählt es sie aus (ui.sel, Aktionen in listen.js). „Fertig“ oder Verlassen der Seite beendet ihn.
 //   cats  = Kategorien (Reihenfolge der Liste ohne Geschäft; „Sonstiges“ bleibt immer unten)
 //   zones = Bereiche eines Geschäfts (Laufweg)
 const WIGGLE = {
@@ -244,7 +244,13 @@ const WIGGLE = {
     },
   },
 };
-function wiggleBar(float) { return '<div class="wigglebar' + (float ? ' floatbar' : '') + `"><span>${T('Ziehen zum Sortieren')}</span><button type="button" class="btn small" data-act="wiggleoff">${T('Fertig')}</button></div>`; }
+// Leiste im Wackelmodus. Schwebend (float) = Listeneinträge: zeigt die Auswahl und den Knopf „Aktionen“ (selBarText in listen.js).
+function wiggleBar(float) {
+  if (!float) return `<div class="wigglebar"><span>${T('Ziehen zum Sortieren')}</span><button type="button" class="btn small" data-act="wiggleoff">${T('Fertig')}</button></div>`;
+  return `<div class="wigglebar floatbar"><span class="wbtxt">${selBarText()}</span>
+    <button type="button" class="btn small ghost" data-act="selactions" id="selActBtn"${ui.sel.size ? '' : ' disabled'}>${T('Aktionen')}</button>
+    <button type="button" class="btn small" data-act="wiggleoff">${T('Fertig')}</button></div>`;
+}
 function dragRow(e, kind, row) {
   const w = WIGGLE[kind], list = row.closest(w.list), sel = w.slots || w.row;
   const before = slotKeys(list, sel).join();
@@ -263,22 +269,32 @@ function startWiggle(e, el) {
 function endWiggle() {
   if (!ui.wiggle) return;
   ui.wiggle = null;
+  ui.sel.clear();
   if (pageTop() === 'cats') catListPage(); else render();
 }
-// Im Wackelmodus: kurz halten (0,18 s, Finger ruhig) = Zeile greifen, sofort wischen = normal scrollen
-let wHold = null;
+// Im Wackelmodus: kurz halten (0,18 s, Finger ruhig) = Zeile greifen, sofort wischen = normal scrollen.
+// wTap merkt sich die zuletzt berührte Zeile: Nur wenn daraus weder Ziehen noch Scrollen wurde, zählt der Klick als Antippen.
+let wHold = null, wTap = null;
 document.addEventListener('pointerdown', (e) => {
+  wTap = null;
   if (!ui.wiggle || !e.isPrimary) return;
   const row = e.target.closest?.(`.wiggle ${WIGGLE[ui.wiggle].row}`);
   if (!row) return;
   const kind = ui.wiggle;
+  wTap = { row, moved: false };
   clearTimeout(wHold?.t);
-  wHold = { id: e.pointerId, x: e.clientX, y: e.clientY, t: setTimeout(() => { wHold = null; if (ui.wiggle === kind) dragRow(e, kind, row); }, 180) };
+  wHold = { id: e.pointerId, x: e.clientX, y: e.clientY, t: setTimeout(() => { wHold = null; if (wTap) wTap.moved = true; if (ui.wiggle === kind) dragRow(e, kind, row); }, 180) };
 }, true);
 document.addEventListener('pointermove', (e) => {
-  if (wHold && e.pointerId === wHold.id && Math.hypot(e.clientX - wHold.x, e.clientY - wHold.y) > 8) { clearTimeout(wHold.t); wHold = null; } // bewegt: scrollen
+  if (wHold && e.pointerId === wHold.id && Math.hypot(e.clientX - wHold.x, e.clientY - wHold.y) > 8) { clearTimeout(wHold.t); wHold = null; if (wTap) wTap.moved = true; } // bewegt: scrollen
 }, true);
 ['pointerup', 'pointercancel'].forEach((t) => document.addEventListener(t, (e) => { if (wHold && e.pointerId === wHold.id) { clearTimeout(wHold.t); wHold = null; } }, true));
-// Im Wackelmodus öffnet Antippen einer Zeile nichts
-document.addEventListener('click', (e) => { if (ui.wiggle && e.target.closest?.('.wiggle')) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+// Im Wackelmodus öffnet Antippen einer Zeile nichts; Listeneinträge werden dabei aus- oder abgewählt
+document.addEventListener('click', (e) => {
+  if (!ui.wiggle || !e.target.closest?.('.wiggle')) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const row = e.target.closest('.row');
+  if (ui.wiggle === 'items' && row && wTap?.row === row && !wTap.moved) toggleSel(row);
+  wTap = null;
+}, true);
 

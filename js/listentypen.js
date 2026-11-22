@@ -63,6 +63,7 @@ function holdDrag(e, row) {
     if (ev.pointerId !== pid || Math.hypot(ev.clientX - x0, ev.clientY - y0) < 8) return;
     off();
     row.classList.remove('lifted');
+    if (ui.wiggle !== 'items') ui.sel.clear(); // neuer Wackelmodus: keine alte Auswahl
     ui.wiggle = 'items'; list.classList.add('wiggle');
     sortDrag(ev, row, row, list, w.slots, w.scroller(list), (order) => {
       if (order && order.join() !== before) w.done(order); else render(); // zeigt den Wackelmodus mit „Fertig“

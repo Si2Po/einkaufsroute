@@ -42,8 +42,8 @@ const ICON_PLUS = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="
 
 const MEAL_ICON = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M7 3v8M4.5 3v5.2a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.4 1.2-3.5 4-3.5 7.5 0 1.7.9 2.5 2 2.5h1.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
 function rowHtml(i) {
-  const pend = ui.pending.has(i.id), on = i.done || pend;
-  return `<li class="row${on ? ' done' : ''}${pend ? ' pending' : ''}" role="checkbox" aria-checked="${on}" tabindex="0" data-act="toggle" data-id="${i.id}" data-key="${i.id}">
+  const pend = ui.pending.has(i.id), on = i.done || pend, picked = ui.wiggle === 'items' && ui.sel.has(i.id); // picked: im Wackelmodus ausgewählt
+  return `<li class="row${on ? ' done' : ''}${pend ? ' pending' : ''}${picked ? ' picked' : ''}" role="checkbox" aria-checked="${on}" tabindex="0" data-act="toggle" data-id="${i.id}" data-key="${i.id}">
     <span class="chk" aria-hidden="true"></span>
     <span class="txt"><span class="nm">${esc(i.name)}</span>${i.note ? `<span class="nt">${esc(i.note)}</span>` : ''}${i.meals?.length ? `<span class="nt ml">${MEAL_ICON}${esc(i.meals.join(', '))}</span>` : ''}</span>
     ${i.photo ? `<img class="thumb" src="${i.photo}" alt="">` : ''}

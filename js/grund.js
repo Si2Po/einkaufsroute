@@ -348,7 +348,7 @@ function seed() {
 
 // ---------- Zustand ----------
 let S;
-const ui = { tab: 'list', wiggle: null, editStoreId: null, selZone: null, drawing: false, showDone: false, confirmDel: false, justDrew: 0, sheetT: 0, pending: new Map(), confirmCat: false, confirmList: false, dupText: '', dupNames: '', langAsk: null };
+const ui = { tab: 'list', wiggle: null, editStoreId: null, selZone: null, drawing: false, showDone: false, confirmDel: false, justDrew: 0, sheetT: 0, pending: new Map(), confirmCat: false, confirmList: false, dupText: '', dupNames: '', langAsk: null, sel: new Set() };
 const curList = () => (S.lists || []).find((l) => l.id === S.listId) || null;
 const curStore = () => S.stores.find((s) => s.id === S.storeId) || null;
 const editStore = () => S.stores.find((s) => s.id === ui.editStoreId) || null;

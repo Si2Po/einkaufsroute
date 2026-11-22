@@ -294,6 +294,15 @@ document.addEventListener('click', (e) => {
     case 'storesheet': storeSheet(); keep = true; break;
     case 'swipesheet': swipePage(); keep = true; break;
     case 'wiggleoff': endWiggle(); keep = true; break;
+    // Auswahl im Wackelmodus (listen.js)
+    case 'selactions': selActionsSheet(); keep = true; break;
+    case 'itemactions': itemActions(id); keep = true; break;
+    case 'selmove': selMoveSheet(); keep = true; break;
+    case 'selmoveto': moveSelTo(id); keep = true; break;
+    case 'selmeal': selMealSheet(); keep = true; break;
+    case 'selmealto': selToMeal(id); keep = true; break;
+    case 'selnewmeal': selNewMealSheet(); keep = true; break;
+    case 'seldel': deleteSel(); keep = true; break;
     case 'themepage': ui.langAsk = null; themePage(); keep = true; break;
     case 'helppage': helpPage(); keep = true; break;
     case 'aboutpage': aboutPage(); keep = true; break;
@@ -365,7 +374,7 @@ document.addEventListener('click', (e) => {
       if (ui.addSec === id) ui.addSec = null;
       commit(); break;
     }
-    case 'sortitems': ui.wiggle = 'items'; closeSheet(); render(); keep = true; break;
+    case 'sortitems': if (ui.wiggle !== 'items') ui.sel.clear(); ui.wiggle = 'items'; closeSheet(); render(); keep = true; break;
     case 'catlist': flushSheetInputs(); ui.confirmCat = false; catListPage(); keep = true; break;
     case 'pinsugg': {
       const input = $('#pinName');
@@ -459,7 +468,10 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('submit', (e) => {
   const f = e.target;
-  if (f.id === 'addForm') {
+  if (f.id === 'selMealForm') {
+    e.preventDefault();
+    newMealFromSel($('#selMealName').value.trim(), $('#smGroup')?.value);
+  } else if (f.id === 'addForm') {
     e.preventDefault();
     addFromInput();
   } else if (f.id === 'newCatForm') {

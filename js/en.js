@@ -285,6 +285,23 @@ const EN = {
   'Sprache und Kategorien umstellen': 'Switch language and categories',
   'Nur die Sprache umstellen': 'Switch language only',
   'Englisch': 'English',
+  // Auswahl im Wackelmodus (js/listen.js)
+  '{n} ausgewählt': '{n} selected',
+  'Tippen: auswählen': 'Tap to select',
+  'Aktionen': 'Actions',
+  '{n} Einträge': '{n} items',
+  'Auf andere Liste': 'Move to another list',
+  'Zu Essen hinzufügen': 'Add to a meal',
+  'Als neues Essen anlegen': 'Save as new meal',
+  'Auf welche Liste?': 'Which list?',
+  'Zu welchem Essen?': 'Which meal?',
+  'Zutaten: {names}': 'Ingredients: {names}',
+  '{n} → „{list}“': '{n} → “{list}”',
+  '1 Zutat zu „{name}“ hinzugefügt': '1 ingredient added to “{name}”',
+  '{n} Zutaten zu „{name}“ hinzugefügt': '{n} ingredients added to “{name}”',
+  'Steht schon alles bei „{name}“': 'Everything is already in “{name}”',
+  'Essen „{name}“ angelegt': 'Meal “{name}” created',
+  '{n} Einträge gelöscht': '{n} items deleted',
   'Deutsch': 'German',
   // ---------- js/listentypen.js ----------
   'Was brauchst du?': 'What do you need?',
@@ -629,6 +646,7 @@ const HELP_EN = () => ({
           You can also <b>speak</b>: tap the field and press the microphone on the keyboard, e.g. “I need milk, bread and two butter”.</li>
         <li><b>Press and hold:</b> edit the item (name, quantity, note, photo). <b>Swipe up</b> in the sheet to see category and area.</li>
         <li><b>Hold and drag:</b> reorder, for example by importance. If you drag an item to another category or another area, the app remembers that. “Undo” takes it back.</li>
+        <li><b>Several at once:</b> after dragging, the list wiggles. Now tapping selects items. Under “Actions” you can move them to another list, add them to a meal, save them as a new meal or delete them. “Done” ends it.</li>
         <li><b>Swipe</b> left or right: you set what happens under Settings → Swiping.</li>
         <li><b>Tap:</b> check off. Shortly afterwards the item moves to “Done”. Tap again to undo.</li>
         <li><b>Maybe due:</b> If you buy something regularly (at least three times), the app suggests it above the list as soon as it is time again. Tap to put it on the list, × hides the suggestion for a while. Under Settings → Suggestions you can see what was recognised, change the rhythm and create your own suggestions.</li>

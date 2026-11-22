@@ -83,6 +83,7 @@ function helpPage() {
           Du kannst auch <b>sprechen</b>: ins Feld tippen und auf der Tastatur das Mikrofon drücken, z. B. „Ich brauche noch Milch, Brot und zwei Butter“.</li>
         <li><b>Gedrückt halten:</b> Eintrag bearbeiten (Name, Menge, Notiz, Foto). Im Sheet <b>nach oben wischen</b> zeigt Kategorie und Bereich.</li>
         <li><b>Halten und ziehen:</b> umsortieren, zum Beispiel nach Wichtigkeit. Ziehst du einen Eintrag zu einer anderen Kategorie oder einem anderen Bereich, merkt sich die App das. Mit „Rückgängig“ lässt es sich zurücknehmen.</li>
+        <li><b>Mehrere auf einmal:</b> Nach dem Ziehen wackelt die Liste. Jetzt wählt Antippen Einträge aus. Unter „Aktionen“ kannst du sie auf eine andere Liste verschieben, zu einem Essen hinzufügen, als neues Essen anlegen oder löschen. „Fertig“ beendet das.</li>
         <li><b>Wischen</b> nach links oder rechts: was dann passiert, stellst du unter Einstellungen → Wischen ein.</li>
         <li><b>Tippen:</b> abhaken. Der Eintrag rutscht kurz danach nach „Erledigt“. Nochmal tippen macht es rückgängig.</li>
         <li><b>Vielleicht fällig:</b> Kaufst du etwas regelmäßig (mindestens dreimal), schlägt die App es über der Liste vor, sobald es wieder Zeit dafür ist. Antippen setzt es auf die Liste, × blendet den Vorschlag eine Weile aus. Unter Einstellungen → Vorschläge siehst du, was erkannt wurde, kannst den Rhythmus ändern und eigene Vorschläge anlegen.</li>

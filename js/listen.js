@@ -57,9 +57,127 @@ function switchList(id) {
   finishAll(); // angehakte Einträge noch in ihrer Liste abschließen
   if (cur) { cur.items = S.items; cur.storeId = S.storeId; }
   S.listId = id; S.items = next.items || []; ui.showDone = false; ui.addSec = null;
-  if (ui.wiggle === 'items') ui.wiggle = null;
+  if (ui.wiggle === 'items') { ui.wiggle = null; ui.sel.clear(); }
   // Jede Liste merkt sich ihren Laden (ohne eigenen Laden bleibt der aktuelle; ein gelöschter Laden wird zu "Kein Laden")
   if (next.storeId !== undefined) S.storeId = S.stores.some((x) => x.id === next.storeId) ? next.storeId : null;
+}
+// ---------- Auswahl im Wackelmodus (Listeneinträge) ----------
+// Im Wackelmodus wählt Antippen einen Eintrag aus (ui.sel, siehe gesten.js). „Aktionen“ in der schwebenden Leiste:
+// auf eine andere Liste verschieben, zu einem Essen hinzufügen, als neues Essen anlegen, löschen. Danach endet der Wackelmodus.
+// Dieselben Aktionen gibt es im Eintrag-Sheet für einen einzelnen Eintrag (itemActions, ohne „Löschen“: steht dort schon).
+const selItems = () => S.items.filter((i) => ui.sel.has(i.id));
+const selBarText = () => (ui.sel.size ? T('{n} ausgewählt', { n: ui.sel.size }) : T('Tippen: auswählen'));
+// Kurzname für Überschrift und Hinweise: ein Eintrag mit Namen, sonst die Anzahl
+const selLabel = (its) => (its.length === 1 ? T('„{x}“', { x: its[0].name }) : T('{n} Einträge', { n: its.length }));
+function toggleSel(row) {
+  const id = row.dataset.id;
+  if (ui.sel.has(id)) ui.sel.delete(id); else ui.sel.add(id);
+  row.classList.toggle('picked', ui.sel.has(id));
+  haptic();
+  const bar = $('.wigglebar.floatbar');
+  if (!bar) return;
+  bar.querySelector('.wbtxt').textContent = selBarText();
+  bar.querySelector('#selActBtn').disabled = !ui.sel.size;
+}
+// Eintrag-Sheet → „Aktionen“: erst die Änderungen im Sheet speichern (schließt es), dann die Aktionen für diesen Eintrag
+function itemActions(id) {
+  const ef = $('#editForm');
+  if (ef && ef.checkValidity()) ef.requestSubmit();
+  ui.sel = new Set([id]);
+  selActionsSheet(true);
+}
+function selActionsSheet(single = false) {
+  const its = selItems();
+  if (!its.length) return;
+  const others = S.lists.filter((l) => l.id !== S.listId);
+  openSheet(`<div class="sheettitle">${esc(selLabel(its))}</div>
+    ${others.length ? `<button type="button" class="sheetbtn" data-act="selmove">${T('Auf andere Liste')} <small>›</small></button>` : ''}
+    ${meals().length ? `<button type="button" class="sheetbtn" data-act="selmeal">${T('Zu Essen hinzufügen')} <small>›</small></button>` : ''}
+    <button type="button" class="sheetbtn" data-act="selnewmeal">${T('Als neues Essen anlegen')} <small>›</small></button>
+    ${single ? '' : `<button type="button" class="sheetbtn danger" data-act="seldel">${T('Löschen')}</button>`}`);
+}
+function selMoveSheet() {
+  openSheet(`<div class="sheettitle">${T('Auf welche Liste?')}</div>
+    <div class="scrollbox">${S.lists.filter((l) => l.id !== S.listId).map((l) => `<button type="button" class="sheetbtn" data-act="selmoveto" data-id="${l.id}"><span>${esc(l.name)}</span><small>${groupTag(l.g)}${T('{n} offen', { n: openCount(l) })}</small></button>`).join('')}</div>`);
+}
+function selMealSheet() {
+  const list = [...meals()].sort((a, b) => a.name.localeCompare(b.name, LOCALE));
+  openSheet(`<div class="sheettitle">${T('Zu welchem Essen?')}</div>
+    <div class="scrollbox">${list.map((m) => `<button type="button" class="sheetbtn" data-act="selmealto" data-id="${m.id}"><span>${esc(m.name)}</span><small>${T('{n} Zutaten', { n: m.ing.length })}</small></button>`).join('')}</div>`);
+}
+function selNewMealSheet() {
+  openSheet(`<div class="sheettitle">${T('Als neues Essen anlegen')}</div>
+    <form id="selMealForm" autocomplete="off">
+      <input id="selMealName" autofocus class="notein" placeholder="${T('Name, z. B. Spaghetti Bolognese')}" aria-label="${T('Name des Essens')}" required>
+      ${groupLine('smGroup', defaultGroup())}
+      <p class="sheetnote">${T('Zutaten: {names}', { names: esc(selItems().map((i) => i.name).join(', ')) })}</p>
+      <button type="submit" class="btn">${T('Anlegen')}</button>
+    </form>`);
+}
+// Nach einer Aktion: Wackelmodus beenden (leert auch die Auswahl); kam sie aus dem Eintrag-Sheet, nur die Auswahl leeren
+const selDone = () => { closeSheet(); if (ui.wiggle) endWiggle(); else ui.sel.clear(); };
+// Ausgewählte Einträge aus der offenen Liste nehmen (auch ein laufendes Abhaken abbrechen). before = alter Stand für „Rückgängig“.
+function takeSel() {
+  const its = selItems(), before = S.items.slice();
+  S.items = S.items.filter((i) => !ui.sel.has(i.id));
+  its.forEach((i) => { clearTimeout(ui.pending.get(i.id)); ui.pending.delete(i.id); });
+  return { its, before };
+}
+// Ausgewählte Einträge auf eine andere Liste verschieben. Abschnitt und eigene Reihenfolge gehören zur alten Liste und fallen weg.
+function moveSelTo(listId) {
+  const to = S.lists.find((l) => l.id === listId), from = S.listId;
+  if (!to || !selItems().length) return;
+  const { its, before } = takeSel(), ids = new Set(its.map((i) => i.id));
+  to.items = to.items || [];
+  its.forEach((i) => { delete i.sec; delete i.ord; to.items.push(i); });
+  selDone(); commit();
+  toast(T('{n} → „{list}“', { n: selLabel(its), list: to.name }), () => {
+    if (S.listId !== from) return;
+    to.items = to.items.filter((i) => !ids.has(i.id));
+    S.items = before; commit();
+  });
+}
+// Als Zutaten übernehmen (Name und Menge; schon vorhandene Zutaten nicht doppelt). Die Einträge bleiben auf der Liste
+// und zeigen das Essen an (wie „Zur Liste“ beim Essen).
+function addSelToMeal(m, its = selItems()) {
+  let n = 0;
+  its.forEach((i) => {
+    if (!m.ing.some((x) => dupKey(x.name) === dupKey(i.name))) { m.ing.push({ id: uid(), name: i.name, qty: i.qty || '', basic: false }); n++; }
+    if (!(i.meals || []).includes(m.name)) i.meals = [...(i.meals || []), m.name];
+  });
+  return n;
+}
+// „Rückgängig“: Essen-Anzeige an den Einträgen wie vorher (snap = [[Eintrag, alte meals], …])
+const mealsSnap = (its) => its.map((i) => [i, i.meals]);
+const restoreMeals = (snap) => snap.forEach(([i, ml]) => { if (ml) i.meals = ml; else delete i.meals; });
+function selToMeal(mealId) {
+  const m = mealById(mealId), its = selItems();
+  if (!m || !its.length) return;
+  const ing = m.ing.slice(), snap = mealsSnap(its);
+  const n = addSelToMeal(m, its);
+  selDone(); commit();
+  let msg = T('Steht schon alles bei „{name}“', { name: m.name });
+  if (n === 1) msg = T('1 Zutat zu „{name}“ hinzugefügt', { name: m.name });
+  else if (n > 1) msg = T('{n} Zutaten zu „{name}“ hinzugefügt', { n, name: m.name });
+  toast(msg, () => { m.ing = ing; restoreMeals(snap); commit(); });
+}
+function newMealFromSel(name, g) {
+  const its = selItems();
+  if (!name || !its.length) return;
+  const m = { id: uid(), name, tags: [], base: 2, ing: [], photo: null, steps: '', g: g || defaultGroup() };
+  if (m.g) S.lastGroup = m.g;
+  meals().push(m);
+  const snap = mealsSnap(its);
+  addSelToMeal(m, its);
+  selDone(); commit();
+  toast(T('Essen „{name}“ angelegt', { name }), () => { S.meals = meals().filter((x) => x !== m); restoreMeals(snap); commit(); });
+}
+function deleteSel() {
+  const lid = S.listId;
+  if (!selItems().length) return;
+  const { its, before } = takeSel();
+  selDone(); commit();
+  toast(its.length === 1 ? T('„{name}“ gelöscht', { name: its[0].name }) : T('{n} Einträge gelöscht', { n: its.length }), () => { if (S.listId === lid) { S.items = before; commit(); } });
 }
 function moreSheet() {
   const done = S.items.filter((i) => i.done).length;
@@ -104,7 +222,8 @@ function openEdit(id) {
       <p id="learnNote" class="sheetnote" hidden>${T('Der Name wird als Stichwort der neuen Kategorie gemerkt.')}</p>
     </div></div>`}
     <div class="actions">
-      <button type="button" class="btn danger" data-act="delitem" data-id="${it.id}">${T('Löschen')}</button>
+      <button type="button" class="btn danger" style="flex:1" data-act="delitem" data-id="${it.id}">${T('Löschen')}</button>
+      <button type="button" class="btn ghost" style="flex:1" data-act="itemactions" data-id="${it.id}">${T('Aktionen')}</button>
       <button type="submit" hidden>${T('Speichern')}</button>
     </div></form>`);
 }
