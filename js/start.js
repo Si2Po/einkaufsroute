@@ -27,6 +27,7 @@
   save();
   render();
   addFromLink(); // Kurzbefehl / Siri: ?neu=…
+  autoStore(); // Geschäft nach Standort (geschaefte.js), nur mit Schalter
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. in der Vorschau nicht möglich */ });
     // Neue Version übernommen: einmal neu laden, damit auch der neue Programmcode läuft.

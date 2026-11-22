@@ -342,6 +342,8 @@ document.addEventListener('click', (e) => {
     }
     case 'moresheet': moreSheet(); keep = true; break;
     case 'editormenu': ui.confirmDel = false; editorSheet(); keep = true; break;
+    case 'storeloc': if (editStore()) rememberStoreLoc(editStore()); keep = true; break;
+    case 'storelocdel': if (editStore()) { delete editStore().loc; commit(); editorSheet(); } keep = true; break;
     case 'assigncat': assignSheet(el.dataset.cat); keep = true; break;
     case 'putcat': {
       const s2 = curStore(), c = el.dataset.cat;
@@ -351,7 +353,7 @@ document.addEventListener('click', (e) => {
       const s2 = curStore(), c = el.dataset.cat;
       s2.zones.push({ id: uid(), name: CAT_BY_ID[c]?.name || T('Bereich'), cats: [c], prods: {}, rect: null }); commit(); break;
     }
-    case 'pickstore': S.storeId = id || null; commit(); if (offerStoreMove()) keep = true; break; // ggf. fragen, ob das Geschäft in die Gruppe der Liste umzieht
+    case 'pickstore': S.storeId = id || null; markManualStore(); commit(); if (offerStoreMove()) keep = true; break; // ggf. fragen, ob das Geschäft in die Gruppe der Liste umzieht
     case 'movestore': { const st = S.stores.find((x) => x.id === id); if (st) { st.g = el.dataset.g; commit(); toast(T('„{name}“ ist jetzt in „{group}“', { name: st.name, group: gName(st.g) })); } break; }
     case 'gostores': { const gh = wrapGhost(); ui.tab = 'stores'; ui.editStoreId = null; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
     case 'delitem': clearTimeout(ui.pending.get(id)); ui.pending.delete(id); S.items = S.items.filter((i) => i.id !== id); commit(); break;
@@ -422,7 +424,7 @@ document.addEventListener('click', (e) => {
     }
     case 'openstore': { const gh = wrapGhost(); ui.wiggle = null; ui.editStoreId = id; ui.view = fitView(S.stores.find((x) => x.id === id)); ui.selZone = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('push', gh); break; }
     case 'back': { const gh = wrapGhost(); ui.wiggle = null; ui.editStoreId = null; ui.drawing = false; ui.confirmDel = false; render(); window.scrollTo(0, 0); wrapAnim('pop', gh); break; }
-    case 'usestore': S.storeId = id; commit(); if (offerStoreMove()) keep = true; break;
+    case 'usestore': S.storeId = id; markManualStore(); commit(); if (offerStoreMove()) keep = true; break;
     case 'delstore':
       if (!ui.confirmDel) { ui.confirmDel = true; editorSheet(); keep = true; break; }
       S.stores = S.stores.filter((s) => s.id !== st.id);

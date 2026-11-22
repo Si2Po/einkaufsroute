@@ -16,6 +16,7 @@
   --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
   --r: 14px;
+  color-scheme: light; /* auch bei dunklem System: Auswahllisten, Scrollbalken usw. passend zur gewählten Darstellung */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -54,6 +55,9 @@ body {
 .wrap { max-width: 560px; margin: 0 auto; }
 h2 { font: 700 1.25rem var(--font-display); margin: 0; }
 button, input, select { font: inherit; color: inherit; }
+/* Aufgeklappte Auswahlliste am PC: Die Felder haben oft einen durchsichtigen Hintergrund, den die Liste übernimmt.
+   Feste Farben, sonst steht im Dunkelmodus helle Schrift auf weißem Grund. (Das iPhone zeigt ein eigenes Auswahlrad.) */
+select option, select optgroup { background-color: var(--surface); color: var(--ink); }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 

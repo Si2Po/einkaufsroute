@@ -6,7 +6,8 @@ function viewStores() {
       <span><strong>${esc(s.name)}</strong><small>${groupTag(s.g)}${T(s.zones.length === 1 ? '{n} Bereich' : '{n} Bereiche', { n: s.zones.length })}${s.id === S.storeId ? ' · ' + T('aktiv') : ''}</small></span>
       <span class="go">›</span></button></li>`).join('');
   return `${pageHead(T('Einstellungen'), T('Geschäfte'), 'data-act="tab" data-tab="settings"')}
-    <div class="group" style="margin-bottom:10px"><label class="sheetbtn swrow"><span>${T('In der Liste verwenden')}<small>${T('Sortiert die Einkaufsliste nach dem Laufweg im Geschäft. Gilt nur für dieses Gerät.')}</small></span><input type="checkbox" switch id="storesSwitch"${storesOn() ? ' checked' : ''}></label></div>
+    <div class="group" style="margin-bottom:10px"><label class="sheetbtn swrow"><span>${T('In der Liste verwenden')}<small>${T('Sortiert die Einkaufsliste nach dem Laufweg im Geschäft. Gilt nur für dieses Gerät.')}</small></span><input type="checkbox" switch id="storesSwitch"${storesOn() ? ' checked' : ''}></label>
+      <label class="sheetbtn swrow"><span>${T('Geschäft nach Standort wählen')}<small>${T('Wählt beim Öffnen der App das Geschäft, in dem du gerade bist. Den Standort merkst du im Menü (…) des Geschäfts. Nur dieses Gerät.')}</small></span><input type="checkbox" switch id="geoSwitch"${geoOn() ? ' checked' : ''}></label></div>
     ${introCard('stores') || `<p class="hint">${T('Lege für jeden Supermarkt einen Grundriss an. Die Liste sortiert sich dann nach dem Laufweg dort.')}</p>`}
     ${S.stores.length ? `<ul class="cards">${cards}</ul>` : ''}
     <button type="button" class="btn" style="margin-top:10px" data-act="newstoresheet">${T('+ Neues Geschäft')}</button>`;
@@ -267,6 +268,8 @@ function editorSheet() {
   const st = editStore();
   openSheet(`<div class="sheettitle">${esc(st.name)}</div>
     ${S.storeId === st.id ? '' : `<button type="button" class="sheetbtn" data-act="usestore" data-id="${st.id}">${T('In der Liste verwenden')}</button>`}
+    <button type="button" class="sheetbtn" data-act="storeloc">${T(st.loc ? 'Standort neu merken' : 'Standort hier merken')} <small>${T(st.loc ? 'gemerkt' : 'im Geschäft antippen')}</small></button>
+    ${st.loc ? `<button type="button" class="sheetbtn" data-act="storelocdel">${T('Standort entfernen')}</button>` : ''}
     ${groupSelect('stGroup', st.g, T('Gruppe'), ` data-id="${st.id}"`)}
     <button type="button" class="sheetbtn danger" data-act="delstore">${T(ui.confirmDel ? 'Wirklich löschen?' : 'Geschäft löschen')}</button>`);
 }
@@ -414,9 +417,69 @@ function bindPlan() {
 }
 
 
-// Schalter „In der Liste verwenden“ (nur dieses Gerät)
+// Schalter „In der Liste verwenden“ und „Geschäft nach Standort wählen“ (nur dieses Gerät)
 document.addEventListener('change', (e) => {
+  if (e.target.id === 'geoSwitch') { setGeo(e.target.checked); if (e.target.checked) autoStore(true); return; }
   if (e.target.id !== 'storesSwitch') return;
   try { localStorage.setItem('ek_stores', e.target.checked ? 'on' : 'off'); } catch (_) { /* privat: gilt bis zum Schließen */ }
   render();
 });
+
+// ---------- Geschäft nach Standort ----------
+// Je Geschäft kann ein Ort gemerkt werden (st.loc = { lat, lng }, wird mit der Gruppe abgeglichen; Editor-Menü „Standort hier merken“).
+// Beim Öffnen der App (Start und Zurückkehren) fragt sie einmal nach dem Standort und wählt das nächste Geschäft im Umkreis
+// automatisch, mit „Rückgängig“. Der eigene Standort wird nicht gespeichert. Nur mit Schalter (ek_geo, nur dieses Gerät):
+// Das iPhone fragt Web-Apps oft erneut nach der Erlaubnis, deshalb ohne Schalter nie. Er geht an, sobald ein Ort gemerkt wird.
+// Wählt man danach von Hand ein Geschäft (ek_geo_manual), ruht die Automatik eine Stunde.
+const GEO_RADIUS = 200; // m: GPS ist in Gebäuden ungenau
+const GEO_PAUSE = 3600e3; // nach Wahl von Hand
+function geoOn() { try { return localStorage.getItem('ek_geo') === 'on'; } catch (_) { return false; } }
+function setGeo(on) { try { localStorage.setItem('ek_geo', on ? 'on' : 'off'); } catch (_) { /* privat */ } }
+function markManualStore() { try { localStorage.setItem('ek_geo_manual', String(Date.now())); } catch (_) { /* privat */ } }
+function manualPause() { try { return Date.now() - (+localStorage.getItem('ek_geo_manual') || 0) < GEO_PAUSE; } catch (_) { return false; } }
+// Abstand zweier Orte in Metern (Haversine)
+function distM(a, b) {
+  const R = 6371e3, rad = Math.PI / 180, dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function getPos(fresh) {
+  return new Promise((ok, fail) => {
+    if (!navigator.geolocation) { fail(new Error('geo')); return; }
+    navigator.geolocation.getCurrentPosition((p) => ok({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }), fail,
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: fresh ? 0 : 60000 });
+  });
+}
+// Editor-Menü: Ort des Geschäfts merken (auf 5 Nachkommastellen, ca. 1 m) und die Automatik einschalten
+async function rememberStoreLoc(st) {
+  closeSheet();
+  toast(T('Standort wird bestimmt …'));
+  try {
+    const p = await getPos(true);
+    st.loc = { lat: +p.lat.toFixed(5), lng: +p.lng.toFixed(5) };
+    setGeo(true);
+    commit();
+    toast(p.acc > 100 ? T('Standort von „{name}“ gemerkt (ungenau, ±{m} m: besser nochmal im Geschäft merken)', { name: st.name, m: Math.round(p.acc) }) : T('Standort von „{name}“ gemerkt', { name: st.name }));
+  } catch (_) {
+    toast(T('Standort nicht verfügbar. Bitte die Standort-Freigabe für den Browser erlauben.'));
+  }
+}
+// Nächstes Geschäft mit Ort im Umkreis wählen. force: auch während der Pause (Schalter gerade eingeschaltet)
+let geoBusy = false;
+async function autoStore(force) {
+  if (!S || geoBusy || !geoOn() || !storesOn() || isSimple() || (!force && manualPause())) return;
+  const withLoc = S.stores.filter((s) => s.loc);
+  if (!withLoc.length) return;
+  geoBusy = true;
+  try {
+    const p = await getPos(false);
+    let best = null, bestD = Infinity;
+    withLoc.forEach((s) => { const d = distM(p, s.loc); if (d < bestD) { best = s; bestD = d; } });
+    if (!best || bestD > GEO_RADIUS || best.id === S.storeId) return;
+    const prev = S.storeId;
+    S.storeId = best.id;
+    commit();
+    toast(T('Nach „{name}“ sortiert (Standort)', { name: best.name }), () => { S.storeId = prev; markManualStore(); commit(); });
+  } catch (_) { /* keine Erlaubnis oder kein Empfang: nichts tun */ } finally { geoBusy = false; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') autoStore(); });

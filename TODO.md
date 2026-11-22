@@ -1,7 +1,7 @@
 # Einkaufsroute – Ideen
 
 ## Offen
-- [ ] Geschäft nach Standort vorschlagen (Ort je Geschäft speichern, Standort-Freigabe nötig)
+- [x] Geschäft nach Standort wählen (st.loc, Schalter unter Einstellungen → Geschäfte, automatisch mit „Rückgängig“)
 - [ ] `supabase/komplett.sql` einmal an einem leeren Test-Projekt prüfen
 
 ## Bewusst nicht
