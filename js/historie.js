@@ -10,6 +10,7 @@
 
 const DAY = 864e5;
 const HIST_KEEP = 12; // so viele Zeitpunkte je Produkt merken
+const RHYTHM_LAST = 6; // der Rhythmus zählt nur die letzten so vielen Käufe: ändert sich das Kaufverhalten, passt er sich nach etwa 3 Käufen an
 
 // ---------- Schalter „Vorschläge“ (gilt nur für dieses Gerät) ----------
 function dueOn() {
@@ -58,8 +59,10 @@ function histChecked(items) {
   save();
 }
 
-// Üblicher Abstand zwischen zwei Käufen (Median, robust gegen einzelne Ausreißer)
-function usualGap(t) {
+// Üblicher Abstand zwischen zwei Käufen: Median der letzten Abstände (robust gegen einzelne Ausreißer, folgt aber
+// einem neuen Rhythmus, sobald er die Hälfte davon ausmacht)
+function usualGap(all) {
+  const t = all.slice(-RHYTHM_LAST);
   const gaps = t.slice(1).map((x, i) => x - t[i]).sort((a, b) => a - b);
   return gaps[Math.floor(gaps.length / 2)];
 }
