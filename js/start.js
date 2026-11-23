@@ -14,7 +14,9 @@
   if (!S.lists || !S.lists.length) { S.lists = [{ id: uid(), name: T('Einkaufsliste'), items: S.items || [] }]; S.listId = S.lists[0].id; }
   if (!curList()) S.listId = S.lists[0].id;
   S.items = curList().items || [];
-  if (curList().storeId !== undefined && S.stores.some((x) => x.id === curList().storeId)) S.storeId = curList().storeId;
+  // Geschäft der Liste: null = bewusst „Kein Geschäft“ (nach Kategorien), das bleibt auch nach dem Neustart so
+  const ls = curList().storeId;
+  if (ls === null || (ls !== undefined && S.stores.some((x) => x.id === ls))) S.storeId = ls;
   // Die frühere "gelernte Zuordnung" ist jetzt Teil der Stichwörter
   if (S.learn) {
     const names = S.learnNames || {};
@@ -23,7 +25,7 @@
   }
   migrateKeywords();
   S.stores.forEach((st) => st.zones.forEach((z) => { z.prods = z.prods || {}; }));
-  if (!S.stores.find((s) => s.id === S.storeId)) S.storeId = S.stores[0]?.id || null;
+  if (S.storeId !== null && !S.stores.find((s) => s.id === S.storeId)) S.storeId = S.stores[0]?.id || null; // fehlt oder gelöscht
   save();
   render();
   addFromLink(); // Kurzbefehl / Siri: ?neu=…

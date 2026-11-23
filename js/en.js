@@ -298,6 +298,7 @@ const EN = {
   'Standort von „{name}“ gemerkt': 'Location of “{name}” saved',
   'Standort nicht verfügbar. Bitte die Standort-Freigabe für den Browser erlauben.': 'Location not available. Please allow location access for the browser.',
   'Nach „{name}“ sortiert (Standort)': 'Sorted for “{name}” (location)',
+  'Kein Geschäft in der Nähe: nach Kategorien sortiert': 'No store nearby: sorted by category',
   // Auswahl im Wackelmodus (js/listen.js)
   '{n} ausgewählt': '{n} selected',
   'Tippen: auswählen': 'Tap to select',
@@ -682,7 +683,7 @@ const HELP_EN = () => ({
         <li>If you don’t need stores, switch them off under Settings → Stores → <b>“Use in the list”</b>. The list is then sorted by category only. This applies to your device only, the others in the group still see their store.</li>
         <li>For each store, create its <b>areas</b> in the order of your route and choose which categories are there. The list then sorts itself exactly that way.</li>
         <li>The <b>floor plan</b> is optional: drawing the areas helps you find things again, for sorting the order is enough.</li>
-        <li><b>Store by location:</b> while you're in the store, tap “Remember location here” in the store's menu (…). When you open the app there later, the list is sorted for this store automatically (“Undo” takes it back). You can turn this off under Settings → Stores. Your own location is not saved.</li>
+        <li><b>Store by location:</b> while you're in the store, tap “Remember location here” in the store's menu (…). When you open the app there later, the list is sorted for this store automatically (“Undo” takes it back). If you’re not near a saved store, it is sorted by category. You can turn this off under Settings → Stores. Your own location is not saved.</li>
         <li>If a product is somewhere other than its category, drag it to the right area in the list, choose the “Area” in the item, or enter it at the store in the area under “Products”. This then applies to this store only.</li>
         <li>If a category is in several areas, the <b>★</b> marks which area should mainly be used for this category.</li>
       </ul>`,

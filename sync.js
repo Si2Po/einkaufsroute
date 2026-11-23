@@ -383,8 +383,9 @@ function repairState() {
   if (!S.lists.some((l) => l.id === S.listId)) S.listId = S.lists[0].id;
   const l = curList();
   S.items = l.items;
-  if (l.storeId !== undefined && S.stores.some((x) => x.id === l.storeId)) S.storeId = l.storeId;
-  if (!S.stores.some((x) => x.id === S.storeId)) S.storeId = S.stores[0]?.id || null;
+  // null = bewusst „Kein Geschäft“ (wie beim Start in js/start.js)
+  if (l.storeId === null || (l.storeId !== undefined && S.stores.some((x) => x.id === l.storeId))) S.storeId = l.storeId;
+  if (S.storeId !== null && !S.stores.some((x) => x.id === S.storeId)) S.storeId = S.stores[0]?.id || null;
   if (!S.cats.length) S.cats.push(...DEFAULT_CATS.map(cloneCat));
   CATS = S.cats; indexCats();
 }

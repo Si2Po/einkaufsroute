@@ -428,11 +428,13 @@ document.addEventListener('change', (e) => {
 // ---------- Geschäft nach Standort ----------
 // Je Geschäft kann ein Ort gemerkt werden (st.loc = { lat, lng }, wird mit der Gruppe abgeglichen; Editor-Menü „Standort hier merken“).
 // Beim Öffnen der App (Start und Zurückkehren) fragt sie einmal nach dem Standort und wählt das nächste Geschäft im Umkreis
-// automatisch, mit „Rückgängig“. Der eigene Standort wird nicht gespeichert. Nur mit Schalter (ek_geo, nur dieses Gerät):
+// automatisch, mit „Rückgängig“. Ist keins in der Nähe, aber das gewählte hat einen Ort (man ist also sicher nicht dort),
+// sortiert die Liste ohne Geschäft nach Kategorien. Der eigene Standort wird nicht gespeichert. Nur mit Schalter (ek_geo, nur dieses Gerät):
 // Das iPhone fragt Web-Apps oft erneut nach der Erlaubnis, deshalb ohne Schalter nie. Er geht an, sobald ein Ort gemerkt wird.
 // Wählt man danach von Hand ein Geschäft (ek_geo_manual), ruht die Automatik eine Stunde.
 const GEO_RADIUS = 200; // m: GPS ist in Gebäuden ungenau
 const GEO_PAUSE = 3600e3; // nach Wahl von Hand
+const GEO_UNSURE = 300; // m: ungenauer ist die Position, wird nichts abgewählt (z. B. schlechter Empfang im Laden)
 function geoOn() { try { return localStorage.getItem('ek_geo') === 'on'; } catch (_) { return false; } }
 function setGeo(on) { try { localStorage.setItem('ek_geo', on ? 'on' : 'off'); } catch (_) { /* privat */ } }
 function markManualStore() { try { localStorage.setItem('ek_geo_manual', String(Date.now())); } catch (_) { /* privat */ } }
@@ -475,11 +477,20 @@ async function autoStore(force) {
     const p = await getPos(false);
     let best = null, bestD = Infinity;
     withLoc.forEach((s) => { const d = distM(p, s.loc); if (d < bestD) { best = s; bestD = d; } });
-    if (!best || bestD > GEO_RADIUS || best.id === S.storeId) return;
-    const prev = S.storeId;
-    S.storeId = best.id;
+    const prev = S.storeId, cur = curStore();
+    let msg;
+    if (best && bestD <= GEO_RADIUS) {
+      if (best.id === S.storeId) return;
+      S.storeId = best.id;
+      msg = T('Nach „{name}“ sortiert (Standort)', { name: best.name });
+    } else {
+      // Kein Geschäft in der Nähe: nur abwählen, wenn das gewählte einen Ort hat (sonst steht man vielleicht gerade darin)
+      if (!cur?.loc || p.acc > GEO_UNSURE) return;
+      S.storeId = null;
+      msg = T('Kein Geschäft in der Nähe: nach Kategorien sortiert');
+    }
     commit();
-    toast(T('Nach „{name}“ sortiert (Standort)', { name: best.name }), () => { S.storeId = prev; markManualStore(); commit(); });
+    toast(msg, () => { S.storeId = prev; markManualStore(); commit(); });
   } catch (_) { /* keine Erlaubnis oder kein Empfang: nichts tun */ } finally { geoBusy = false; }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') autoStore(); });
