@@ -219,6 +219,11 @@ dialog .actions { gap: 8px; }
 dialog form { grid-template-columns: minmax(0, 1fr); }
 .srow { min-width: 0; }
 .srow select { text-overflow: ellipsis; }
+/* Fokus in einer Zeile mit Beschriftung (Kategorie, Bereich, Art …): Rahmen um die ganze Zeile statt nur um das Feld darin.
+   Am PC bekommt eine Auswahl den Fokus-Rahmen auch beim Anklicken, er stand dann wie zwei Striche mitten in der Zeile. */
+.srow select:focus-visible, .srow input:focus-visible, .gline select:focus-visible { outline: none; }
+.srow:has(:focus-visible) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.gline select:focus-visible { color: var(--accent); }
 
 /* Details: Foto, aufklappbarer Bereich, Gesten */
 dialog { touch-action: none; max-height: calc(100% - 24px); overflow: auto; overscroll-behavior: contain; }
