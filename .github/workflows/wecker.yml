@@ -1,0 +1,43 @@
+# Ruft die Supabase-Datenbank einmal am Tag kurz an, damit das kostenlose Projekt nicht einschläft
+# (Supabase pausiert kostenlose Projekte nach 7 Tagen ohne Nutzung, z. B. wenn im Urlaub niemand die App öffnet).
+# Adresse und öffentlicher Schlüssel kommen aus config.js (Format der Zeilen „url: '…',“ und „key: '…',“ beibehalten).
+# Angerufen wird guest_get mit leerem Schlüssel: öffentlich erlaubt, liest nichts und antwortet nur „null“.
+name: Wecker
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  wecken:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: config.js
+          sparse-checkout-cone-mode: false
+
+      - name: Datenbank anrufen
+        run: |
+          URL=$(tr -d '\r' < config.js | sed -n "s/^ *url: '\(.*\)',$/\1/p")
+          KEY=$(tr -d '\r' < config.js | sed -n "s/^ *key: '\(.*\)',$/\1/p")
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "Keine Datenbank in config.js eingetragen – nichts zu tun."
+            exit 0
+          fi
+          curl -sf -X POST "$URL/rest/v1/rpc/guest_get" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{"t":""}'
+          echo
+          echo "Datenbank ist wach."
+
+      # GitHub schaltet zeitgesteuerte Abläufe nach 60 Tagen ohne Änderungen am Repo ab.
+      # Dieser Schritt schaltet den Wecker jedes Mal wieder ein, damit das nie passiert.
+      - name: Wecker eingeschaltet lassen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/wecker.yml/enable"

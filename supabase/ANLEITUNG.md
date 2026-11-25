@@ -42,3 +42,6 @@ Fehlt ein Schritt, läuft die App trotzdem; nur die jeweilige Funktion geht dann
 `passwort_setzen.sql` öffnen, E-Mail und neues Passwort eintragen und im SQL-Editor ausführen (Anleitung oben in der Datei).
 Die Person meldet sich damit an und ändert es in der App unter Einstellungen → Konto und Gruppen → Passwort ändern.
 Die Datei danach **nicht** mit eingetragenem Passwort speichern.
+
+## D. Wecker
+Kostenlose Supabase-Projekte schlafen nach 7 Tagen ohne Nutzung ein. Der GitHub-Ablauf `.github/workflows/wecker.yml` ruft die Datenbank deshalb jeden Morgen einmal kurz an. Er nimmt Adresse und Schlüssel automatisch aus `config.js`; es ist nichts weiter zu tun. Prüfen kann man ihn auf GitHub unter **Actions → Wecker** (dort auch „Run workflow“ zum Ausprobieren).
